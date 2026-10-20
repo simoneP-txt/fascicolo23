@@ -1,0 +1,49 @@
+{
+  "name": "fascicolo23",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build && tsc -p electron",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "e2e": "npm run build && playwright test",
+    "dist": "npm run build && npm test && electron-builder"
+  },
+  "build": {
+    "productName": "Fascicolo23",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "win": {
+      "target": "portable"
+    },
+    "portable": {
+      "artifactName": "Fascicolo23.exe"
+    }
+  },
+  "devDependencies": {
+    "@fontsource/anton": "^5.3.0",
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/poiret-one": "^5.3.0",
+    "@fontsource/special-elite": "^5.3.0",
+    "@playwright/test": "^1.64.1",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/howler": "^2.2.13",
+    "@types/node": "^24.19.2",
+    "canvas-confetti": "^1.9.4",
+    "chess.js": "^1.4.0",
+    "electron": "^44.9.2",
+    "electron-builder": "^26.15.3",
+    "howler": "^2.2.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "placeholder": {
+    "title": "Fascicolo n. 23",
+    "line": "Il caso si apre presto?"
+  },
+  "link": [
+    { "room": "fascicolo", "text": "youtu.be/" },
+    { "room": "studio", "text": "71" },
+    { "room": "scacchiera", "text": "Kg4" },
+    { "room": "biblioteca", "text": "_v7" },
+    { "room": "rapture", "text": "Qj" },
+    { "room": "stanza-46", "text": "s" }
+  ]
+}
