@@ -1,0 +1,58 @@
+/* Meme: over the veil every .overlay spreads, the image and the caption land together with a sudden zoom,
+   from --meme-zoom down to their size in the first eighth of --duration-meme, then hold still until
+   meme.ts takes the overlay away. The caption is the Anton sample of 04-sistema at meme size: white, upper
+   case, its ink outline in the sample's proportion. Over an image it sits on the bottom edge, as in a meme. */
+
+/* The frame clips the zoom at the stage edges. The overlay itself never clips: its veil runs past them. */
+.meme__frame {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.meme__figure {
+  display: grid;
+  place-items: center;
+  max-width: 1600px;
+  margin: 0;
+  animation: meme-zoom var(--duration-meme) var(--ease) both;
+}
+
+/* Image and caption share one cell, so the caption can lie on the image. */
+.meme__figure > * {
+  grid-area: 1 / 1;
+}
+
+.meme__image {
+  max-width: 100%;
+  height: 768px;
+  object-fit: contain;
+}
+
+.meme__caption {
+  color: var(--meme-fill);
+  font-family: var(--font-meme);
+  font-size: var(--text-meme);
+  line-height: normal; /* Anton's tall glyph box would overflow a tighter line */
+  text-align: center;
+  text-transform: uppercase;
+  text-wrap: balance;
+  -webkit-text-stroke: var(--meme-outline) var(--ink);
+}
+
+.meme__image + .meme__caption {
+  align-self: end;
+  margin-bottom: var(--space-4);
+}
+
+@keyframes meme-zoom {
+  from {
+    transform: scale(var(--meme-zoom));
+  }
+  12.5%,
+  to {
+    transform: none;
+  }
+}

@@ -57,6 +57,19 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
     await page.getByRole('button', { name: content.ui.skip.button }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
   },
+  // 04, the Anton sample: the consolation meme over the study once its zoom has landed, held on screen by
+  // the page clock standing still
+  meme: async (page) => {
+    await page.clock.install();
+    await seed(page, { opened: true, solved: [], clues: [], tokens: content.tokens });
+    await page.goto('/');
+    await enterRoom(page, 'studio');
+    await page.clock.runFor(content.rooms.studio.help.skipAfterSec * 1000);
+    await page.getByRole('button', { name: content.ui.skip.button }).click();
+    await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
+    await page.getByRole('button', { name: content.ui.skip.yes }).click();
+    await expect(page.locator('[data-meme] figure')).toHaveCSS('transform', 'none');
+  },
 };
 
 for (const [width, height, deviceScaleFactor] of SIZES) {

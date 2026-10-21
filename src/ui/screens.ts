@@ -1,7 +1,8 @@
 // Screens: the GameUi the engine talks to. It puts the case opening, the board or a room on the stage;
 // a room gets a frame (header, way back to the board, audience help, witness, auto-help) and the area
 // it mounts into. The stage swaps screens at once for now, so the old screen is gone and a room is on
-// screen as soon as show() returns; a meme only plays its sound until the meme overlay exists.
+// screen as soon as show() returns. A meme goes on the stage itself, so it scales with it and leaves with
+// the screen under it.
 import type { AudienceStatus } from '../engine/audience';
 import { renderBoard } from '../engine/board';
 import type { Game, GameUi, Sfx } from '../engine/game';
@@ -10,6 +11,7 @@ import { createAudienceButton, createAudienceOverlay, type AudienceView } from '
 import { createHelpPanel, type HelpPanel } from './autohelp';
 import { el } from './dom';
 import { renderIntro } from './intro';
+import { showMeme as showMemeOverlay } from './meme';
 import type { Stage } from './stage';
 import { createWitness, type Witness } from './witness';
 
@@ -90,8 +92,7 @@ export function createScreens(
     },
 
     showMeme(meme, done) {
-      if (meme.sound) audio.play(meme.sound);
-      done();
+      showMemeOverlay(stage.root, meme, audio, done);
     },
   };
 }
