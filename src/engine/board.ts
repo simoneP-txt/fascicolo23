@@ -1,6 +1,7 @@
 // Board: the case board drawn from the game state. The case title, the classified link with a black bar
-// for every missing fragment, a card per room (solved, open, or closed with what it lacks) and the
-// clues found so far. Phase 3 dresses it like mockup 01.
+// for every missing fragment, a card per room (solved, open, or closed with what it lacks), the clues
+// found so far and the audience tokens. Phase 3 dresses it like mockup 01.
+import { tokenRow } from '../ui/audience';
 import { el } from '../ui/dom';
 import { isOpen } from './clues';
 import { linkParts } from './link';
@@ -45,7 +46,11 @@ export function renderBoard(content: Content, rooms: readonly Room[], state: Gam
     clues.append(card);
   }
 
-  screen.append(title, link, doors, clues);
+  // The tokens left, shown here but used inside the rooms.
+  const tokens = el('div', 'card board__tokens');
+  tokens.append(el('div', 'board__tokens-title', content.ui.audience.button), tokenRow(state.tokens, content.tokens));
+
+  screen.append(title, link, doors, clues, tokens);
   return screen;
 }
 

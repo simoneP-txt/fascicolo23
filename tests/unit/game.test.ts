@@ -1,11 +1,15 @@
 // Game lifecycle: intro or board at start, doors that follow the clue graph, rooms mounted once and
 // completed once, and an unmount on every way out of a room, even when the room itself is broken.
-import { expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { validOrders } from '../../src/engine/clues';
 import { load, save } from '../../src/engine/save';
 import { newState, openCase } from '../../src/engine/state';
 import { graphRooms } from '../../src/rooms/graph';
 import { content, ctxOf, memoryStorage, setup } from './fakes';
+
+// A room session runs an interval; fake timers keep it out of the real clock.
+beforeEach(() => vi.useFakeTimers());
+afterEach(() => vi.useRealTimers());
 
 // A game whose case is already open, showing the board.
 function onBoard() {
