@@ -1,0 +1,31 @@
+// Token scan: colors, durations and the easing curve live only in src/ui/tokens.css; every other .css and
+// .ts file under src/ uses var(--…), and a pixel length written in a stylesheet sits on the 8 px grid.
+import { readdirSync, readFileSync } from 'node:fs';
+import { extname } from 'node:path';
+import { expect, test } from 'vitest';
+
+const TOKENS = 'src/ui/tokens.css';
+
+const sources = readdirSync('src', { recursive: true, encoding: 'utf8' })
+  .map((path) => `src/${path.replaceAll('\\', '/')}`)
+  .filter((path) => ['.css', '.ts'].includes(extname(path)) && path !== TOKENS);
+
+/** Every match of the pattern as "file: match", in all the sources or in those with one extension. */
+function hits(pattern: RegExp, extension?: string): string[] {
+  return sources
+    .filter((path) => !extension || extname(path) === extension)
+    .flatMap((path) => [...readFileSync(path, 'utf8').matchAll(pattern)].map((match) => `${path}: ${match[0]}`));
+}
+
+/** Every pixel length written in the sources with this extension. */
+function pxLiterals(extension: string): number[] {
+  return hits(/\d*\.?\d+px\b/g, extension).map((hit) => parseFloat(hit.slice(hit.lastIndexOf(' ') + 1)));
+}
+
+test('colors live only in tokens.css', () => expect(hits(/#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\(/gi)).toEqual([]));
+test('durations and curves live only in tokens.css', () => expect(hits(/\b\d*\.?\d+m?s\b|cubic-bezier\(/g, '.css')).toEqual([]));
+test('lengths sit on the 8 px grid', () => expect(pxLiterals('.css').filter((px) => px % 8 !== 0)).toEqual([]));
+test('tokens.css has a single easing curve', () => {
+  const tokensCss = readFileSync(TOKENS, 'utf8');
+  expect(tokensCss.match(/cubic-bezier\(/g)).toHaveLength(1);
+});

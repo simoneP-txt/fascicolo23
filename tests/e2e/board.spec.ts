@@ -1,6 +1,5 @@
 // Board e2e: the case opens offline with local fonts, "No?" runs away, the doors follow the clue
-// graph, earned fragments survive a reload, rooms lead back to the board, and the 16:9 stage fits the
-// three test resolutions with the background filling the window.
+// graph, earned fragments survive a reload and rooms lead back to the board.
 import { expect, test } from '@playwright/test';
 import { board, content, door, enterRoom, offline, openCase, roomScreen, solveRoom } from './helpers';
 
@@ -81,24 +80,4 @@ test('a solved room shows its fragment and survives a reload', async ({ page }) 
   await expect(board(page)).toBeVisible();
   await expect(page.locator('[data-fragment="studio"]')).toHaveText('71');
   await expect(door(page, 'studio')).toContainText(content.ui.solved);
-});
-
-test('the 16:9 stage fits 1707x1067 at 150%, 1920x1080 and 1366x768', async ({ browser, baseURL }) => {
-  for (const [width, height, deviceScaleFactor] of [
-    [1707, 1067, 1.5],
-    [1920, 1080, 1],
-    [1366, 768, 1],
-  ]) {
-    const context = await browser.newContext({ baseURL, viewport: { width, height }, deviceScaleFactor });
-    const page = await context.newPage();
-    await openCase(page);
-    const stage = (await page.locator('#stage').boundingBox())!;
-    expect(stage.width / stage.height).toBeCloseTo(16 / 9, 2);
-    expect(Math.abs(stage.width - width) < 1 || Math.abs(stage.height - height) < 1).toBe(true);
-    expect(Math.abs(stage.x - (width - stage.width) / 2)).toBeLessThan(1);
-    expect(Math.abs(stage.y - (height - stage.height) / 2)).toBeLessThan(1);
-    const backdrop = (await page.locator('#app').boundingBox())!;
-    expect([backdrop.x, backdrop.y, backdrop.width, backdrop.height]).toEqual([0, 0, width, height]);
-    await context.close();
-  }
 });

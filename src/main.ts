@@ -1,6 +1,14 @@
-// Bootstrap: validates content.json and the clue graph, then starts the game on the stage and installs
-// the hidden host hotkeys. Invalid content or a door that can never open stops here, on screen.
+// Bootstrap: loads the four local fonts and the stylesheets, validates content.json and the clue graph,
+// then starts the game on the stage and installs the hidden host hotkeys. Invalid content or a door that
+// can never open stops here, on screen.
 import '@fontsource/special-elite';
+import '@fontsource/cormorant-garamond/500.css';
+import '@fontsource/cormorant-garamond/600.css';
+import '@fontsource/cormorant-garamond/500-italic.css';
+import '@fontsource/anton';
+import '@fontsource/poiret-one';
+import './ui/tokens.css';
+import './ui/base.css';
 import './style.css';
 import json from '../content/content.json';
 import { createAudio } from './engine/audio';

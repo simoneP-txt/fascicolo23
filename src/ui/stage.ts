@@ -1,5 +1,6 @@
 // Stage: every screen is drawn on a 1920x1080 stage, scaled to fit the window and centered, while the
-// host behind it paints the screen's background across the whole window (decision 15).
+// host behind it paints the screen's background across the whole window (decision 15). The scale goes
+// on the root element as --stage-scale, so what the host paints around the stage can follow it too.
 import { el } from './dom';
 
 export const STAGE_WIDTH = 1920;
@@ -19,7 +20,7 @@ export function createStage(host: HTMLElement): Stage {
   let scale = 1;
   const fit = () => {
     scale = Math.min(window.innerWidth / STAGE_WIDTH, window.innerHeight / STAGE_HEIGHT);
-    root.style.setProperty('--stage-scale', String(scale));
+    document.documentElement.style.setProperty('--stage-scale', String(scale));
   };
   fit();
   window.addEventListener('resize', fit);

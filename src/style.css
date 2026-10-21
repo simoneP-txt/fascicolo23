@@ -1,122 +1,6 @@
-/* Phase 2 styles: tokens and a plain look for the stage, the case opening, the board and the rooms.
-   Phase 3 brings the mockups' look; colors, sizes, spacing and durations stay tokens in :root. */
-:root {
-  --paper: #f2efea;
-  --paper-dim: #e4ddd2;
-  --red: #e94535;
-  --ink: #1f1b17;
-  --ink-soft: #5c524a;
-  --ink-faint: rgba(31, 27, 23, 0.35);
-  --veil: rgba(31, 27, 23, 0.82);
-  --red-glow: rgba(233, 69, 53, 0.25);
-  --night: #1e2a44;
-  --cork: #b98d5f;
-  --sage: #8fa58a;
-  --walnut: #2b1d14;
-  --teal: #1f6f6a;
-  --sea: #0f2a3d;
-
-  --font-report: 'Special Elite', monospace;
-  --text-label: 20px;
-  --text-small: 28px;
-  --text-game: 32px;
-  --text-witness: 36px;
-  --text-heading: 40px;
-  --text-title: 56px;
-  --text-display: 64px;
-  --text-countdown: 128px;
-
-  --space-1: 8px;
-  --space-2: 16px;
-  --space-3: 24px;
-  --space-4: 32px;
-  --space-5: 40px;
-  --space-6: 48px;
-  --space-8: 64px;
-  --space-9: 72px;
-  --space-11: 88px;
-  --space-12: 96px;
-
-  --stage-width: 1920px;
-  --stage-height: 1080px;
-  --radius: 8px;
-  --radius-bubble: 24px;
-  --border: 4px;
-  --shadow-card: 0 10px 18px rgba(30, 15, 5, 0.35);
-  --shadow-button: 0 8px 14px rgba(31, 27, 23, 0.35);
-
-  --duration-press: 80ms;
-  --duration-jump: 160ms;
-  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-
-html,
-body {
-  margin: 0;
-  height: 100%;
-}
-
-/* Components set display: flex or grid; hidden must still win. */
-[hidden] {
-  display: none !important;
-}
-
-body {
-  overflow: hidden;
-  background: var(--ink);
-  color: var(--ink);
-  font-family: var(--font-report);
-}
-
-/* The host fills the window with the current screen's background; the stage sits centered on it. */
-#app {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  background: var(--backdrop, var(--ink));
-}
-#app[data-backdrop='intro'],
-#app[data-backdrop='scacchiera'] {
-  --backdrop: var(--night);
-}
-#app[data-backdrop='board'] {
-  --backdrop: var(--cork);
-}
-#app[data-backdrop='studio'] {
-  --backdrop: var(--sage);
-}
-#app[data-backdrop='biblioteca'] {
-  --backdrop: var(--walnut);
-}
-#app[data-backdrop='rapture'] {
-  --backdrop: var(--teal);
-}
-#app[data-backdrop='stanza-46'] {
-  --backdrop: var(--sea);
-}
-
-.stage {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: var(--stage-width);
-  height: var(--stage-height);
-  overflow: hidden;
-  transform: translate(-50%, -50%) scale(var(--stage-scale, 1));
-}
-
-.screen {
-  position: absolute;
-  inset: 0;
-}
-
-.fatal {
-  margin: var(--space-12);
-  color: var(--paper);
-  font-family: var(--font-report);
-  font-size: var(--text-game);
-  white-space: pre-wrap;
-}
+/* Phase 2 component styles: a plain look for the case opening, the board, the rooms and the dialogs,
+   built from the tokens of src/ui/tokens.css only. Phase 3 gives each component the look of the mockups
+   in its own stylesheet next to its module. */
 
 /* Controls: never the browser's look, always a visible press. */
 .button {
@@ -139,7 +23,7 @@ body {
   filter: brightness(1.08);
 }
 .button:active {
-  transform: translateY(2px) scale(0.98);
+  transform: translateY(var(--press-shift)) scale(var(--press-scale));
 }
 .button:focus-visible {
   outline: var(--border) solid var(--paper);
@@ -162,7 +46,7 @@ body {
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-3);
-  border-radius: var(--border);
+  border-radius: var(--radius-chip);
   background: var(--paper);
   color: var(--ink);
   box-shadow: var(--shadow-card);
@@ -171,7 +55,7 @@ body {
 .label {
   color: var(--ink-soft);
   font-size: var(--text-label);
-  letter-spacing: 0.12em;
+  letter-spacing: var(--label-tracking);
 }
 
 /* Case opening (mockup 05). */
@@ -288,7 +172,7 @@ body {
 }
 .door__fragment {
   padding: 0 var(--space-2);
-  border-radius: var(--border);
+  border-radius: var(--radius-chip);
   background: var(--ink);
   color: var(--paper);
   font-size: var(--text-game);
@@ -385,15 +269,20 @@ body {
   display: inline-flex;
   gap: var(--space-2);
 }
+/* Anton's metrics are balanced around its capitals: at its normal line height the "?" sits in the middle
+   of the circle. The dashed ring of a spent token is drawn over the circle, not as a border, so the "?"
+   keeps the whole circle to sit in. */
 .token {
-  box-sizing: border-box;
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: var(--space-6);
   height: var(--space-6);
   border-radius: 50%;
-  font-size: var(--text-small);
+  font-family: var(--font-meme);
+  font-size: var(--text-token);
+  line-height: normal;
 }
 .token--left,
 .token--in-use {
@@ -404,8 +293,14 @@ body {
   box-shadow: 0 0 0 var(--space-1) var(--red-glow);
 }
 .token--used {
-  border: var(--border) dashed var(--ink-faint);
   color: var(--ink-faint);
+}
+.token--used::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: var(--border) dashed;
+  border-radius: 50%;
 }
 .audience {
   display: inline-flex;
@@ -435,7 +330,7 @@ body {
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-5) var(--space-8);
-  border-radius: var(--space-2);
+  border-radius: var(--radius-dialog);
 }
 .dialog__title {
   margin: 0;
@@ -495,7 +390,7 @@ body {
   width: 408px;
 }
 .help__card {
-  border-top: var(--space-1) solid var(--red);
+  border-top: var(--border-thick) solid var(--red);
 }
 .help__text {
   margin: 0;

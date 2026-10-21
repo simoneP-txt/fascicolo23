@@ -1,0 +1,63 @@
+/* Base: the host fills the window with the backdrop of the current screen, two tones split at the middle,
+   so the bands left by the 16:9 stage on a 16:10 screen continue its top and bottom edges. The stage
+   sits centered, scaled by --stage-scale, and paints the same backdrop under the screen. While an
+   overlay is open, the veil it spreads over the stage covers the bands too. */
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+/* Components set display: flex or grid; hidden must still win. */
+[hidden] {
+  display: none !important;
+}
+
+body {
+  overflow: hidden;
+  background: var(--ink);
+  color: var(--ink);
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--font-ui);
+}
+
+/* The stage paints the backdrop again, so the veil under it never darkens the screen twice. */
+#app,
+.stage {
+  background: linear-gradient(var(--backdrop-top) 50%, var(--backdrop-bottom) 50%);
+}
+
+#app:has(.overlay:not([hidden]))::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--veil);
+}
+
+.stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--stage-width);
+  height: var(--stage-height);
+  overflow: hidden;
+  transform: translate(-50%, -50%) scale(var(--stage-scale));
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+}
+
+.fatal {
+  margin: var(--space-12);
+  color: var(--paper);
+  font-family: var(--font-report);
+  font-size: var(--text-game);
+  white-space: pre-wrap;
+}

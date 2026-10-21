@@ -1,9 +1,22 @@
 // E2E helpers: the content texts, a network cut that records every request outside the local server,
-// and the steps most tests repeat (opening the case, solving a placeholder room).
+// a save written before the page loads, and the steps most tests repeat (opening the case, solving a
+// placeholder room).
 import { readFileSync } from 'node:fs';
 import { expect, type BrowserContext, type Page } from '@playwright/test';
+import { save, SAVE_KEY } from '../../src/engine/save';
+import type { GameState } from '../../src/engine/state';
 
 export const content = JSON.parse(readFileSync('content/content.json', 'utf8'));
+
+/** The game of mockup 01: study and chessboard solved, their three clues found, one token spent. */
+export const MOCKUP_01: GameState = { opened: true, solved: ['studio', 'scacchiera'], clues: ['rule', 'profile', 'g4'], tokens: 2 };
+
+/** Writes this state as the save before every load of the page, so the game starts from it. */
+export async function seed(page: Page, state: GameState): Promise<void> {
+  let saved = '';
+  save(state, { getItem: () => null, setItem: (_key, value) => (saved = value), removeItem: () => {} });
+  await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [SAVE_KEY, saved]);
+}
 
 /** Blocks every request outside the local server and returns the list of the blocked URLs. */
 export async function offline(context: BrowserContext, baseURL: string): Promise<string[]> {
