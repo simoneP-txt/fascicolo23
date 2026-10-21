@@ -28,7 +28,12 @@ try {
   stage.root.addEventListener('click', (event) => {
     if (event.target instanceof Element && event.target.closest('button')) audio.play('click');
   });
-  const game = createGame({ content, rooms, audio, ui: (g) => createScreens(stage, content, rooms, g) });
+  const game = createGame({
+    content,
+    rooms,
+    audio,
+    ui: (g, screenGone) => createScreens(stage, content, rooms, g, audio, screenGone),
+  });
   installHotkeys(window, {
     solve: () => game.solve(),
     hint: () => game.hint(true),

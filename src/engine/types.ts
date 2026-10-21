@@ -32,10 +32,18 @@ export interface SkipText {
   no: string;
 }
 
+/** A meme over the room: a caption in Anton and/or an image from public/assets/memes/, maybe a sound. */
+export interface Meme {
+  text?: string;
+  image?: string;
+  sound?: string; // a key of Content.sounds
+}
+
 /** One room's slice of content.json, handed to the room as ctx.content. */
 export interface RoomContent {
   name: string;
   header: string;
+  from: string; // where its fragment comes from, on the wish card ("dallo studio")
   witness: { intro: string };
   hints: string[];
   help: HelpThresholds;
@@ -60,6 +68,7 @@ export interface Ui {
   skip: SkipText;
   reset: ConfirmText;
   debug: { title: string; close: string };
+  wish: { label: string; clue: string; clues: string; from: string; continue: string };
 }
 
 export interface Content {
@@ -67,9 +76,10 @@ export interface Content {
   audienceSeconds: number;
   sounds: Record<string, string>;
   link: { room: RoomId | 'fascicolo'; text: string }[];
-  witness: { board: string; help: string };
+  witness: { board: string; help: string; wish: string };
   clues: Record<ClueId, { label: string; missing: string }>;
   rooms: Record<RoomId, RoomContent>;
+  memes: Record<string, Meme>; // "consolation" follows a confirmed skip
   ui: Ui;
 }
 
@@ -79,6 +89,7 @@ export interface GameContext {
   hasClue(id: ClueId): boolean; // clues found in other rooms
   narrate(text: string): void; // witness bubble, appends "?" if missing
   playSfx(name: string): void; // sounds listed in content.json
+  meme(id: string): void; // a meme from content.json over the room; the help clock waits for it to go
   reportError(): void; // a wrong attempt: feeds the auto-help ladder
   complete(): void; // award fragment + clues, save, back to the board
 }

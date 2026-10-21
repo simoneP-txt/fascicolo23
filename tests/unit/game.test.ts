@@ -1,6 +1,8 @@
 // Game lifecycle: intro or board at start, doors that follow the clue graph, rooms mounted once and
 // completed once, and an unmount on every way out of a room, even when the room itself is broken. A
-// broken room can still be solved, and a room's context goes inert once the player leaves it.
+// broken room can still be solved, and a room's context goes inert once the player leaves it. Every
+// fragment won is celebrated on the board; memes and screen changes hold the help clock, and no hold
+// outlives its room; a room is unmounted once its screen has left, and before it mounts again.
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { validOrders } from '../../src/engine/clues';
 import { SAVE_KEY, load, save } from '../../src/engine/save';
@@ -13,13 +15,15 @@ beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
 // A game whose case is already open, showing the board.
-function onBoard() {
+function onBoard(options: { slowScreens?: boolean } = {}) {
   const storage = memoryStorage();
   save(openCase(newState(3)), storage);
-  const t = setup(storage);
+  const t = setup(storage, options);
   t.game.start();
   return t;
 }
+
+const HINT_ONLY = { hint: true, skip: false };
 
 test('a new game opens on the intro, a saved one on the board', () => {
   const fresh = setup();
@@ -38,8 +42,24 @@ test('opening the case saves it and shows the board', () => {
   game.openCase();
   expect(game.state.opened).toBe(true);
   expect(load(3, storage).opened).toBe(true);
-  expect(ui.showBoard).toHaveBeenCalledWith(game.state);
+  expect(ui.showBoard).toHaveBeenCalledWith(game.state, 'fascicolo');
   expect(ui.narrate).toHaveBeenLastCalledWith(content.witness.board);
+});
+
+test('opening the case and solving a room celebrate their fragment', () => {
+  const { game, ui, room } = setup();
+  game.start();
+  game.openCase();
+  expect(ui.showBoard).toHaveBeenLastCalledWith(game.state, 'fascicolo');
+  game.enter('studio');
+  ctxOf(room('studio')).complete();
+  expect(ui.showBoard).toHaveBeenLastCalledWith(game.state, 'studio');
+  game.enter('scacchiera');
+  game.leave();
+  expect(ui.showBoard).toHaveBeenLastCalledWith(game.state, null);
+
+  const saved = onBoard();
+  expect(saved.ui.showBoard).toHaveBeenLastCalledWith(saved.game.state, null);
 });
 
 test('a closed door does not open', () => {
@@ -172,8 +192,10 @@ test('a room that outlives its exit cannot touch the next room', () => {
   game.leave();
   game.enter('scacchiera');
   for (let i = 0; i < content.rooms.studio.help.hintAfterErrors!; i++) old.reportError();
+  old.meme('error');
   old.complete();
   expect(game.state.solved).toEqual([]);
+  expect(ui.showMeme).not.toHaveBeenCalled();
   expect(room('scacchiera').unmount).not.toHaveBeenCalled();
 
   // Its errors did not count for it either.
@@ -205,7 +227,7 @@ test('Ctrl+Shift+G gives back a spent token and redraws the screen', () => {
   game.giveBackToken();
   expect(game.state.tokens).toBe(2);
   expect(load(3, storage).tokens).toBe(2);
-  expect(ui.showBoard).toHaveBeenLastCalledWith(game.state);
+  expect(ui.showBoard).toHaveBeenLastCalledWith(game.state, null);
 
   game.enter('studio');
   game.giveBackToken();
@@ -239,7 +261,7 @@ test('the debug menu enters any room with its required clues', () => {
   expect(game.state.opened).toBe(true);
   expect(game.state.clues).toEqual(expect.arrayContaining(['profile', 'time-0451', 'confession']));
   expect(room('stanza-46').mount).toHaveBeenCalledOnce();
-  expect(ui.showRoom).toHaveBeenLastCalledWith(room('stanza-46'));
+  expect(ui.showRoom).toHaveBeenLastCalledWith(room('stanza-46'), expect.any(Function));
 });
 
 test('the debug menu leaves the open room first', () => {
@@ -248,4 +270,121 @@ test('the debug menu leaves the open room first', () => {
   game.debugEnter('rapture');
   expect(room('studio').unmount).toHaveBeenCalledOnce();
   expect(room('rapture').mount).toHaveBeenCalledOnce();
+});
+
+// Memes and the confirmed skip.
+
+test('a meme stops the help clock until it has gone', () => {
+  const { game, ui, room } = onBoard();
+  game.enter('scacchiera');
+  vi.advanceTimersByTime(110_000);
+  ctxOf(room('scacchiera')).meme('error');
+  expect(ui.showMeme).toHaveBeenCalledWith(content.memes.error, expect.any(Function));
+  vi.advanceTimersByTime(30_000);
+  expect(ui.setHelp).not.toHaveBeenCalledWith(HINT_ONLY);
+  ui.showMeme.mock.lastCall![1]();
+  vi.advanceTimersByTime(10_000);
+  expect(ui.setHelp).toHaveBeenLastCalledWith(HINT_ONLY);
+});
+
+test('leaving during a meme does not freeze the help ladder', () => {
+  const { game, ui, room } = onBoard();
+  game.enter('scacchiera');
+  ctxOf(room('scacchiera')).meme('error');
+  game.leave();
+  game.enter('scacchiera');
+  vi.advanceTimersByTime(content.rooms.scacchiera.help.hintAfterSec! * 1000);
+  expect(ui.setHelp).toHaveBeenLastCalledWith(HINT_ONLY);
+});
+
+test('a meme that ends after its room was left changes nothing', () => {
+  const { game, ui, room } = onBoard();
+  game.enter('scacchiera');
+  ctxOf(room('scacchiera')).meme('error');
+  const done = ui.showMeme.mock.lastCall![1];
+  game.leave();
+  game.enter('scacchiera');
+  game.startAudience(); // the countdown holds the help clock
+  done(); // the old meme ends late
+  vi.advanceTimersByTime(content.rooms.scacchiera.help.hintAfterSec! * 1000);
+  expect(ui.setHelp).not.toHaveBeenCalledWith(HINT_ONLY);
+  vi.advanceTimersByTime(content.audienceSeconds * 1000);
+  expect(ui.setHelp).toHaveBeenLastCalledWith(HINT_ONLY);
+});
+
+test('an unknown meme does nothing', () => {
+  const { game, ui, room } = onBoard();
+  game.enter('studio');
+  ctxOf(room('studio')).meme('nope');
+  expect(ui.showMeme).not.toHaveBeenCalled();
+});
+
+test('the confirmed skip shows the consolation meme, then solves the room', () => {
+  const { game, ui } = onBoard();
+  game.enter('scacchiera');
+  game.skip();
+  expect(ui.showMeme).toHaveBeenCalledWith(content.memes.consolation, expect.any(Function));
+  expect(game.state.solved).toEqual([]);
+  ui.showMeme.mock.lastCall![1]();
+  expect(game.state.solved).toEqual(['scacchiera']);
+  expect(ui.showBoard).toHaveBeenLastCalledWith(game.state, 'scacchiera');
+});
+
+test('Ctrl+Shift+N during the consolation meme solves the room once', () => {
+  const { game, ui } = onBoard();
+  game.enter('scacchiera');
+  game.skip();
+  game.solve();
+  ui.showMeme.mock.lastCall![1]();
+  expect(game.state.solved).toEqual(['scacchiera']);
+  expect(ui.showBoard).toHaveBeenCalledTimes(2); // at start, then once for the solve
+});
+
+// Screen changes: the UI says when the old screen has left and when a room is on screen.
+
+test('a room is unmounted when its screen has left', () => {
+  const t = onBoard({ slowScreens: true });
+  t.game.enter('studio');
+  t.game.leave();
+  expect(t.room('studio').unmount).not.toHaveBeenCalled();
+  t.screenGone();
+  t.screenGone();
+  expect(t.room('studio').unmount).toHaveBeenCalledOnce();
+});
+
+test('a room is unmounted before it mounts again', () => {
+  const t = onBoard({ slowScreens: true });
+  t.game.enter('studio');
+  t.game.leave();
+  t.game.enter('studio');
+  const studio = t.room('studio');
+  expect(studio.unmount).toHaveBeenCalledOnce();
+  expect(studio.unmount.mock.invocationCallOrder[0]).toBeLessThan(studio.mount.mock.invocationCallOrder[1]);
+});
+
+test('reset unmounts the open room at once', () => {
+  const t = onBoard({ slowScreens: true });
+  t.game.enter('studio');
+  t.game.reset();
+  expect(t.room('studio').unmount).toHaveBeenCalledOnce();
+});
+
+test('the help clock starts when the room is on screen', () => {
+  const t = onBoard({ slowScreens: true });
+  t.game.enter('scacchiera');
+  vi.advanceTimersByTime(200_000);
+  expect(t.ui.setHelp).not.toHaveBeenCalledWith(HINT_ONLY);
+  t.shown();
+  vi.advanceTimersByTime(content.rooms.scacchiera.help.hintAfterSec! * 1000);
+  expect(t.ui.setHelp).toHaveBeenLastCalledWith(HINT_ONLY);
+});
+
+test('a room left before it was on screen does not freeze the help ladder', () => {
+  const t = onBoard({ slowScreens: true });
+  t.game.enter('scacchiera');
+  t.game.leave();
+  t.game.enter('scacchiera');
+  t.shown();
+  vi.advanceTimersByTime(content.rooms.scacchiera.help.hintAfterSec! * 1000);
+  expect(t.ui.setHelp).toHaveBeenLastCalledWith(HINT_ONLY);
 });

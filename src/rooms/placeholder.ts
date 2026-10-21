@@ -1,5 +1,5 @@
 // Placeholder room: the real id and clues, with one button that solves the room and one that counts a
-// wrong attempt. Phase 4 replaces each placeholder with its real puzzle.
+// wrong attempt and shows the error meme. Phase 4 replaces each placeholder with its real puzzle.
 import type { Room, RoomId } from '../engine/types';
 import { el } from '../ui/dom';
 import { GRAPH } from './graph';
@@ -16,7 +16,10 @@ export function placeholderRoom(id: RoomId, audienceHelp: boolean): Room {
       const solve = el('button', 'button', texts.solve);
       const wrong = el('button', 'button button--quiet', texts.error);
       solve.addEventListener('click', () => ctx.complete());
-      wrong.addEventListener('click', () => ctx.reportError());
+      wrong.addEventListener('click', () => {
+        ctx.reportError();
+        ctx.meme('error');
+      });
       view = el('div', 'placeholder-room');
       view.append(solve, wrong);
       root.append(view);
