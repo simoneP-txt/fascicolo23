@@ -1,7 +1,8 @@
-// Help e2e: the audience countdown spends one token at a time until the jury has spoken, and Rapture
-// shows no audience button. The page clock is faked, so 30 seconds pass at once.
+// Help e2e: the audience countdown spends one token at a time until the jury has spoken, Rapture shows
+// no audience button, and the auto-help ladder offers a hint and then the way out by itself, with its
+// own texts in Room 46. The page clock is faked, so minutes pass at once.
 import { expect, test } from '@playwright/test';
-import { content, enterRoom, openCase, solveRoom } from './helpers';
+import { board, content, enterRoom, openCase, solveRoom } from './helpers';
 
 test('the audience countdown spends one token at a time', async ({ page }) => {
   await page.clock.install();
@@ -36,4 +37,45 @@ test('Rapture has no audience button', async ({ page }) => {
   await enterRoom(page, 'rapture');
   await expect(page.getByRole('button', { name: content.ui.audience.button })).toHaveCount(0);
   await expect(page.locator('[data-audience]')).toHaveCount(0);
+});
+
+test('help appears by itself in the chessboard', async ({ page }) => {
+  const { hintAfterSec, skipAfterSec } = content.rooms.scacchiera.help;
+  await page.clock.install();
+  await openCase(page);
+  await enterRoom(page, 'scacchiera');
+  const hint = page.getByRole('button', { name: content.ui.hint.button });
+  const skip = page.getByRole('button', { name: content.ui.skip.button });
+  await expect(hint).toBeHidden();
+  await expect(skip).toBeHidden();
+
+  await page.clock.runFor(hintAfterSec * 1000);
+  await expect(hint).toBeVisible();
+  await expect(page.locator('[data-witness]')).toContainText(content.witness.help);
+  await hint.click();
+  await expect(page.locator('[data-hint]')).toContainText('AIUTO 1 DI 2');
+  await expect(page.locator('[data-hint]')).toContainText(content.rooms.scacchiera.hints[0]);
+  await expect(hint).toBeHidden();
+
+  await page.clock.runFor((skipAfterSec - hintAfterSec) * 1000);
+  await skip.click();
+  await expect(page.getByRole('dialog')).toContainText(content.ui.skip.body);
+  await page.getByRole('button', { name: content.ui.skip.yes }).click();
+  await expect(board(page)).toBeVisible();
+  await expect(page.locator('[data-fragment="scacchiera"]')).toHaveText('Kg4');
+});
+
+test('Room 46 offers to show the culprit', async ({ page }) => {
+  const finale = content.rooms['stanza-46'];
+  await page.clock.install();
+  await openCase(page);
+  for (const id of ['studio', 'scacchiera', 'biblioteca', 'rapture']) await solveRoom(page, id);
+  await enterRoom(page, 'stanza-46');
+  await page.clock.runFor(finale.help.skipAfterSec * 1000);
+  await page.getByRole('button', { name: finale.skip.button }).click();
+  await page.getByRole('button', { name: finale.skip.no }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: finale.skip.button }).click();
+  await page.getByRole('button', { name: finale.skip.yes }).click();
+  await expect(page.locator('[data-fragment="stanza-46"]')).toHaveText('s');
 });

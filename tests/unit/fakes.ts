@@ -39,6 +39,8 @@ export function fakeUi() {
     showRoom: vi.fn<GameUi['showRoom']>(() => ({}) as HTMLElement),
     narrate: vi.fn<GameUi['narrate']>(),
     setAudience: vi.fn<GameUi['setAudience']>(),
+    setHelp: vi.fn<GameUi['setHelp']>(),
+    showHint: vi.fn<GameUi['showHint']>(),
   } satisfies GameUi;
 }
 

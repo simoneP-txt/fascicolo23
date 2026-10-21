@@ -1,8 +1,9 @@
 // Game controller: owns the state and the save, moves between the case opening, the board and the
-// rooms, builds each room's context and runs the audience help. Every way out of a room goes through
-// exit(), so the countdown ends, the session timer stops and unmount always runs. It never touches the
-// DOM: the screen is a GameUi.
+// rooms, builds each room's context and runs the audience help and the auto-help ladder. Every way out
+// of a room goes through exit(), so the countdown ends, the session timer stops and unmount always
+// runs. It never touches the DOM: the screen is a GameUi.
 import { audienceStatus, startCountdown, type AudienceStatus, type Countdown } from './audience';
+import { createLadder, type HelpStatus, type Ladder } from './autohelp';
 import { isOpen } from './clues';
 import { load, save, type StorageLike } from './save';
 import * as rules from './state';
@@ -24,6 +25,8 @@ export interface GameUi {
   showRoom(room: Room): HTMLElement; // the element the room mounts into
   narrate(text: string): void;
   setAudience(status: AudienceStatus): void;
+  setHelp(help: HelpStatus): void;
+  showHint(text: string, n: number, total: number): void;
 }
 
 export interface Game {
@@ -35,6 +38,7 @@ export interface Game {
   solve(): void; // ctx.complete(), Ctrl+Shift+N and the confirmed skip all land here
   startAudience(): void; // "Aiuto del pubblico?"
   finishAudience(): void; // "Abbiamo finito?"
+  hint(force: boolean): void; // "Un indizio?", or Ctrl+Shift+H with force
 }
 
 export interface GameDeps {
@@ -51,6 +55,8 @@ interface Session {
   timer: ReturnType<typeof setInterval>;
   countdown: Countdown | null;
   shown: string; // the audience status last sent to the screen
+  ladder: Ladder;
+  help: HelpStatus; // the help buttons last sent to the screen
 }
 
 export function createGame(deps: GameDeps): Game {
@@ -59,6 +65,8 @@ export function createGame(deps: GameDeps): Game {
   let state = load(content.tokens, storage);
   let session: Session | null = null;
   let onBoard = false;
+  // One ladder per room for the whole game: leaving pauses it, coming back resumes it.
+  const ladders = new Map<RoomId, Ladder>();
 
   const persist = (next: GameState) => {
     state = next;
@@ -80,10 +88,27 @@ export function createGame(deps: GameDeps): Game {
     ui.setAudience(status);
   };
 
+  // New help buttons are announced by the witness.
+  const showHelp = () => {
+    if (!session) return;
+    const help = session.ladder.status();
+    const before = session.help;
+    if (help.hint === before.hint && help.skip === before.skip) return;
+    session.help = help;
+    if ((help.hint && !before.hint) || (help.skip && !before.skip)) ui.narrate(content.witness.help);
+    ui.setHelp(help);
+  };
+
+  const showHint = (index: number) => {
+    const hints = content.rooms[session!.room.id].hints;
+    ui.showHint(hints[index], index + 1, hints.length);
+  };
+
   // The token is spent when the countdown ends, however it ends.
   const endAudience = () => {
     if (!session?.countdown) return;
     session.countdown = null;
+    session.ladder.resume();
     persist(rules.useToken(state));
     showAudience();
   };
@@ -91,12 +116,14 @@ export function createGame(deps: GameDeps): Game {
   const tick = () => {
     if (session?.countdown?.done()) endAudience();
     showAudience();
+    showHelp();
   };
 
   // The only way out of a room: whatever the room does wrong, the game goes on.
   const exit = () => {
     if (!session) return;
     endAudience();
+    session.ladder.pause();
     clearInterval(session.timer);
     const { room } = session;
     session = null;
@@ -106,18 +133,31 @@ export function createGame(deps: GameDeps): Game {
 
   const mount = (room: Room) => {
     onBoard = false;
-    const current: Session = { room, timer: setInterval(tick, TICK_MS), countdown: null, shown: '' };
+    const roomContent = content.rooms[room.id];
+    let ladder = ladders.get(room.id);
+    if (ladder) ladder.resume();
+    else ladders.set(room.id, (ladder = createLadder(roomContent.help, roomContent.hints.length, now)));
+    const help = ladder.status();
+    const current: Session = { room, timer: setInterval(tick, TICK_MS), countdown: null, shown: '', ladder, help };
     session = current;
     const live = () => session === current; // a room that outlives its exit is ignored
+
     const root = ui.showRoom(room);
-    ui.narrate(content.rooms[room.id].witness.intro);
+    ui.narrate(roomContent.witness.intro);
     showAudience();
+    ui.setHelp(help);
+    if (ladder.revealed() > 0) showHint(ladder.revealed() - 1);
+
     const ctx: GameContext = {
-      content: content.rooms[room.id],
+      content: roomContent,
       hasClue: (id) => state.clues.includes(id),
       narrate: (text) => live() && ui.narrate(text),
       playSfx: (name) => live() && audio.play(name),
-      reportError: () => {},
+      reportError: () => {
+        if (!live()) return;
+        current.ladder.error();
+        showHelp();
+      },
       complete: () => live() && game.solve(),
     };
     guard(() => room.mount(root, ctx));
@@ -148,17 +188,26 @@ export function createGame(deps: GameDeps): Game {
     },
     solve() {
       if (!session) return;
-      persist(rules.complete(state, session.room));
+      const { room } = session;
+      persist(rules.complete(state, room));
       exit();
+      ladders.delete(room.id);
       showBoard();
     },
     startAudience() {
       if (!session || session.countdown || !session.room.audienceHelp || state.tokens === 0) return;
       session.countdown = startCountdown(content.audienceSeconds, now);
+      session.ladder.pause();
       showAudience();
     },
     finishAudience() {
       endAudience();
+    },
+    hint(force) {
+      if (!session) return;
+      const index = session.ladder.reveal(force);
+      if (index !== null) showHint(index);
+      showHelp();
     },
   };
   const ui = deps.ui(game);
