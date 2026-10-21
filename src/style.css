@@ -229,7 +229,7 @@ body {
     'title title link link'
     'doors doors doors doors'
     'clues clues clues clues'
-    'tokens finale witness witness';
+    'tokens finale finale witness';
   gap: var(--space-5) var(--space-4);
   padding: var(--space-8) var(--space-12);
 }
@@ -308,6 +308,21 @@ body {
   color: var(--red);
   font-size: var(--text-small);
   transform: rotate(-10deg);
+}
+.board__finale {
+  grid-area: finale;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.case-stamp {
+  padding: 0 var(--space-2);
+  border: var(--border) solid var(--red);
+  background: var(--paper);
+  color: var(--red);
+  font-size: var(--text-heading);
+  transform: rotate(-4deg);
 }
 .board__clues {
   grid-area: clues;

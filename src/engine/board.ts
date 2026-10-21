@@ -1,10 +1,12 @@
 // Board: the case board drawn from the game state. The case title, the classified link with a black bar
 // for every missing fragment, a card per room (solved, open, or closed with what it lacks), the clues
-// found so far and the audience tokens. Phase 3 dresses it like mockup 01.
+// found so far and the audience tokens. Once every fragment is earned, the provisional finale: the
+// "CASO RISOLTO?" stamp and the button that opens the video (phase 5 moves both into Room 46).
+// Phase 3 dresses the board like mockup 01.
 import { tokenRow } from '../ui/audience';
 import { el } from '../ui/dom';
 import { isOpen } from './clues';
-import { linkParts } from './link';
+import { assembleLink, linkParts } from './link';
 import type { GameState } from './state';
 import type { ClueId, Content, Room, RoomId } from './types';
 
@@ -51,7 +53,17 @@ export function renderBoard(content: Content, rooms: readonly Room[], state: Gam
   tokens.append(el('div', 'board__tokens-title', content.ui.audience.button), tokenRow(state.tokens, content.tokens));
 
   screen.append(title, link, doors, clues, tokens);
+  if (parts.every((part) => part.shown)) screen.append(finale(content));
   return screen;
+}
+
+function finale(content: Content): HTMLElement {
+  const watch = el('button', 'button', content.ui.finale.watch);
+  // Electron hands https links to the system browser (electron/main.ts).
+  watch.addEventListener('click', () => window.open(assembleLink(content.link.map((part) => part.text)), '_blank'));
+  const block = el('div', 'board__finale');
+  block.append(el('div', 'case-stamp', content.ui.finale.stamp), watch);
+  return block;
 }
 
 function doorCard(room: Room, content: Content, state: GameState, onEnter: (id: RoomId) => void): HTMLElement {
