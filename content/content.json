@@ -3,6 +3,11 @@
     "title": "Fascicolo n. 23",
     "line": "Il caso si apre presto?"
   },
+  "tokens": 3,
+  "audienceSeconds": 30,
+  "sounds": {
+    "click": "assets/sounds/click.wav"
+  },
   "link": [
     { "room": "fascicolo", "text": "youtu.be/" },
     { "room": "studio", "text": "71" },
@@ -10,5 +15,132 @@
     { "room": "biblioteca", "text": "_v7" },
     { "room": "rapture", "text": "Qj" },
     { "room": "stanza-46", "text": "s" }
-  ]
+  ],
+  "witness": {
+    "board": "Da quassù si vede lontano?",
+    "help": "Ti serve una mano?"
+  },
+  "clues": {
+    "rule": { "label": "Obbedisce solo alle domande", "missing": "Serve una regola?" },
+    "profile": { "label": "Ogni frase è una domanda", "missing": "Serve un profilo?" },
+    "g4": { "label": "g4", "missing": "Servono delle coordinate?" },
+    "time-0451": { "label": "04:51", "missing": "Serve un codice?" },
+    "confession": { "label": "Confessione filmata", "missing": "Serve una confessione?" }
+  },
+  "rooms": {
+    "studio": {
+      "name": "Lo studio",
+      "header": "FASCICOLO N. 23 · LO STUDIO",
+      "witness": { "intro": "Cosa vede una mente quando chiude gli occhi?" },
+      "hints": [
+        "Ogni testimone sbaglia per un motivo diverso.",
+        "Conta come è formulata la domanda, non solo la risposta."
+      ],
+      "help": { "hintAfterSec": 180, "secondHintAfterSec": 300, "hintAfterErrors": 3, "skipAfterSec": 360, "skipAfterErrors": null },
+      "placeholder": { "solve": "Risolvi la stanza?", "error": "Sbaglia apposta?" }
+    },
+    "scacchiera": {
+      "name": "La scacchiera",
+      "header": "FASCICOLO N. 23 · LA SCACCHIERA",
+      "witness": { "intro": "Cosa c'è dietro quel muro di pezzi?" },
+      "hints": [
+        "Il re può andare solo dove nessun pezzo bianco arriva.",
+        "Prova le case intorno al re una per una: solo una è libera."
+      ],
+      "help": { "hintAfterSec": 120, "secondHintAfterSec": 240, "hintAfterErrors": 3, "skipAfterSec": 300, "skipAfterErrors": null },
+      "placeholder": { "solve": "Risolvi la stanza?", "error": "Sbaglia apposta?" }
+    },
+    "biblioteca": {
+      "name": "La biblioteca",
+      "header": "FASCICOLO N. 23 · LA BIBLIOTECA",
+      "witness": { "intro": "Lo senti anche tu, questo fruscio?" },
+      "hints": [
+        "Le coordinate della scacchiera valgono anche sullo scaffale.",
+        "Cerca il libro nella colonna g, alla riga 4."
+      ],
+      "help": { "hintAfterSec": 240, "secondHintAfterSec": 360, "hintAfterErrors": 3, "skipAfterSec": 420, "skipAfterErrors": null },
+      "placeholder": { "solve": "Risolvi la stanza?", "error": "Sbaglia apposta?" }
+    },
+    "rapture": {
+      "name": "Rapture?",
+      "header": "FASCICOLO N. 23 · RAPTURE",
+      "witness": { "intro": "Quanto si può scendere prima di perdersi?" },
+      "hints": [
+        "Il codice è l'orario trovato in biblioteca.",
+        "Esegui solo gli ordini che finiscono con il punto interrogativo."
+      ],
+      "help": { "hintAfterSec": null, "secondHintAfterSec": null, "hintAfterErrors": null, "skipAfterSec": 300, "skipAfterErrors": 3 },
+      "placeholder": { "solve": "Risolvi la stanza?", "error": "Sbaglia apposta?" }
+    },
+    "stanza-46": {
+      "name": "Stanza 46?",
+      "header": "FASCICOLO N. 23 · STANZA 46",
+      "witness": { "intro": "Chi di loro ha l'acqua alla gola?" },
+      "hints": [
+        "Appunta ogni indizio sul sospettato che riguarda.",
+        "Resta chi parla per domande e non ha un alibi."
+      ],
+      "help": { "hintAfterSec": 180, "secondHintAfterSec": 300, "hintAfterErrors": 3, "skipAfterSec": 360, "skipAfterErrors": null },
+      "locked": "Servono tutti gli indizi?",
+      "skip": {
+        "button": "Mostrami il colpevole?",
+        "body": "Il caso conta come risolto: l'ultimo frammento arriva lo stesso.",
+        "yes": "Sì, mostramelo?",
+        "no": "No, ci riprovo?"
+      },
+      "placeholder": { "solve": "Risolvi la stanza?", "error": "Sbaglia apposta?" }
+    }
+  },
+  "ui": {
+    "file": "FASCICOLO N. 23",
+    "case": "Il caso del punto interrogativo?",
+    "witnessLabel": "IL TESTIMONE",
+    "clueLabel": "INDIZIO",
+    "enter": "Entra?",
+    "solved": "RISOLTO?",
+    "back": "Torna alla lavagna?",
+    "link": {
+      "label": "PROVA N. 1 · INDIRIZZO SECRETATO",
+      "done": "PROVA N. 1 · INDIRIZZO COMPLETO"
+    },
+    "finale": {
+      "stamp": "CASO RISOLTO?",
+      "watch": "Guarda la confessione?"
+    },
+    "intro": {
+      "label": "PRATICA RISERVATA",
+      "question": "Vuoi aprire il caso?",
+      "yes": "Sì?",
+      "no": "No?"
+    },
+    "audience": {
+      "button": "Aiuto del pubblico?",
+      "spent": "La giuria ha già parlato?",
+      "label": "AIUTO DEL PUBBLICO",
+      "title": "Pubblico, tocca a voi?",
+      "seconds": "SECONDI",
+      "tokens": "GETTONI",
+      "done": "Abbiamo finito?"
+    },
+    "hint": {
+      "button": "Un indizio?",
+      "label": "AIUTO {n} DI {total}"
+    },
+    "skip": {
+      "button": "Apri la porta?",
+      "body": "La stanza conta come risolta: frammento e indizi arrivano lo stesso.",
+      "yes": "Sì, aprila?",
+      "no": "No, ci riprovo?"
+    },
+    "reset": {
+      "title": "Azzerare la partita?",
+      "body": "Frammenti, indizi e gettoni tornano come all'inizio.",
+      "yes": "Sì, azzera?",
+      "no": "No, continua?"
+    },
+    "debug": {
+      "title": "In quale stanza?",
+      "close": "Chiudi?"
+    }
+  }
 }
