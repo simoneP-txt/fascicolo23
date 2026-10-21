@@ -155,7 +155,6 @@ export function createGame(deps: GameDeps): Game {
     for (const release of [...session.holds]) release();
     session.ladder.pause();
     clearInterval(session.timer);
-    retire();
     leaving = session.room;
     session = null;
     audio.stopAll();

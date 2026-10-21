@@ -180,7 +180,8 @@ test('a room that throws on mount can still be solved with Ctrl+Shift+N or the s
   game.enter('scacchiera');
   vi.advanceTimersByTime(content.rooms.scacchiera.help.skipAfterSec * 1000);
   expect(ui.setHelp).toHaveBeenLastCalledWith({ hint: true, skip: true });
-  game.solve();
+  game.skip();
+  ui.showMeme.mock.lastCall![1](); // the consolation meme has gone
   expect(game.state.solved).toEqual(['studio', 'scacchiera']);
   error.mockRestore();
 });
