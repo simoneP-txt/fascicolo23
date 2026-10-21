@@ -16,6 +16,13 @@ test('the case opens offline with local fonts', async ({ context, page, baseURL 
   expect(outside).toEqual([]);
 });
 
+test('a click plays the click sound', async ({ page }) => {
+  await page.goto('/');
+  const sound = page.waitForResponse((response) => response.url().endsWith(content.sounds.click));
+  await page.getByRole('button', { name: content.ui.intro.yes }).click();
+  expect((await sound).ok()).toBe(true);
+});
+
 test('"No?" runs away from the mouse', async ({ page }) => {
   await page.goto('/');
   const no = page.getByRole('button', { name: content.ui.intro.no });

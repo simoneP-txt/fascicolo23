@@ -1,10 +1,16 @@
-// Witness: the speech bubble on the board and in every room, with its label and the current line.
+// Witness: the speech bubble on the board and in every room. Every line it says ends with exactly one
+// question mark, the running gag, whatever text a room hands it.
 import type { Content } from '../engine/types';
 import { el } from './dom';
 
 export interface Witness {
   el: HTMLElement;
   say(text: string): void;
+}
+
+/** The line as the witness says it: trailing spaces, periods, exclamations and ellipses become one "?". */
+export function question(text: string): string {
+  return `${text.trim().replace(/[\s.!?…]+$/u, '')}?`;
 }
 
 export function createWitness(content: Content): Witness {
@@ -15,7 +21,7 @@ export function createWitness(content: Content): Witness {
   return {
     el: bubble,
     say(text) {
-      line.textContent = text;
+      line.textContent = question(text);
     },
   };
 }
