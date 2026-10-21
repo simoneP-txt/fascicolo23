@@ -1,5 +1,6 @@
 // Game lifecycle: intro or board at start, doors that follow the clue graph, rooms mounted once and
-// completed once, and an unmount on every way out of a room, even when the room itself is broken.
+// completed once, and an unmount on every way out of a room, even when the room itself is broken. A
+// broken room can still be solved, and a room's context goes inert once the player leaves it.
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { validOrders } from '../../src/engine/clues';
 import { SAVE_KEY, load, save } from '../../src/engine/save';
@@ -142,6 +143,43 @@ test('a room that throws on mount does not block the game', () => {
   expect(ui.showBoard).toHaveBeenCalledTimes(2);
   expect(error).toHaveBeenCalledTimes(2);
   error.mockRestore();
+});
+
+test('a room that throws on mount can still be solved with Ctrl+Shift+N or the skip', () => {
+  const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const { game, ui, room } = onBoard();
+  for (const id of ['studio', 'scacchiera'] as const) {
+    room(id).mount.mockImplementation(() => {
+      throw new Error('broken mount');
+    });
+  }
+  game.enter('studio');
+  game.solve();
+  expect(game.state.solved).toEqual(['studio']);
+
+  game.enter('scacchiera');
+  vi.advanceTimersByTime(content.rooms.scacchiera.help.skipAfterSec * 1000);
+  expect(ui.setHelp).toHaveBeenLastCalledWith({ hint: true, skip: true });
+  game.solve();
+  expect(game.state.solved).toEqual(['studio', 'scacchiera']);
+  error.mockRestore();
+});
+
+test('a room that outlives its exit cannot touch the next room', () => {
+  const { game, ui, room } = onBoard();
+  game.enter('studio');
+  const old = ctxOf(room('studio'));
+  game.leave();
+  game.enter('scacchiera');
+  for (let i = 0; i < content.rooms.studio.help.hintAfterErrors!; i++) old.reportError();
+  old.complete();
+  expect(game.state.solved).toEqual([]);
+  expect(room('scacchiera').unmount).not.toHaveBeenCalled();
+
+  // Its errors did not count for it either.
+  game.leave();
+  game.enter('studio');
+  expect(ui.setHelp).toHaveBeenLastCalledWith({ hint: false, skip: false });
 });
 
 // Host actions behind the hidden hotkeys.

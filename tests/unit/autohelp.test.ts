@@ -1,6 +1,7 @@
 // Auto-help ladder: hints and the skip unlock at the thresholds in content.json (time or errors), paused
 // time does not count, Rapture never shows the hint button but Ctrl+Shift+H still works, and inside the
-// game the ladder pauses for the audience, announces new help and survives leaving the room.
+// game the ladder pauses for the audience, announces new help and survives leaving the room, running
+// again on return.
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createLadder } from '../../src/engine/autohelp';
 import { save } from '../../src/engine/save';
@@ -158,6 +159,11 @@ describe('in the game', () => {
     game.enter('studio');
     expect(ui.showHint).toHaveBeenCalledWith(content.rooms.studio.hints[0], 1, 2);
     expect(ui.setHelp).toHaveBeenLastCalledWith({ hint: false, skip: false });
+    // Back inside, the clock runs again: the second hint comes on time.
+    seconds(studio.secondHintAfterSec! - studio.hintAfterSec! - 1);
+    expect(ui.setHelp).toHaveBeenLastCalledWith({ hint: false, skip: false });
+    seconds(1);
+    expect(ui.setHelp).toHaveBeenLastCalledWith({ hint: true, skip: false });
   });
 
   test('the skip completes the room like Ctrl+Shift+N', () => {

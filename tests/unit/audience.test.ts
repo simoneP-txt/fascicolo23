@@ -1,9 +1,9 @@
 // Audience help: a countdown that spends exactly one token when it ends, however it ends (time out,
-// "Abbiamo finito?", leaving or solving the room), never two at once, a spent button at zero tokens
-// and no button at all in Rapture.
+// "Abbiamo finito?", leaving or solving the room, the debug menu), never two at once, gone with a
+// reset, a spent button at zero tokens and no button at all in Rapture.
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { audienceStatus, startCountdown } from '../../src/engine/audience';
-import { load, save } from '../../src/engine/save';
+import { SAVE_KEY, load, save } from '../../src/engine/save';
 import { addClues, newState, openCase, type GameState } from '../../src/engine/state';
 import type { RoomId } from '../../src/engine/types';
 import { content, memoryStorage, setup } from './fakes';
@@ -56,12 +56,15 @@ test('a token is spent when the 30 seconds end', () => {
 });
 
 test('two countdowns cannot run together', () => {
-  const { game } = inRoom('studio');
+  const { game, ui } = inRoom('studio');
   game.startAudience();
   vi.advanceTimersByTime(10_000);
   game.startAudience();
-  vi.advanceTimersByTime(COUNTDOWN);
+  vi.advanceTimersByTime(COUNTDOWN - 10_000);
   expect(game.state.tokens).toBe(2);
+  // The help clock was paused once and resumed once: the hint comes on time.
+  vi.advanceTimersByTime(content.rooms.studio.help.hintAfterSec! * 1000);
+  expect(ui.setHelp).toHaveBeenLastCalledWith({ hint: true, skip: false });
 });
 
 test('no countdown without tokens', () => {
@@ -109,4 +112,30 @@ test('solving the room during the countdown spends one token', () => {
   vi.advanceTimersByTime(COUNTDOWN);
   expect(game.state.tokens).toBe(2);
   expect(game.state.solved).toEqual(['studio']);
+});
+
+test('the debug menu during the countdown spends one token and the help still comes on time', () => {
+  const { game, ui } = inRoom('studio');
+  game.startAudience();
+  vi.advanceTimersByTime(5_000);
+  game.debugEnter('studio');
+  expect(game.state.tokens).toBe(2);
+  expect(vi.getTimerCount()).toBe(1); // the new session's clock only
+  vi.advanceTimersByTime(content.rooms.studio.help.hintAfterSec! * 1000);
+  expect(ui.setHelp).toHaveBeenLastCalledWith({ hint: true, skip: false });
+});
+
+test('reset during the countdown stops it and forgets the token', () => {
+  const { game, ui, storage } = inRoom('studio');
+  game.startAudience();
+  vi.advanceTimersByTime(5_000);
+  game.reset();
+  expect(vi.getTimerCount()).toBe(0);
+  expect(storage.getItem(SAVE_KEY)).toBeNull();
+  expect(game.state.tokens).toBe(3);
+
+  game.openCase();
+  game.enter('studio');
+  vi.advanceTimersByTime(content.rooms.studio.help.hintAfterSec! * 1000);
+  expect(ui.setHelp).toHaveBeenLastCalledWith({ hint: true, skip: false });
 });
