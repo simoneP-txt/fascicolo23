@@ -5,13 +5,13 @@ import './style.css';
 import json from '../content/content.json';
 import { checkGraph } from './engine/clues';
 import { validateContent } from './engine/content';
-import { graphRooms } from './rooms/graph';
+import { rooms } from './rooms';
 
 const app = document.querySelector('#app')!;
 
 try {
   validateContent(json);
-  const problems = checkGraph(graphRooms());
+  const problems = checkGraph(rooms);
   if (problems.length) throw new Error(`Clue graph: ${problems.join('; ')}`);
   app.append(
     Object.assign(document.createElement('h1'), { textContent: json.placeholder.title }),
