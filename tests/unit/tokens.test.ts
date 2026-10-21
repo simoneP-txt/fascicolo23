@@ -22,7 +22,15 @@ function pxLiterals(extension: string): number[] {
   return hits(/\d*\.?\d+px\b/g, extension).map((hit) => parseFloat(hit.slice(hit.lastIndexOf(' ') + 1)));
 }
 
-test('colors live only in tokens.css', () => expect(hits(/#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\(/gi)).toEqual([]));
+test('colors live only in tokens.css', () =>
+  expect(hits(/#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/gi)).toEqual([]));
+test('no named colors in stylesheets or in SVG markup', () => {
+  const named = 'white|black|red|green|blue|yellow|orange|purple|pink|brown|gr[ae]y|gold|silver|navy|teal|cyan|magenta';
+  const property = '(?:color|background(?:-color)?|fill|stroke|stop-color|(?:border|outline)(?:-\\w+)?|(?:box|text)-shadow)';
+  const inCss = hits(new RegExp(`\\b${property}\\s*:[^;{}]*(?<![\\w-])(?:${named})\\b`, 'gi'), '.css'); // not var(--red)
+  const inSvg = hits(/\b(?:fill|stroke|stop-color)="(?!none"|currentColor"|transparent"|var\(|url\()[^"]*"/g, '.ts');
+  expect([...inCss, ...inSvg]).toEqual([]);
+});
 test('durations and curves live only in tokens.css', () => expect(hits(/\b\d*\.?\d+m?s\b|cubic-bezier\(/g, '.css')).toEqual([]));
 test('lengths sit on the 8 px grid', () => expect(pxLiterals('.css').filter((px) => px % 8 !== 0)).toEqual([]));
 test('tokens.css has a single easing curve', () => {

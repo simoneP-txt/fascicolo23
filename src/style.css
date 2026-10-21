@@ -316,15 +316,6 @@
 .board__tokens-title {
   font-size: var(--text-game);
 }
-.overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--veil);
-}
 .dialog {
   width: 768px;
   align-items: center;

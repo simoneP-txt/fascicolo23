@@ -1,7 +1,8 @@
 // Screens: the GameUi the engine talks to. It puts the case opening, the board or a room on the stage;
 // a room gets a frame (header, way back to the board, audience help, witness, auto-help) and the area
-// it mounts into. The stage swaps screens at once for now, so the old screen is gone and a room is on
-// screen as soon as show() returns; a meme only plays its sound until the meme overlay exists.
+// it mounts into. Overlays go on the stage root, outside the screen's clip, so their veil reaches the
+// bands. The stage swaps screens at once for now, so the old screen is gone and a room is on screen as
+// soon as show() returns; a meme only plays its sound until the meme overlay exists.
 import type { AudienceStatus } from '../engine/audience';
 import { renderBoard } from '../engine/board';
 import type { Game, GameUi, Sfx } from '../engine/game';
@@ -56,18 +57,19 @@ export function createScreens(
       header.append(el('div', 'label room__title', content.rooms[room.id].header), back);
 
       witness = createWitness(content);
-      help = createHelpPanel(content, content.rooms[room.id], screen, () => game.hint(false), () => game.skip());
+      help = createHelpPanel(content, content.rooms[room.id], stage.root, () => game.hint(false), () => game.skip());
       screen.append(area, header, witness.el, help.el);
 
       audience = [];
+      let overlay: AudienceView | null = null;
       if (room.audienceHelp) {
         const button = createAudienceButton(content, () => game.startAudience());
-        const overlay = createAudienceOverlay(content, () => game.finishAudience());
+        overlay = createAudienceOverlay(content, () => game.finishAudience());
         header.append(button.el);
-        screen.append(overlay.el);
         audience = [button, overlay];
       }
       stage.show(screen, room.id);
+      if (overlay) stage.root.append(overlay.el);
       screenGone();
       shown();
       return area;

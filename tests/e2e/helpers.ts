@@ -11,11 +11,19 @@ export const content = JSON.parse(readFileSync('content/content.json', 'utf8'));
 /** The game of mockup 01: study and chessboard solved, their three clues found, one token spent. */
 export const MOCKUP_01: GameState = { opened: true, solved: ['studio', 'scacchiera'], clues: ['rule', 'profile', 'g4'], tokens: 2 };
 
-/** Writes this state as the save before every load of the page, so the game starts from it. */
+/** Writes this state as the save before the first load of the page in this tab, so the game starts from
+ *  it and a reload keeps whatever the test did since. */
 export async function seed(page: Page, state: GameState): Promise<void> {
   let saved = '';
   save(state, { getItem: () => null, setItem: (_key, value) => (saved = value), removeItem: () => {} });
-  await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [SAVE_KEY, saved]);
+  await page.addInitScript(
+    ([key, value]) => {
+      if (sessionStorage.getItem('e2e-seeded')) return;
+      sessionStorage.setItem('e2e-seeded', '1');
+      localStorage.setItem(key, value);
+    },
+    [SAVE_KEY, saved],
+  );
 }
 
 /** Blocks every request outside the local server and returns the list of the blocked URLs. */
