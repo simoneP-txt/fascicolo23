@@ -1,8 +1,10 @@
 // Token scan: colors, durations and the easing curve live only in src/ui/tokens.css; every other .css and
 // .ts file under src/ uses var(--…), and a pixel length written in a stylesheet sits on the 8 px grid.
+// The code reads a duration from its token at runtime, through parseDuration().
 import { readdirSync, readFileSync } from 'node:fs';
 import { extname } from 'node:path';
 import { expect, test } from 'vitest';
+import { parseDuration } from '../../src/ui/dom';
 
 const TOKENS = 'src/ui/tokens.css';
 
@@ -36,4 +38,9 @@ test('lengths sit on the 8 px grid', () => expect(pxLiterals('.css').filter((px)
 test('tokens.css has a single easing curve', () => {
   const tokensCss = readFileSync(TOKENS, 'utf8');
   expect(tokensCss.match(/cubic-bezier\(/g)).toHaveLength(1);
+});
+test('durations parse from their tokens', () => {
+  expect(parseDuration('480ms')).toBe(480);
+  expect(parseDuration(' 0.4s ')).toBe(400);
+  expect(parseDuration('')).toBe(0);
 });

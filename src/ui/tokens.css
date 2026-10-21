@@ -129,6 +129,7 @@
   --text-digit: 72px;
   --text-question: 88px;
   --text-countdown: 128px;
+  --text-meme: 160px; /* meme captions */
   --label-tracking: 0.12em;
 
   /* Spacing on the 8 px grid */
@@ -156,6 +157,7 @@
   --border: 4px;
   --border-thick: 8px;
   --border-frame: 16px; /* window frames */
+  --meme-outline: 10px; /* ink around a meme caption: 2 px at the 32 px of the sample */
   --pin: 24px;
 
   /* Shadows */
@@ -174,8 +176,10 @@
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --duration-press: 80ms;
   --duration-jump: 160ms;
+  --duration-meme: 1600ms; /* a meme on screen; its zoom takes the first eighth */
   --press-shift: 2px; /* how far a pressed control sinks */
   --press-scale: 0.98;
+  --meme-zoom: 1.35; /* the size a meme lands from */
 }
 
 /* Backdrops: the tones of each screen's top and bottom edge. The rooms keep one tone until phase 4
