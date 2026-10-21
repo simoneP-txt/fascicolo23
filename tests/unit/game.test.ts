@@ -2,7 +2,7 @@
 // completed once, and an unmount on every way out of a room, even when the room itself is broken.
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { validOrders } from '../../src/engine/clues';
-import { load, save } from '../../src/engine/save';
+import { SAVE_KEY, load, save } from '../../src/engine/save';
 import { newState, openCase } from '../../src/engine/state';
 import { graphRooms } from '../../src/rooms/graph';
 import { content, ctxOf, memoryStorage, setup } from './fakes';
@@ -142,4 +142,72 @@ test('a room that throws on mount does not block the game', () => {
   expect(ui.showBoard).toHaveBeenCalledTimes(2);
   expect(error).toHaveBeenCalledTimes(2);
   error.mockRestore();
+});
+
+// Host actions behind the hidden hotkeys.
+
+test('Ctrl+Shift+N on the board does nothing', () => {
+  const { game, ui } = onBoard();
+  game.solve();
+  expect(game.state.solved).toEqual([]);
+  expect(ui.showBoard).toHaveBeenCalledOnce();
+});
+
+test('Ctrl+Shift+G never goes over the maximum', () => {
+  const { game } = onBoard();
+  game.giveBackToken();
+  expect(game.state.tokens).toBe(3);
+});
+
+test('Ctrl+Shift+G gives back a spent token and redraws the screen', () => {
+  const storage = memoryStorage();
+  save({ ...openCase(newState(3)), tokens: 1 }, storage);
+  const { game, ui } = setup(storage);
+  game.start();
+  game.giveBackToken();
+  expect(game.state.tokens).toBe(2);
+  expect(load(3, storage).tokens).toBe(2);
+  expect(ui.showBoard).toHaveBeenLastCalledWith(game.state);
+
+  game.enter('studio');
+  game.giveBackToken();
+  expect(ui.setAudience).toHaveBeenLastCalledWith({ mode: 'ready', tokens: 3, max: 3 });
+});
+
+test('reset empties the save and returns to the intro', () => {
+  const { game, ui, room, storage } = onBoard();
+  game.enter('studio');
+  game.reset();
+  expect(room('studio').unmount).toHaveBeenCalledOnce();
+  expect(storage.getItem(SAVE_KEY)).toBeNull();
+  expect(game.state).toEqual(newState(3));
+  expect(ui.showIntro).toHaveBeenCalledOnce();
+});
+
+test('reset also forgets the help progress', () => {
+  const { game, ui } = onBoard();
+  game.enter('studio');
+  vi.advanceTimersByTime(content.rooms.studio.help.hintAfterSec! * 1000);
+  game.reset();
+  game.openCase();
+  game.enter('studio');
+  expect(ui.setHelp).toHaveBeenLastCalledWith({ hint: false, skip: false });
+});
+
+test('the debug menu enters any room with its required clues', () => {
+  const { game, ui, room } = setup();
+  game.start();
+  game.debugEnter('stanza-46');
+  expect(game.state.opened).toBe(true);
+  expect(game.state.clues).toEqual(expect.arrayContaining(['profile', 'time-0451', 'confession']));
+  expect(room('stanza-46').mount).toHaveBeenCalledOnce();
+  expect(ui.showRoom).toHaveBeenLastCalledWith(room('stanza-46'));
+});
+
+test('the debug menu leaves the open room first', () => {
+  const { game, room } = onBoard();
+  game.enter('studio');
+  game.debugEnter('rapture');
+  expect(room('studio').unmount).toHaveBeenCalledOnce();
+  expect(room('rapture').mount).toHaveBeenCalledOnce();
 });

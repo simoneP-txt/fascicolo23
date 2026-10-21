@@ -460,6 +460,13 @@ body {
   gap: var(--space-3);
 }
 
+.debug__rooms {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2);
+  width: 100%;
+}
+
 /* Auto-help, bottom right in every room (mockups 07, 10, 11). */
 .help {
   position: absolute;

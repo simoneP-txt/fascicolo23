@@ -5,7 +5,7 @@
 import { audienceStatus, startCountdown, type AudienceStatus, type Countdown } from './audience';
 import { createLadder, type HelpStatus, type Ladder } from './autohelp';
 import { isOpen } from './clues';
-import { load, save, type StorageLike } from './save';
+import { clear, load, save, type StorageLike } from './save';
 import * as rules from './state';
 import type { GameState } from './state';
 import type { Content, GameContext, Room, RoomId } from './types';
@@ -39,6 +39,9 @@ export interface Game {
   startAudience(): void; // "Aiuto del pubblico?"
   finishAudience(): void; // "Abbiamo finito?"
   hint(force: boolean): void; // "Un indizio?", or Ctrl+Shift+H with force
+  giveBackToken(): void; // Ctrl+Shift+G
+  debugEnter(id: RoomId): void; // the debug menu: opens the case, adds the room's clues, enters it
+  reset(): void; // Ctrl+Shift+R, once confirmed
 }
 
 export interface GameDeps {
@@ -208,6 +211,26 @@ export function createGame(deps: GameDeps): Game {
       const index = session.ladder.reveal(force);
       if (index !== null) showHint(index);
       showHelp();
+    },
+    giveBackToken() {
+      persist(rules.giveBackToken(state, content.tokens));
+      if (session) showAudience();
+      else if (onBoard) showBoard();
+    },
+    debugEnter(id) {
+      const room = rooms.find((candidate) => candidate.id === id);
+      if (!room) return;
+      exit();
+      persist(rules.addClues(rules.openCase(state), room.requires));
+      mount(room);
+    },
+    reset() {
+      exit();
+      ladders.clear();
+      clear(storage);
+      state = rules.newState(content.tokens);
+      onBoard = false;
+      ui.showIntro();
     },
   };
   const ui = deps.ui(game);
