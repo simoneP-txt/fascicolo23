@@ -170,7 +170,8 @@ describe('in the game', () => {
     const { game, ui } = inRoom('studio');
     seconds(studio.skipAfterSec);
     expect(ui.setHelp).toHaveBeenLastCalledWith({ hint: true, skip: true });
-    game.solve();
+    game.skip();
+    ui.showMeme.mock.lastCall![1](); // the consolation meme has gone
     expect(game.state.solved).toEqual(['studio']);
     expect(game.state.clues).toEqual(['rule', 'profile']);
   });

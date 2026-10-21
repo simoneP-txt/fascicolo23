@@ -2,7 +2,10 @@
   "tokens": 3,
   "audienceSeconds": 30,
   "sounds": {
-    "click": "assets/sounds/click.wav"
+    "click": "assets/sounds/click.wav",
+    "wish": "assets/sounds/wish.wav",
+    "boom": "assets/sounds/boom.wav",
+    "stamp": "assets/sounds/stamp.wav"
   },
   "link": [
     { "room": "fascicolo", "text": "youtu.be/" },
@@ -14,7 +17,12 @@
   ],
   "witness": {
     "board": "Da quassù si vede lontano?",
-    "help": "Ti serve una mano?"
+    "help": "Ti serve una mano?",
+    "wish": "Hai espresso un desiderio?"
+  },
+  "memes": {
+    "error": { "text": "Sicura?", "sound": "boom" },
+    "consolation": { "text": "Capita anche a Poirot?", "sound": "boom" }
   },
   "clues": {
     "rule": { "label": "Obbedisce solo alle domande", "missing": "Serve una regola?" },
@@ -27,6 +35,7 @@
     "studio": {
       "name": "Lo studio",
       "header": "FASCICOLO N. 23 · LO STUDIO",
+      "from": "dallo studio",
       "witness": { "intro": "Cosa vede una mente quando chiude gli occhi?" },
       "hints": [
         "Ogni testimone sbaglia per un motivo diverso.",
@@ -38,6 +47,7 @@
     "scacchiera": {
       "name": "La scacchiera",
       "header": "FASCICOLO N. 23 · LA SCACCHIERA",
+      "from": "dalla scacchiera",
       "witness": { "intro": "Cosa c'è dietro quel muro di pezzi?" },
       "hints": [
         "Il re può andare solo dove nessun pezzo bianco arriva.",
@@ -49,6 +59,7 @@
     "biblioteca": {
       "name": "La biblioteca",
       "header": "FASCICOLO N. 23 · LA BIBLIOTECA",
+      "from": "dalla biblioteca",
       "witness": { "intro": "Lo senti anche tu, questo fruscio?" },
       "hints": [
         "Le coordinate della scacchiera valgono anche sullo scaffale.",
@@ -60,6 +71,7 @@
     "rapture": {
       "name": "Rapture?",
       "header": "FASCICOLO N. 23 · RAPTURE",
+      "from": "da Rapture",
       "witness": { "intro": "Quanto si può scendere prima di perdersi?" },
       "hints": [
         "Il codice è l'orario trovato in biblioteca.",
@@ -71,6 +83,7 @@
     "stanza-46": {
       "name": "Stanza 46?",
       "header": "FASCICOLO N. 23 · STANZA 46",
+      "from": "dalla Stanza 46",
       "witness": { "intro": "Chi di loro ha l'acqua alla gola?" },
       "hints": [
         "Appunta ogni indizio sul sospettato che riguarda.",
@@ -137,6 +150,13 @@
     "debug": {
       "title": "In quale stanza?",
       "close": "Chiudi?"
+    },
+    "wish": {
+      "label": "FRAMMENTO N. {n}",
+      "clue": "NUOVO INDIZIO",
+      "clues": "NUOVI INDIZI",
+      "from": "dal fascicolo",
+      "continue": "Continua?"
     }
   }
 }

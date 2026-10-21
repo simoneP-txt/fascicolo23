@@ -1,5 +1,6 @@
 // Content schema: content.json must validate, a broken copy must name the faulty field, the help
-// thresholds and audience numbers must match the decisions, and every witness sentence must end with "?".
+// thresholds and audience numbers must match the decisions, every witness sentence must end with "?",
+// and every meme must have something to show and a sound that exists.
 import { expect, test } from 'vitest';
 import json from '../../content/content.json';
 import { validateContent } from '../../src/engine/content';
@@ -41,6 +42,24 @@ test('the link lists every room exactly once', () => {
   const broken = copy();
   broken.link = broken.link.filter((fragment: { room: string }) => fragment.room !== 'rapture');
   expect(() => validateContent(broken)).toThrow(/link/);
+});
+
+test('a meme needs a text or an image', () => {
+  const broken = copy();
+  broken.memes.error = { sound: 'boom' };
+  expect(() => validateContent(broken)).toThrow(/memes\.error/);
+});
+
+test('a meme sound must be listed in sounds', () => {
+  const broken = copy();
+  broken.memes.error.sound = 'nope';
+  expect(() => validateContent(broken)).toThrow(/memes\.error\.sound/);
+});
+
+test('the consolation meme of the confirmed skip exists', () => {
+  const broken = copy();
+  delete broken.memes.consolation;
+  expect(() => validateContent(broken)).toThrow(/memes\.consolation/);
 });
 
 test('thresholds follow decision 9', () => {

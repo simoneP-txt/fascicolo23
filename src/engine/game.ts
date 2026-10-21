@@ -1,14 +1,15 @@
 // Game controller: owns the state and the save, moves between the case opening, the board and the
 // rooms, builds each room's context and runs the audience help and the auto-help ladder. Every way out
-// of a room goes through exit(), so the countdown ends, the session timer stops and unmount always
-// runs. It never touches the DOM: the screen is a GameUi.
+// of a room goes through exit(), so the countdown ends, the session timer stops and every hold on the
+// help clock is released; the room is unmounted once its screen has left. Animations (a room coming on
+// screen, a meme) hold the help clock while they play. It never touches the DOM: the screen is a GameUi.
 import { audienceStatus, startCountdown, type AudienceStatus, type Countdown } from './audience';
 import { createLadder, type HelpStatus, type Ladder } from './autohelp';
 import { isOpen } from './clues';
 import { clear, load, save, type StorageLike } from './save';
 import * as rules from './state';
 import type { GameState } from './state';
-import type { Content, GameContext, Room, RoomId } from './types';
+import type { Content, GameContext, Meme, Room, RoomId } from './types';
 
 const TICK_MS = 250;
 
@@ -18,15 +19,19 @@ export interface Sfx {
   stopAll(): void;
 }
 
+/** The fragment just won: a room's, or "youtu.be/" when the case opens. */
+export type Earned = RoomId | 'fascicolo';
+
 /** What the game asks of the screen. */
 export interface GameUi {
   showIntro(): void;
-  showBoard(state: GameState): void;
-  showRoom(room: Room): HTMLElement; // the element the room mounts into
+  showBoard(state: GameState, earned: Earned | null): void; // earned: the fragment the board celebrates
+  showRoom(room: Room, shown: () => void): HTMLElement; // the element the room mounts into; shown: it is on screen
   narrate(text: string): void;
   setAudience(status: AudienceStatus): void;
   setHelp(help: HelpStatus): void;
   showHint(text: string, n: number, total: number): void;
+  showMeme(meme: Meme, done: () => void): void; // done, once, when the meme has gone
 }
 
 export interface Game {
@@ -35,7 +40,8 @@ export interface Game {
   openCase(): void;
   enter(id: RoomId): void; // only from the board, through an open and unsolved door
   leave(): void; // "Torna alla lavagna?"
-  solve(): void; // ctx.complete(), Ctrl+Shift+N and the confirmed skip all land here
+  solve(): void; // ctx.complete(), Ctrl+Shift+N and the end of a confirmed skip all land here
+  skip(): void; // the confirmed "Apri la porta?": the consolation meme, then solve()
   startAudience(): void; // "Aiuto del pubblico?"
   finishAudience(): void; // "Abbiamo finito?"
   hint(force: boolean): void; // "Un indizio?", or Ctrl+Shift+H with force
@@ -50,7 +56,7 @@ export interface GameDeps {
   audio: Sfx;
   storage?: StorageLike;
   now?: () => number;
-  ui(game: Game): GameUi;
+  ui(game: Game, screenGone: () => void): GameUi; // the screen calls screenGone once the old screen has left
 }
 
 interface Session {
@@ -60,6 +66,7 @@ interface Session {
   shown: string; // the audience status last sent to the screen
   ladder: Ladder;
   help: HelpStatus; // the help buttons last sent to the screen
+  holds: Set<() => void>; // animations holding the help clock, each released once
 }
 
 export function createGame(deps: GameDeps): Game {
@@ -67,6 +74,7 @@ export function createGame(deps: GameDeps): Game {
   const now = deps.now ?? (() => Date.now());
   let state = load(content.tokens, storage);
   let session: Session | null = null;
+  let leaving: Room | null = null; // left, but its screen is still on the way out
   let onBoard = false;
   // One ladder per room for the whole game: leaving pauses it, coming back resumes it.
   const ladders = new Map<RoomId, Ladder>();
@@ -76,9 +84,9 @@ export function createGame(deps: GameDeps): Game {
     save(state, storage);
   };
 
-  const showBoard = () => {
+  const showBoard = (earned: Earned | null = null) => {
     onBoard = true;
-    ui.showBoard(state);
+    ui.showBoard(state, earned);
     ui.narrate(content.witness.board);
   };
 
@@ -122,30 +130,49 @@ export function createGame(deps: GameDeps): Game {
     showHelp();
   };
 
+  // An animation holds the help clock: the ladder pauses now and resumes once, at release() or when
+  // the room is left, whichever comes first.
+  const hold = (current: Session): (() => void) => {
+    current.ladder.pause();
+    const release = () => {
+      if (current.holds.delete(release)) current.ladder.resume();
+    };
+    current.holds.add(release);
+    return release;
+  };
+
+  // The room that left is unmounted once: when its screen has left, or before any room mounts.
+  const retire = () => {
+    const room = leaving;
+    leaving = null;
+    if (room) guard(() => room.unmount());
+  };
+
   // The only way out of a room: whatever the room does wrong, the game goes on.
   const exit = () => {
     if (!session) return;
     endAudience();
+    for (const release of [...session.holds]) release();
     session.ladder.pause();
     clearInterval(session.timer);
-    const { room } = session;
+    leaving = session.room;
     session = null;
-    guard(() => room.unmount());
     audio.stopAll();
   };
 
   const mount = (room: Room) => {
+    retire();
     onBoard = false;
     const roomContent = content.rooms[room.id];
     let ladder = ladders.get(room.id);
     if (ladder) ladder.resume();
     else ladders.set(room.id, (ladder = createLadder(roomContent.help, roomContent.hints.length, now)));
     const help = ladder.status();
-    const current: Session = { room, timer: setInterval(tick, TICK_MS), countdown: null, shown: '', ladder, help };
+    const current: Session = { room, timer: setInterval(tick, TICK_MS), countdown: null, shown: '', ladder, help, holds: new Set() };
     session = current;
     const live = () => session === current; // a room that outlives its exit is ignored
 
-    const root = ui.showRoom(room);
+    const root = ui.showRoom(room, hold(current)); // the help clock waits until the room is on screen
     ui.narrate(roomContent.witness.intro);
     showAudience();
     ui.setHelp(help);
@@ -156,6 +183,7 @@ export function createGame(deps: GameDeps): Game {
       hasClue: (id) => state.clues.includes(id),
       narrate: (text) => live() && ui.narrate(text),
       playSfx: (name) => live() && audio.play(name),
+      meme: (id) => live() && Object.hasOwn(content.memes, id) && ui.showMeme(content.memes[id], hold(current)),
       reportError: () => {
         if (!live()) return;
         current.ladder.error();
@@ -177,7 +205,7 @@ export function createGame(deps: GameDeps): Game {
     openCase() {
       if (session) return;
       persist(rules.openCase(state));
-      showBoard();
+      showBoard('fascicolo');
     },
     enter(id) {
       const room = rooms.find((candidate) => candidate.id === id);
@@ -195,7 +223,16 @@ export function createGame(deps: GameDeps): Game {
       persist(rules.complete(state, room));
       exit();
       ladders.delete(room.id);
-      showBoard();
+      showBoard(room.id);
+    },
+    skip() {
+      if (!session) return;
+      const current = session;
+      const release = hold(current);
+      ui.showMeme(content.memes.consolation, () => {
+        release();
+        if (session === current) game.solve();
+      });
     },
     startAudience() {
       if (!session || session.countdown || !session.room.audienceHelp || state.tokens === 0) return;
@@ -226,6 +263,7 @@ export function createGame(deps: GameDeps): Game {
     },
     reset() {
       exit();
+      retire();
       ladders.clear();
       clear(storage);
       state = rules.newState(content.tokens);
@@ -233,7 +271,7 @@ export function createGame(deps: GameDeps): Game {
       ui.showIntro();
     },
   };
-  const ui = deps.ui(game);
+  const ui = deps.ui(game, retire);
   return game;
 }
 

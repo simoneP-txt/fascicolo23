@@ -15,6 +15,7 @@ const SKIP: Schema = { button: 'text', body: 'text', yes: 'text', no: 'text' };
 const ROOM: Schema = {
   name: 'text',
   header: 'text',
+  from: 'text',
   witness: { intro: 'text' },
   hints: 'texts',
   help: {
@@ -33,7 +34,7 @@ const SCHEMA: Schema = {
   tokens: 'count',
   audienceSeconds: 'seconds',
   sounds: 'map',
-  witness: { board: 'text', help: 'text' },
+  witness: { board: 'text', help: 'text', wish: 'text' },
   clues: each(CLUE_IDS, { label: 'text', missing: 'text' }),
   rooms: each(ROOM_IDS, ROOM),
   ui: {
@@ -52,8 +53,12 @@ const SCHEMA: Schema = {
     skip: SKIP,
     reset: { title: 'text', body: 'text', yes: 'text', no: 'text' },
     debug: { title: 'text', close: 'text' },
+    wish: { label: 'text', clue: 'text', clues: 'text', from: 'text', continue: 'text' },
   },
 };
+
+const MEME: Schema = { 'text?': 'text', 'image?': 'text', 'sound?': 'text' };
+const NEEDED_MEMES = ['consolation']; // shown by the engine itself, after a confirmed skip
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -102,9 +107,22 @@ function checkLink(link: unknown): void {
   }
 }
 
+// Every meme shows a caption or an image, and its sound is one of the listed sounds.
+function checkMemes(memes: unknown, sounds: Record<string, string>): void {
+  if (!isObject(memes)) fail('memes', 'must be an object');
+  for (const id of NEEDED_MEMES) if (memes[id] === undefined) fail(`memes.${id}`, 'is missing');
+  for (const [id, meme] of Object.entries(memes)) {
+    check(meme, MEME, `memes.${id}`);
+    const { text, image, sound } = meme as Record<string, unknown>;
+    if (text === undefined && image === undefined) fail(`memes.${id}`, 'needs a text or an image');
+    if (typeof sound === 'string' && !Object.hasOwn(sounds, sound)) fail(`memes.${id}.sound`, 'must name one of the sounds');
+  }
+}
+
 /** Returns the content typed, or throws an Error whose message names the faulty field. */
 export function validateContent(raw: unknown): Content {
   check(raw, SCHEMA, '');
   checkLink((raw as { link?: unknown }).link);
+  checkMemes((raw as { memes?: unknown }).memes, (raw as Content).sounds);
   return raw as Content;
 }
