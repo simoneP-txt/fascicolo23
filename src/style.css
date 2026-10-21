@@ -1,24 +1,362 @@
-/* Placeholder styles: base palette tokens from the poster, until the design system of phase 3. */
+/* Phase 2 styles: tokens and a plain look for the stage, the case opening, the board and the rooms.
+   Phase 3 brings the mockups' look; colors, sizes, spacing and durations stay tokens in :root. */
 :root {
   --paper: #f2efea;
+  --paper-dim: #e4ddd2;
   --red: #e94535;
   --ink: #1f1b17;
+  --ink-soft: #5c524a;
+  --ink-faint: rgba(31, 27, 23, 0.35);
+  --night: #1e2a44;
+  --cork: #b98d5f;
+  --sage: #8fa58a;
+  --walnut: #2b1d14;
+  --teal: #1f6f6a;
+  --sea: #0f2a3d;
+
   --font-report: 'Special Elite', monospace;
-  --text-body: 32px;
+  --text-label: 20px;
+  --text-small: 28px;
+  --text-game: 32px;
+  --text-witness: 36px;
+  --text-heading: 40px;
+  --text-display: 64px;
+
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 40px;
+  --space-6: 48px;
+  --space-8: 64px;
+  --space-9: 72px;
+  --space-11: 88px;
+  --space-12: 96px;
+
+  --stage-width: 1920px;
+  --stage-height: 1080px;
+  --radius: 8px;
+  --radius-bubble: 24px;
+  --border: 4px;
+  --shadow-card: 0 10px 18px rgba(30, 15, 5, 0.35);
+  --shadow-button: 0 8px 14px rgba(31, 27, 23, 0.35);
+
+  --duration-press: 80ms;
+  --duration-jump: 160ms;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
 }
 
 body {
-  margin: 0;
-  min-height: 100vh;
-  display: grid;
-  place-content: center;
-  text-align: center;
+  overflow: hidden;
   background: var(--ink);
-  color: var(--paper);
+  color: var(--ink);
   font-family: var(--font-report);
-  font-size: var(--text-body);
 }
 
-h1 {
+/* The host fills the window with the current screen's background; the stage sits centered on it. */
+#app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--backdrop, var(--ink));
+}
+#app[data-backdrop='intro'],
+#app[data-backdrop='scacchiera'] {
+  --backdrop: var(--night);
+}
+#app[data-backdrop='board'] {
+  --backdrop: var(--cork);
+}
+#app[data-backdrop='studio'] {
+  --backdrop: var(--sage);
+}
+#app[data-backdrop='biblioteca'] {
+  --backdrop: var(--walnut);
+}
+#app[data-backdrop='rapture'] {
+  --backdrop: var(--teal);
+}
+#app[data-backdrop='stanza-46'] {
+  --backdrop: var(--sea);
+}
+
+.stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--stage-width);
+  height: var(--stage-height);
+  overflow: hidden;
+  transform: translate(-50%, -50%) scale(var(--stage-scale, 1));
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+}
+
+.fatal {
+  margin: var(--space-12);
+  color: var(--paper);
+  font-family: var(--font-report);
+  font-size: var(--text-game);
+  white-space: pre-wrap;
+}
+
+/* Controls: never the browser's look, always a visible press. */
+.button {
+  appearance: none;
+  margin: 0;
+  border: 0;
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-4);
+  background: var(--red);
+  color: var(--paper);
+  box-shadow: var(--shadow-button);
+  font: inherit;
+  font-size: var(--text-game);
+  cursor: pointer;
+  transition:
+    transform var(--duration-press) var(--ease),
+    filter var(--duration-press) var(--ease);
+}
+.button:hover {
+  filter: brightness(1.08);
+}
+.button:active {
+  transform: translateY(2px) scale(0.98);
+}
+.button:focus-visible {
+  outline: var(--border) solid var(--paper);
+  outline-offset: var(--border);
+}
+.button--quiet {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 var(--border) var(--ink);
+}
+
+.card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--border);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--shadow-card);
+}
+
+.label {
+  color: var(--ink-soft);
+  font-size: var(--text-label);
+  letter-spacing: 0.12em;
+}
+
+/* Case opening (mockup 05). */
+.intro__folder {
+  position: absolute;
+  left: 512px;
+  top: 144px;
+  width: 896px;
+  height: 672px;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-9);
+}
+.intro__case {
+  margin: 0;
+  font-size: var(--text-witness);
+  font-style: italic;
+}
+.intro__question {
+  margin: 0;
+  font-size: var(--text-display);
+  line-height: 1;
+}
+.intro__actions {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: auto;
+}
+.intro__actions .button,
+.intro__slot,
+.intro__no {
+  box-sizing: border-box;
+  width: 224px;
+  height: var(--space-11);
+  font-size: var(--text-heading);
+}
+.intro__slot {
+  border: var(--border) dashed var(--ink-faint);
+  border-radius: var(--radius);
+}
+.intro__no {
+  position: absolute;
+  left: 840px;
+  top: 664px;
+  transition:
+    left var(--duration-jump) var(--ease),
+    top var(--duration-jump) var(--ease);
+}
+
+/* Board (mockup 01, plain). */
+.board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: 144px 320px 144px 1fr;
+  grid-template-areas:
+    'title title link link'
+    'doors doors doors doors'
+    'clues clues clues clues'
+    'tokens finale witness witness';
+  gap: var(--space-5) var(--space-4);
+  padding: var(--space-8) var(--space-12);
+}
+.board__title {
+  grid-area: title;
+}
+.board__case {
+  margin: 0;
+  font-size: var(--text-heading);
+  line-height: 1.1;
+}
+.board__link {
+  grid-area: link;
+  gap: var(--space-2);
+}
+.link {
+  display: flex;
+  align-items: center;
+  font-size: var(--text-heading);
+  white-space: nowrap;
+}
+.link__part {
   color: var(--red);
+}
+.link__part[data-fragment='fascicolo'] {
+  color: var(--ink);
+}
+.link__part[data-hidden] {
+  display: inline-block;
+  height: var(--space-4);
+  margin-left: var(--space-1);
+  background: var(--ink);
+}
+.board__doors {
+  grid-area: doors;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-4);
+}
+.door {
+  position: relative;
+  gap: var(--space-2);
+}
+.door--closed {
+  background: var(--paper-dim);
+}
+.door__name {
+  margin: 0;
+  font-size: var(--text-game);
+  line-height: 1.1;
+}
+.door__enter,
+.door__fragment {
+  align-self: flex-start;
+  margin-top: auto;
+}
+.door__fragment {
+  padding: 0 var(--space-2);
+  border-radius: var(--border);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: var(--text-game);
+}
+.door__missing {
+  margin-top: auto;
+  font-size: var(--text-small);
+  line-height: 1.2;
+}
+.stamp {
+  position: absolute;
+  right: var(--space-2);
+  top: var(--space-12);
+  padding: 0 var(--space-1);
+  border: var(--border) solid var(--red);
+  background: var(--paper);
+  color: var(--red);
+  font-size: var(--text-small);
+  transform: rotate(-10deg);
+}
+.board__clues {
+  grid-area: clues;
+  display: flex;
+  gap: var(--space-3);
+}
+.clue {
+  width: 320px;
+  border-top: var(--border) solid var(--red);
+}
+.clue__text {
+  font-size: var(--text-small);
+  line-height: 1.1;
+}
+
+/* Witness bubble. */
+.witness {
+  border: var(--border) solid var(--ink);
+  border-radius: var(--radius-bubble);
+  box-shadow: none;
+}
+.witness__line {
+  margin: 0;
+  font-size: var(--text-witness);
+  font-style: italic;
+  line-height: 1.15;
+}
+.board .witness {
+  grid-area: witness;
+  align-self: start;
+}
+.room .witness {
+  position: absolute;
+  right: var(--space-12);
+  top: 136px;
+  width: 456px;
+}
+
+/* Room frame: the room draws on the whole stage, the frame sits on top. */
+.room__area {
+  position: absolute;
+  inset: 0;
+}
+.room__header {
+  position: absolute;
+  left: var(--space-12);
+  right: var(--space-12);
+  top: var(--space-5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+.room__title {
+  padding: var(--space-1) var(--space-2);
+  background: var(--ink);
+  color: var(--paper);
+}
+.placeholder-room {
+  position: absolute;
+  left: var(--space-12);
+  top: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
 }
