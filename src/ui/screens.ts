@@ -77,10 +77,10 @@ export function createScreens(
       audience = [];
       let overlay: AudienceView | null = null;
       if (room.audienceHelp) {
-        const button = createAudienceButton(content, () => game.startAudience());
+        const audienceButton = createAudienceButton(content, () => game.startAudience());
         overlay = createAudienceOverlay(content, () => game.finishAudience());
-        header.append(button.el);
-        audience = [button, overlay];
+        header.append(audienceButton.el);
+        audience = [audienceButton, overlay];
       }
       const change = stage.show(screen, room.id);
       if (overlay) stage.root.append(overlay.el);

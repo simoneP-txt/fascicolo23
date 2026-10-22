@@ -76,6 +76,13 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
     await page.clock.runFor(16_500);
     await expect(page.locator('[data-seconds]')).toHaveText('14');
   },
+  // 06 with every token spent: the audience button, switched off, says the jury has spoken
+  'audience-spent': async (page) => {
+    await seed(page, { opened: true, solved: [], clues: [], tokens: 0 });
+    await page.goto('/');
+    await enterRoom(page, 'studio');
+    await expect(page.getByRole('button', { name: content.ui.audience.spent })).toBeDisabled();
+  },
   // 10, the frame: Rapture with the way out, offered after skipAfterSec
   'room-rapture': async (page) => {
     await page.clock.install();
