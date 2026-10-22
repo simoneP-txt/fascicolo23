@@ -1,14 +1,15 @@
 // Feedback e2e: every press answers with the click sound; a switched-off button keeps taking clicks, so it
 // sounds and shakes and does nothing else; a double click selects no text; Rapture's frame speaks Poiret
 // One. An init script counts the calls to HTMLMediaElement.prototype.play that play the click sound
-// (howler also calls play() once on an empty element, to probe the autoplay lock).
+// (howler also calls play() once on an empty element, to probe the autoplay lock). Durations are cut to 1 ms.
 import { expect, test, type Page } from '@playwright/test';
-import { content, door, enterRoom, MOCKUP_01, roomScreen, seed } from './helpers';
+import { content, door, enterRoom, MOCKUP_01, quick, roomScreen, seed } from './helpers';
 
 /** How many times the page has started the click sound. */
 const clicks = (page: Page) => page.evaluate(() => (window as unknown as { clicks: number }).clicks);
 
 test.beforeEach(async ({ page }) => {
+  await quick(page);
   await page.addInitScript((sound) => {
     const counter = window as unknown as { clicks: number };
     const play = HTMLMediaElement.prototype.play;

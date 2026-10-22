@@ -5,13 +5,15 @@
 // in percent of the one duration, --duration-wish, and moves only transform and opacity. The scene paints
 // its own sky, so it takes no veil. "Continua?" stays hidden until the end, from a timer: a screen change
 // can take the scene away before any animation event, and then the timer only shows a button nobody sees.
-// Its click closes the scene and runs onDone once.
+// Its click closes the scene and runs onDone once. Clicks on the stage wait a moment when the scene comes
+// and when it goes (hush).
 import './wish.css';
 import type { Earned, Sfx } from '../engine/game';
 import type { ClueId, Content } from '../engine/types';
 import { button } from './button';
 import { chip, paper } from './card';
 import { durationOf, el } from './dom';
+import { hush } from './stage';
 import { svg } from './svg';
 import { createWitness } from './witness';
 
@@ -107,6 +109,7 @@ export function showWish(parent: HTMLElement, content: Content, card: WishCard, 
     if (!open) return;
     open = false;
     scene.remove();
+    hush();
     onDone();
   });
   next.classList.add('wish__continue');
@@ -120,6 +123,7 @@ export function showWish(parent: HTMLElement, content: Content, card: WishCard, 
 
   scene.append(glow, svg(SKY), flash, svg(COMET), stars, column, witness.el);
   parent.append(scene);
+  hush();
   setTimeout(() => (next.hidden = false), durationOf('--duration-wish'));
   audio.play('wish');
 }

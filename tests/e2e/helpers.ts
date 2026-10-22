@@ -1,7 +1,8 @@
 // E2E helpers: the content texts, a network cut that records every request outside the local server,
 // the games of mockup 01 and of the end, a save written before the page loads, quick() for the tests that
-// do not watch animations, and the steps most tests repeat (opening the case and solving a placeholder
-// room, both through the wish, and the consolation that follows a confirmed "Apri la porta?").
+// do not watch animations, settled() and throughChange() for those that wait out a screen change, and the
+// steps most tests repeat (opening the case, entering and solving a placeholder room, both through the
+// wish, and the consolation that follows a confirmed "Apri la porta?").
 import { readFileSync } from 'node:fs';
 import { expect, type BrowserContext, type Page } from '@playwright/test';
 import { save, SAVE_KEY } from '../../src/engine/save';
@@ -60,6 +61,18 @@ export async function duration(page: Page, token: `--duration-${string}`): Promi
   return parseDuration(await page.evaluate((name) => getComputedStyle(document.documentElement).getPropertyValue(name), token));
 }
 
+/** Waits until no screen change is under way and the click guard after the last change, or after the last
+ *  overlay that came or went, is over, so a raw or forced click reaches the stage again. */
+export async function settled(page: Page): Promise<void> {
+  await expect(page.locator('#app[data-hush]')).toHaveCount(0);
+}
+
+/** Runs a paused page clock through one screen change: the ink comes in, the screens swap under it, the
+ *  ink goes. */
+export async function throughChange(page: Page): Promise<void> {
+  await page.clock.runFor(2 * (await duration(page, '--duration-dip')));
+}
+
 /** Blocks every request outside the local server and returns the list of the blocked URLs. */
 export async function offline(context: BrowserContext, baseURL: string): Promise<string[]> {
   const outside: string[] = [];
@@ -94,9 +107,11 @@ export async function openCase(page: Page): Promise<void> {
   await expect(board(page)).toBeVisible();
 }
 
+/** Enters the room from the board and waits until it is on screen and takes clicks. */
 export async function enterRoom(page: Page, id: string): Promise<void> {
   await door(page, id).getByRole('button', { name: content.ui.enter }).click();
   await expect(roomScreen(page, id)).toBeVisible();
+  await settled(page);
 }
 
 export async function solveRoom(page: Page, id: string): Promise<void> {

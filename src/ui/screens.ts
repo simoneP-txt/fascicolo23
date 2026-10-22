@@ -5,8 +5,9 @@
 // the board reveals the fragment, and what the room brought, once the wish is over. On the board the
 // witness speaks from the top right, its silhouette standing under the bubble. Overlays, the meme and the
 // wish included, go on the stage root: they scale with the stage, leave with the screen under them and
-// stay outside the screen's clip, so a veil reaches the bands. The stage swaps screens at once for now, so
-// the old screen is gone and a room is on screen as soon as show() returns.
+// stay outside the screen's clip, so a veil reaches the bands. A screen change tells the engine when the old
+// screen has gone, so it can unmount the room that left, and when a room is on screen, so its help clock
+// starts; the wish over a board waits until the board is on screen too.
 import './room.css';
 import type { AudienceStatus } from '../engine/audience';
 import { renderBoard } from '../engine/board';
@@ -40,8 +41,7 @@ export function createScreens(
       witness = null;
       audience = [];
       help = null;
-      stage.show(renderIntro(content, stage, () => game.openCase()), 'intro');
-      screenGone();
+      stage.show(renderIntro(content, stage, () => game.openCase()), 'intro').gone.then(screenGone);
     },
 
     showBoard(state, earned) {
@@ -50,9 +50,12 @@ export function createScreens(
       audience = [];
       help = null;
       board.el.append(witness.el);
-      stage.show(board.el, 'board');
-      if (earned) showWish(stage.root, content, wishCard(content, earned, gives(earned)), audio, () => board.reveal());
-      screenGone();
+      const change = stage.show(board.el, 'board');
+      change.gone.then(screenGone);
+      if (earned) {
+        const card = wishCard(content, earned, gives(earned));
+        change.shown.then(() => showWish(stage.root, content, card, audio, () => board.reveal()));
+      }
     },
 
     showRoom(room, shown) {
@@ -78,10 +81,10 @@ export function createScreens(
         header.append(button.el);
         audience = [button, overlay];
       }
-      stage.show(screen, room.id);
+      const change = stage.show(screen, room.id);
       if (overlay) stage.root.append(overlay.el);
-      screenGone();
-      shown();
+      change.gone.then(screenGone);
+      change.shown.then(shown);
       return area;
     },
 

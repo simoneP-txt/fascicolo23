@@ -2,7 +2,8 @@
    so the bands left by the 16:9 stage on a 16:10 screen continue its top and bottom edges. The stage
    sits centered, scaled by --stage-scale, and paints nothing, so the host's art shows through it; no
    text on it can be selected. An open overlay spreads its veil past the stage edges: one layer darkens
-   the screen and the bands.
+   the screen and the bands. A screen change dips the whole window in ink, and the same ink layer takes
+   the clicks while they are ignored.
    Cascade layers: shared typography sits in "base" and the shared components (buttons, cards, witness,
    dialogs) in "components", so the unlayered stylesheet of a screen or a room always wins over them,
    whatever order the modules load in. */
@@ -56,6 +57,33 @@ body {
   position: absolute;
   inset: 0;
   overflow: hidden;
+}
+
+/* A screen change (stage.ts): the host's ink layer covers the window, stage and bands alike. It fades in
+   while #app carries data-dip, the screens and backdrops swap under it, and it fades out, moving opacity
+   alone. The screen coming in is laid out at once but hidden until the swap. While #app carries data-hush
+   the layer takes every pointer event, seen or not, so a click lands on the host and presses nothing. */
+#app::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-dip) var(--ease);
+}
+
+#app[data-dip]::after {
+  opacity: 1;
+}
+
+#app[data-hush]::after {
+  pointer-events: auto;
+}
+
+.stage > [data-incoming] {
+  visibility: hidden;
 }
 
 /* An overlay covers the stage and centers its content. Its veil runs a whole window past every stage

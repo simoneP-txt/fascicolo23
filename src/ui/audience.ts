@@ -1,13 +1,14 @@
 // Audience help on screen: one "?" per token (filled while left, haloed while in use, dashed once used), the
 // transparent header button with its text and tokens, which stays clickable once the jury has spoken and
 // then only shakes, and the countdown dialog of mockup 14, redrawn from the status, its red arc stepping
-// down once a second.
+// down once a second. Clicks on the stage wait a moment when the dialog comes and when it goes (hush).
 import './dialog.css';
 import type { AudienceStatus } from '../engine/audience';
 import type { Content } from '../engine/types';
 import { button, setEnabled } from './button';
 import { paper } from './card';
 import { el } from './dom';
+import { hush } from './stage';
 import { svg } from './svg';
 
 export interface AudienceView {
@@ -79,8 +80,10 @@ export function createAudienceOverlay(content: Content, onFinish: () => void): A
   return {
     el: overlay,
     update(status) {
-      overlay.hidden = status.mode !== 'running';
-      if (status.mode !== 'running') return;
+      const running = status.mode === 'running';
+      if (running === overlay.hidden) hush(); // the dialog comes or goes
+      overlay.hidden = !running;
+      if (!running) return;
       seconds.textContent = String(status.secondsLeft);
       const left = status.secondsLeft / Math.max(1, content.audienceSeconds);
       arc.style.strokeDashoffset = String(RING_LENGTH * (1 - left));

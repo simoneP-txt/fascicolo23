@@ -189,6 +189,8 @@
   --duration-stamp: 240ms; /* a stamp beating onto a door card, once the bar is off */
   --duration-drop: 400ms; /* new clue cards coming down to the board, after the stamp */
   --duration-string: 560ms; /* their strings stretching to the doors, last */
+  --duration-dip: 240ms; /* each half of a screen change: the ink comes in, the screens swap, the ink goes */
+  --duration-hush: 300ms; /* clicks ignored after a screen change, and after an overlay comes or goes */
   --press-shift: 2px; /* how far a pressed control sinks */
   --press-scale: 0.98;
   --meme-zoom: 1.35; /* the size a meme lands from */

@@ -1,9 +1,10 @@
 // Wish e2e, with the real durations: every fragment won arrives with the wish of mockup 13 and its sound.
 // The wish moves only transform and opacity and shows "Continua?" only at its end; its click gives the
 // board back once, with the bar of the fragment lifted off. A reset during the wish leaves nothing of it
-// behind, and a fragment still missing carries no text on the board, whatever the wish shows.
+// behind, and a fragment still missing carries no text on the board, whatever the wish shows. The wish
+// starts once the board is on screen, so where the page clock stands still the test runs it through the dip.
 import { expect, test, type Page } from '@playwright/test';
-import { board, content, continueWish, duration, enterRoom, fragment, wish } from './helpers';
+import { board, content, continueWish, duration, enterRoom, fragment, throughChange, wish } from './helpers';
 
 const yes = (page: Page) => page.getByRole('button', { name: content.ui.intro.yes });
 const next = (page: Page) => page.getByRole('button', { name: content.ui.wish.continue });
@@ -49,6 +50,7 @@ test('"Continua?" waits for the end of the wish', async ({ page }) => {
   const length = await duration(page, '--duration-wish');
   await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
   await yes(page).click();
+  await throughChange(page);
   await expect(wish(page)).toBeVisible();
   await page.clock.runFor(1000);
   await expect(next(page)).toBeHidden();
