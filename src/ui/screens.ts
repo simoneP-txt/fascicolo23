@@ -2,10 +2,11 @@
 // a room gets the frame of mockups 06, 07 and 10 (header, way back to the board, audience button, the
 // witness top right with its silhouette, auto-help bottom right), colored by the room's frame theme, and
 // the area it mounts into. When the board comes with a fragment just won, the wish plays over it first and
-// the board reveals the fragment once the wish is over. Overlays, the meme and the wish included, go on the
-// stage root: they scale with the stage, leave with the screen under them and stay outside the screen's
-// clip, so a veil reaches the bands. The stage swaps screens at once for now, so the old screen is gone
-// and a room is on screen as soon as show() returns.
+// the board reveals the fragment, and what the room brought, once the wish is over. On the board the
+// witness speaks from the top right, its silhouette standing under the bubble. Overlays, the meme and the
+// wish included, go on the stage root: they scale with the stage, leave with the screen under them and
+// stay outside the screen's clip, so a veil reaches the bands. The stage swaps screens at once for now, so
+// the old screen is gone and a room is on screen as soon as show() returns.
 import './room.css';
 import type { AudienceStatus } from '../engine/audience';
 import { renderBoard } from '../engine/board';
@@ -44,8 +45,8 @@ export function createScreens(
     },
 
     showBoard(state, earned) {
-      const board = renderBoard(content, rooms, state, earned, (id) => game.enter(id));
-      witness = createWitness(content, 'right');
+      const board = renderBoard(content, rooms, state, earned, audio, (id) => game.enter(id));
+      witness = createWitness(content, 'down');
       audience = [];
       help = null;
       board.el.append(witness.el);

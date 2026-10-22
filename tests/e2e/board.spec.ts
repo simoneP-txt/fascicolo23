@@ -1,7 +1,25 @@
 // Board e2e: the case opens offline with local fonts, "No?" runs away, the doors follow the clue
-// graph, earned fragments survive a reload and rooms lead back to the board. Durations are cut to 1 ms.
+// graph, earned fragments survive a reload and rooms lead back to the board. The board of mockup 01 has
+// its clue cards, strings, locks, stamps and tokens; a room won stamps its door and stretches its strings
+// only once the wish is over, moving nothing but transform, opacity and the strings' dash; the finished
+// board offers the confession in place of the tokens. Durations are cut to 1 ms.
 import { expect, test } from '@playwright/test';
-import { board, content, door, enterRoom, offline, openCase, quick, roomScreen, solveRoom } from './helpers';
+import {
+  board,
+  content,
+  continueWish,
+  door,
+  enterRoom,
+  FINISHED,
+  MOCKUP_01,
+  offline,
+  openCase,
+  quick,
+  roomScreen,
+  seed,
+  solveRoom,
+  wish,
+} from './helpers';
 
 test.beforeEach(({ page }) => quick(page));
 
@@ -82,4 +100,61 @@ test('a solved room shows its fragment and survives a reload', async ({ page }) 
   await expect(board(page)).toBeVisible();
   await expect(page.locator('[data-fragment="studio"]')).toHaveText('71');
   await expect(door(page, 'studio')).toContainText(content.ui.solved);
+});
+
+test('the board shows the mockup 01 state', async ({ page }) => {
+  await seed(page, MOCKUP_01);
+  await page.goto('/');
+  await expect(page.locator('[data-clue]')).toHaveCount(3);
+  await expect(page.locator('[data-string]')).toHaveCount(3);
+  await expect(page.locator('[data-lock]')).toHaveCount(2);
+  for (const id of ['rapture', 'stanza-46']) await expect(door(page, id).locator('[data-lock]')).toHaveCount(1);
+  for (const id of ['studio', 'scacchiera']) await expect(door(page, id).locator('[data-stamp]')).toHaveText(content.ui.solved);
+  await expect(door(page, 'biblioteca').getByRole('button', { name: content.ui.enter })).toBeVisible();
+  await expect(page.locator('[data-token="left"]')).toHaveCount(2);
+});
+
+test('a solved room gets its stamp and its strings after the wish', async ({ page }) => {
+  await openCase(page);
+  await enterRoom(page, 'studio');
+  await page.getByRole('button', { name: content.rooms.studio.placeholder.solve }).click();
+  await expect(wish(page)).toBeVisible();
+  const stamp = door(page, 'studio').locator('[data-stamp]');
+  const strings = page.locator('[data-string]');
+  const clues = page.locator('[data-clue]');
+  // Under the wish the new pieces wait out of sight.
+  await expect(stamp).toHaveCSS('opacity', '0');
+  for (const clue of await clues.all()) await expect(clue).toHaveCSS('opacity', '0');
+  for (const string of await strings.all()) await expect(string).not.toHaveCSS('stroke-dashoffset', '0px');
+
+  const sound = page.waitForResponse((response) => response.url().endsWith(content.sounds.stamp));
+  await continueWish(page);
+  await expect(stamp).toHaveCSS('opacity', '1');
+  await expect(clues).toHaveCount(2);
+  for (const clue of await clues.all()) await expect(clue).toHaveCSS('opacity', '1');
+  await expect(strings).toHaveCount(2);
+  for (const string of await strings.all()) await expect(string).toHaveCSS('stroke-dashoffset', '0px');
+  expect((await sound).ok()).toBe(true);
+});
+
+test('the reveal moves only transform, opacity and the dash of the strings', async ({ page }) => {
+  await openCase(page);
+  await solveRoom(page, 'studio');
+  // Each step of the reveal fills both ways, so it stays listed once played.
+  const moved = await page.evaluate(() =>
+    document.getAnimations().flatMap((animation) => (animation.effect as KeyframeEffect).getKeyframes().flatMap(Object.keys)),
+  );
+  expect(moved).toContain('strokeDashoffset');
+  const allowed = ['transform', 'opacity', 'strokeDashoffset', 'offset', 'computedOffset', 'easing', 'composite'];
+  expect(moved.filter((property) => !allowed.includes(property))).toEqual([]);
+});
+
+test('the finished board offers the confession', async ({ page }) => {
+  await seed(page, FINISHED);
+  await page.goto('/');
+  await expect(board(page)).toContainText(content.ui.finale.stamp);
+  // Never pressed here: it opens the real video.
+  await expect(page.getByRole('button', { name: content.ui.finale.watch })).toBeVisible();
+  await expect(page.locator('[data-token]')).toHaveCount(0); // the finale takes the place of the tokens
+  await expect(page.locator('[data-string]')).toHaveCount(6);
 });

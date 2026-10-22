@@ -1,11 +1,12 @@
 // E2E helpers: the content texts, a network cut that records every request outside the local server,
-// a save written before the page loads, quick() for the tests that do not watch animations, and the steps
-// most tests repeat (opening the case and solving a placeholder room, both through the wish, and the
-// consolation that follows a confirmed "Apri la porta?").
+// the games of mockup 01 and of the end, a save written before the page loads, quick() for the tests that
+// do not watch animations, and the steps most tests repeat (opening the case and solving a placeholder
+// room, both through the wish, and the consolation that follows a confirmed "Apri la porta?").
 import { readFileSync } from 'node:fs';
 import { expect, type BrowserContext, type Page } from '@playwright/test';
 import { save, SAVE_KEY } from '../../src/engine/save';
 import type { GameState } from '../../src/engine/state';
+import { CLUE_IDS, ROOM_IDS } from '../../src/engine/types';
 import { parseDuration } from '../../src/ui/dom';
 
 export const content = JSON.parse(readFileSync('content/content.json', 'utf8'));
@@ -15,6 +16,9 @@ export const fragment = (source: string): string => content.link.find((part: { r
 
 /** The game of mockup 01: study and chessboard solved, their three clues found, one token spent. */
 export const MOCKUP_01: GameState = { opened: true, solved: ['studio', 'scacchiera'], clues: ['rule', 'profile', 'g4'], tokens: 2 };
+
+/** The game over: every room solved in the order of the list, every clue found, one token spent. */
+export const FINISHED: GameState = { opened: true, solved: [...ROOM_IDS], clues: [...CLUE_IDS], tokens: 2 };
 
 /** Writes this state as the save before the first load of the page in this tab, so the game starts from
  *  it and a reload keeps whatever the test did since. */

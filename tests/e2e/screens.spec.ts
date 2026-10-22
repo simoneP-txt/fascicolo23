@@ -4,7 +4,7 @@
 // three font families. Later tasks add rows to the table.
 import { expect, test, type Page } from '@playwright/test';
 import { bandsMatchTokens, colorDistance, edgeColors, fontFamilies, hasBands, outsideStage, overflowingText, smallText } from './checks';
-import { board, consolation, content, enterRoom, MOCKUP_01, openCase, quick, roomScreen, seed, wish } from './helpers';
+import { board, consolation, content, enterRoom, FINISHED, MOCKUP_01, openCase, quick, roomScreen, seed, wish } from './helpers';
 
 const SIZES = [
   [1707, 1067, 1.5],
@@ -41,6 +41,16 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
   // 01
   board: async (page) => {
     await seed(page, MOCKUP_01);
+    await page.goto('/');
+    await expect(board(page)).toBeVisible();
+  },
+  // 01 with the case just opened: two doors open, three locked, no clue yet
+  'board-start': async (page) => {
+    await openCase(page);
+  },
+  // 01 at the end: every door stamped, five clues and six strings, the provisional finale in place of the tokens
+  'board-end': async (page) => {
+    await seed(page, FINISHED);
     await page.goto('/');
     await expect(board(page)).toBeVisible();
   },

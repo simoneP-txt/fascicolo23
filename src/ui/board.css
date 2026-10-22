@@ -1,66 +1,177 @@
-/* Board, phase 2 layout: a grid of the case title, the classified link, the door cards, the clues found,
-   the tokens, the provisional finale and the witness. The cards, buttons, stamps and chips are the shared
-   components; Task 3.6 replaces this layout with mockup 01. */
-.board {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: 144px 320px 144px 1fr;
-  grid-template-areas:
-    'title title link link'
-    'doors doors doors doors'
-    'clues clues clues clues'
-    'tokens finale finale witness';
-  gap: var(--space-5) var(--space-4);
-  padding: var(--space-8) var(--space-12);
+/* Board (src/engine/board.ts), mockup 01: every card hangs at its own place on the 1920x1080 stage, tilted
+   by a degree or two, over the cork the host paints (tokens.css); the stage itself paints nothing. The red
+   strings run behind the cards. A door is solved (fragment chip and stamp), open (red outline and
+   "Entra?") or closed (darker paper, faded drawing, lock, what it lacks). After a wish, reveal() sets
+   data-reveal and what the room brought (data-new) arrives in turn: the stamp beats once the bar is off,
+   the clue cards come down, then their strings stretch. Only transform, opacity and the strings' dash move. */
+.board__strings {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .board__title,
 .board__link,
 .board__tokens,
-.door {
+.board__finale {
+  position: absolute;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-3);
-  border-radius: var(--radius-chip);
   box-shadow: var(--shadow-card);
 }
 
 .board__title {
-  grid-area: title;
+  left: 96px;
+  top: var(--space-8);
+  width: 1056px;
+  height: 144px;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  rotate: -0.6deg;
+}
+.board__title .label {
+  font-size: var(--text-tag);
 }
 .board__case {
   margin: 0;
-  font-size: var(--text-heading);
-  line-height: 1.1;
+  font-family: var(--font-witness);
+  font-size: var(--text-title);
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .board__link {
-  grid-area: link;
+  left: 1216px;
+  top: var(--space-8);
+  width: 616px;
+  height: 144px;
   gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  rotate: 0.8deg;
 }
 
-.board__doors {
-  grid-area: doors;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: var(--space-4);
+/* The window on the hill: the night inside a 16 px wooden frame. */
+.board__window {
+  position: absolute;
+  left: 96px;
+  top: 232px;
+  width: 384px;
+  height: 456px;
+  box-sizing: border-box;
+  border: var(--border-frame) solid var(--frame);
+  background: var(--night);
+  box-shadow: var(--shadow-window);
 }
-.door {
+.board__night {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Under the window: the tokens left, or at the end of the game the provisional finale. */
+.board__tokens,
+.board__finale {
+  left: 96px;
+  top: 744px;
+  width: 384px;
+  height: 216px;
+  rotate: -1deg;
+}
+.board__tokens {
+  --token-used: var(--token-spent);
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+.board__tokens-title {
+  font-family: var(--font-witness);
+  font-size: var(--text-witness);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.board__tokens .token {
+  width: var(--space-8);
+  height: var(--space-8);
+  font-size: var(--text-heading);
+}
+/* The finale: the big stamp, tilted less than a door's so it clears the button, over a button as wide as
+   the card, whose text takes two lines. */
+.board__finale {
+  justify-content: center;
   gap: var(--space-2);
+  padding: var(--space-3);
+}
+.board__stamp {
+  align-self: center;
+  font-size: var(--text-heading);
+  rotate: -4deg;
+}
+.board__watch {
+  white-space: normal;
+}
+
+.door {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 288px;
+  height: 296px;
+  padding: var(--space-3);
+  box-shadow: var(--shadow-door);
+}
+.door--open {
+  box-shadow:
+    0 0 0 var(--border) var(--red),
+    var(--shadow-door);
 }
 .door--closed {
   background-color: var(--paper-dim);
 }
+
+.door__art {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  height: var(--space-11);
+  border-radius: var(--radius-chip);
+  background: var(--paper-art);
+}
+.door--closed .door__art {
+  background: var(--paper-art-dim);
+}
+.door__drawing {
+  width: 104px;
+  height: var(--space-11);
+}
+.door--closed .door__drawing {
+  opacity: 0.55;
+}
+.door__lock {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  color: var(--ink-soft);
+}
+
 .door__name {
   margin: 0;
-  font-size: var(--text-game);
-  line-height: 1.1;
+  font-family: var(--font-witness);
+  font-size: var(--text-witness);
+  font-weight: 600;
+  line-height: 1.2;
 }
-.door__enter,
-.door__fragment {
+.door__fragment,
+.door__enter {
   align-self: flex-start;
   margin-top: auto;
+}
+.door__enter {
+  min-height: var(--space-6);
   font-size: var(--text-game);
 }
 .door__missing {
@@ -71,36 +182,94 @@
 .door__stamp {
   position: absolute;
   right: var(--space-2);
-  top: var(--space-12);
+  top: var(--space-10);
+  rotate: -10deg;
 }
 
-.board__clues {
-  grid-area: clues;
-  display: flex;
-  gap: var(--space-3);
+.board .clue {
+  position: absolute;
 }
 
-.board__tokens {
-  grid-area: tokens;
-  align-self: start;
-  gap: var(--space-2);
+/* The witness at the top right: the bubble, its tail turned towards the silhouette standing under it. */
+.board .witness {
+  position: absolute;
+  left: 1376px;
+  top: 232px;
+  width: 456px;
 }
-.board__tokens-title {
-  font-size: var(--text-game);
+.board .witness__bubble {
+  transform-origin: calc(100% - var(--space-10)) 100%;
 }
-
-.board__finale {
-  grid-area: finale;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-3);
+.board .witness__bubble::after {
+  left: auto;
+  right: var(--space-8);
 }
-.board__stamp {
+.board .witness__line {
   font-size: var(--text-heading);
 }
+.board .witness__figure {
+  position: absolute;
+  left: 392px;
+  top: 216px;
+  margin: 0;
+}
+/* Its faint shadow at its feet. */
+.board .witness::before {
+  content: '';
+  position: absolute;
+  left: 408px;
+  top: 392px;
+  width: var(--space-6);
+  height: var(--space-1);
+  border-radius: 50%;
+  background: var(--ink);
+  opacity: 0.25;
+}
 
-.board .witness {
-  grid-area: witness;
-  align-self: start;
+/* What the room brought waits out of sight under the wish, then comes in turn. */
+.door__stamp[data-new],
+.clue[data-new] {
+  opacity: 0;
+}
+[data-string][data-new] {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.board[data-reveal] .door__stamp[data-new] {
+  animation: board-stamp var(--duration-stamp) var(--ease) var(--duration-peel) both;
+}
+.board[data-reveal] .clue[data-new] {
+  animation: board-drop var(--duration-drop) var(--ease) calc(var(--duration-peel) + var(--duration-stamp)) both;
+}
+.board[data-reveal] [data-string][data-new] {
+  animation: board-string var(--duration-string) var(--ease)
+    calc(var(--duration-peel) + var(--duration-stamp) + var(--duration-drop)) both;
+}
+
+@keyframes board-stamp {
+  from {
+    opacity: 0;
+    transform: scale(var(--stamp-scale));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes board-drop {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--space-8)));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes board-string {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
