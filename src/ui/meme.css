@@ -1,7 +1,8 @@
 /* Meme: over the veil every .overlay spreads, the image and the caption land together with a sudden zoom,
    from --meme-zoom down to their size in the first eighth of --duration-meme, then hold still until
    meme.ts takes the overlay away. The caption is the Anton sample of 04-sistema at meme size: white, upper
-   case, its ink outline in the sample's proportion. Over an image it sits on the bottom edge, as in a meme. */
+   case, its ink outline in the sample's proportion, drawn under the letters. Over an image it sits on the
+   bottom edge, as in a meme. */
 
 /* The frame clips the zoom at the stage edges. The overlay itself never clips: its veil runs past them. */
 .meme__frame {
@@ -39,7 +40,10 @@
   text-align: center;
   text-transform: uppercase;
   text-wrap: balance;
-  -webkit-text-stroke: var(--meme-outline) var(--ink);
+  /* Under the letters, where only its outer half shows, hence twice the width. Painted over them, its inner
+     half cut dark notches where a letter's contours cross, as in the N. */
+  -webkit-text-stroke: calc(2 * var(--meme-outline)) var(--ink);
+  paint-order: stroke fill;
 }
 
 .meme__image + .meme__caption {

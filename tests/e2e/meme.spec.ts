@@ -72,3 +72,41 @@ test('a screen change during a meme leaves no overlay behind', async ({ page }) 
   await continueWish(page);
   await expect(page.locator('[data-fragment="studio"]')).toHaveText('71');
 });
+
+test(`the caption's outline lies under its letters`, async ({ page }) => {
+  await page.clock.install();
+  await study(page);
+  await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000); // the meme stays until the test is done
+  await page.getByRole('button', { name: content.rooms.studio.placeholder.error }).click();
+  await expect(meme(page).locator('figure')).toHaveCSS('transform', 'none'); // the zoom has landed
+  const outlined = await page.screenshot();
+  await meme(page).locator('figcaption').evaluate((node) => node.style.setProperty('-webkit-text-stroke-width', '0px'));
+  const bare = await page.screenshot();
+  // The pixels the bare letters cover in full, white (nothing else is, under the veil), and those of them that
+  // the outline turns dark. Stroked text is drawn as paths and bare text from the glyph cache, so a few edge
+  // pixels lose a little white either way, but none turns dark.
+  const [letters, darkened] = await page.evaluate(
+    async (shots) => {
+      const [withOutline, without] = await Promise.all(
+        shots.map(async (base64) => {
+          const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+          const image = await createImageBitmap(new Blob([bytes], { type: 'image/png' }));
+          const context = new OffscreenCanvas(image.width, image.height).getContext('2d')!;
+          context.drawImage(image, 0, 0);
+          return context.getImageData(0, 0, image.width, image.height).data;
+        }),
+      );
+      const all = (data: Uint8ClampedArray, i: number, test: (value: number) => boolean) => [0, 1, 2].every((c) => test(data[i + c]));
+      let [letters, darkened] = [0, 0];
+      for (let i = 0; i < without.length; i += 4) {
+        if (!all(without, i, (value) => value >= 250)) continue;
+        letters++;
+        if (all(withOutline, i, (value) => value < 128)) darkened++;
+      }
+      return [letters, darkened];
+    },
+    [outlined.toString('base64'), bare.toString('base64')],
+  );
+  expect(letters).toBeGreaterThan(0);
+  expect(darkened).toBe(0);
+});
