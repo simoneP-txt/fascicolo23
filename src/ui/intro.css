@@ -84,7 +84,7 @@
 .intro__question {
   margin: 0;
   font-family: var(--font-witness);
-  font-size: var(--text-digit);
+  font-size: var(--text-question);
   font-weight: 600;
   line-height: 1.2;
 }
