@@ -5,7 +5,8 @@
 import { expect, test } from '@playwright/test';
 import { isOpen, validOrders } from '../../src/engine/clues';
 import { graphRooms } from '../../src/rooms/graph';
-import { board, content, door, offline, openCase, quick, solveRoom } from './helpers';
+import { board, content, door, offline, openCase, quick } from './helpers';
+import { solveRoom } from './play';
 
 test.beforeEach(({ page }) => quick(page));
 

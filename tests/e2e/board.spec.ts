@@ -20,9 +20,9 @@ import {
   recordPlays,
   roomScreen,
   seed,
-  solveRoom,
   wish,
 } from './helpers';
+import { solveRoom } from './play';
 
 test.beforeEach(({ page }) => quick(page));
 

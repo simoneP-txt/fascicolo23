@@ -8,9 +8,10 @@ import { validateContent } from '../../src/engine/content';
 import { createGame, type GameUi, type Sfx } from '../../src/engine/game';
 import type { StorageLike } from '../../src/engine/save';
 import { ROOM_IDS, type GameContext, type Room, type RoomId } from '../../src/engine/types';
+import { rooms as realRooms } from '../../src/rooms';
 import { GRAPH } from '../../src/rooms/graph';
 
-export const content = validateContent(json);
+export const content = validateContent(json, realRooms); // with the real rooms' own fields, as main.ts checks it
 
 export function memoryStorage(): StorageLike & { data: Map<string, string> } {
   const data = new Map<string, string>();

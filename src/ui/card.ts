@@ -27,10 +27,11 @@ export function chip(text: string): HTMLElement {
   return el('span', 'chip', text);
 }
 
-export function clueCard(content: Content, clue: ClueId, tilt?: number): HTMLElement {
-  const label = content.clues[clue].label;
+/** A clue card, from the texts every screen shares: the board passes the whole content, a room ctx.common. */
+export function clueCard(texts: Pick<Content, 'clues' | 'ui'>, clue: ClueId, tilt?: number): HTMLElement {
+  const label = texts.clues[clue].label;
   const card = paper('clue', { pin: true, tilt });
   card.dataset.clue = clue;
-  card.append(el('div', 'label', content.ui.clueLabel), el('div', /\s/.test(label) ? 'clue__text' : 'clue__code', label));
+  card.append(el('div', 'label', texts.ui.clueLabel), el('div', /\s/.test(label) ? 'clue__text' : 'clue__code', label));
   return card;
 }

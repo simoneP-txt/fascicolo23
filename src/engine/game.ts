@@ -180,6 +180,7 @@ export function createGame(deps: GameDeps): Game {
 
     const ctx: GameContext = {
       content: roomContent,
+      common: { clues: content.clues, ui: content.ui },
       hasClue: (id) => state.clues.includes(id),
       narrate: (text) => live() && ui.narrate(text),
       playSfx: (name) => live() && audio.play(name),

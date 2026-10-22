@@ -3,6 +3,7 @@
 import { expect, test } from 'vitest';
 import content from '../../content/content.json';
 import { validateContent } from '../../src/engine/content';
+import { rooms } from '../../src/rooms';
 import { assembleLink, linkParts } from '../../src/engine/link';
 import { complete, newState, openCase, type GameState } from '../../src/engine/state';
 
@@ -11,7 +12,7 @@ test('fragments assemble into the final link', () => {
 });
 
 test('only earned fragments are shown', () => {
-  const link = validateContent(content).link;
+  const link = validateContent(content, rooms).link;
   const shown = (state: GameState) => linkParts(link, state).filter((part) => part.shown).map((part) => part.text);
   expect(shown(newState(3))).toEqual([]);
   const opened = openCase(newState(3));

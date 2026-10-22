@@ -2,7 +2,8 @@
 // no audience button, and the auto-help ladder offers a hint and then the way out by itself, with its
 // own texts in Room 46. The page clock is faked, so minutes pass at once, and durations are cut to 1 ms.
 import { expect, test } from '@playwright/test';
-import { board, content, continueWish, enterRoom, openCase, quick, solveRoom } from './helpers';
+import { board, content, continueWish, enterRoom, openCase, quick } from './helpers';
+import { solveRoom } from './play';
 
 test.beforeEach(({ page }) => quick(page));
 
@@ -35,7 +36,7 @@ test('the audience countdown spends one token at a time', async ({ page }) => {
 
 test('Rapture has no audience button', async ({ page }) => {
   await openCase(page);
-  for (const id of ['studio', 'scacchiera', 'biblioteca']) await solveRoom(page, id);
+  for (const id of ['studio', 'scacchiera', 'biblioteca'] as const) await solveRoom(page, id);
   await enterRoom(page, 'rapture');
   await expect(page.getByRole('button', { name: content.ui.audience.button })).toHaveCount(0);
   await expect(page.locator('[data-audience]')).toHaveCount(0);
@@ -72,7 +73,7 @@ test('Room 46 offers to show the culprit', async ({ page }) => {
   const finale = content.rooms['stanza-46'];
   await page.clock.install();
   await openCase(page);
-  for (const id of ['studio', 'scacchiera', 'biblioteca', 'rapture']) await solveRoom(page, id);
+  for (const id of ['studio', 'scacchiera', 'biblioteca', 'rapture'] as const) await solveRoom(page, id);
   await enterRoom(page, 'stanza-46');
   await page.clock.runFor(finale.help.skipAfterSec * 1000);
   await page.getByRole('button', { name: finale.skip.button }).click();

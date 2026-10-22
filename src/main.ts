@@ -25,7 +25,7 @@ import { createStage } from './ui/stage';
 const host = document.querySelector<HTMLElement>('#app')!;
 
 try {
-  const content = validateContent(json);
+  const content = validateContent(json, rooms);
   const problems = checkGraph(rooms);
   if (problems.length) throw new Error(`Clue graph: ${problems.join('; ')}`);
   const audio = createAudio(content.sounds);

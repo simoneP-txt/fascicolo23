@@ -12,6 +12,12 @@
   inset: 0;
 }
 
+/* The success beat: once the room marks its area solved, its result stays on screen for --duration-beat
+   with no way back, no audience button and no help, so no press can lose the solution or spend a token. */
+.room:has(> .room__area[data-solved]) :is(.room__back, .audience, .help) {
+  visibility: hidden;
+}
+
 .room__header {
   position: absolute;
   inset: 0 0 auto;

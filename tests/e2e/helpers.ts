@@ -1,8 +1,8 @@
 // E2E helpers: the content texts, a network cut that records every request outside the local server,
 // the games of mockup 01 and of the end, a save written before the page loads, quick() for the tests that
 // do not watch animations, settled() and throughChange() for those that wait out a screen change, and the
-// steps most tests repeat (opening the case, entering and solving a placeholder room, both through the
-// wish, and the consolation that follows a confirmed "Apri la porta?").
+// steps most tests repeat (opening the case through the wish, entering a room, and the consolation that
+// follows a confirmed "Apri la porta?"). Solving a room lives in play.ts.
 import { readFileSync } from 'node:fs';
 import { expect, type BrowserContext, type Page } from '@playwright/test';
 import { save, SAVE_KEY } from '../../src/engine/save';
@@ -135,13 +135,6 @@ export async function enterRoom(page: Page, id: string): Promise<void> {
   await door(page, id).getByRole('button', { name: content.ui.enter }).click();
   await expect(roomScreen(page, id)).toBeVisible();
   await settled(page);
-}
-
-export async function solveRoom(page: Page, id: string): Promise<void> {
-  await enterRoom(page, id);
-  await page.getByRole('button', { name: content.rooms[id].placeholder.solve }).click();
-  await continueWish(page);
-  await expect(board(page)).toBeVisible();
 }
 
 /** "Apri la porta?" offered in the study and confirmed, with the case open and nothing solved. The page

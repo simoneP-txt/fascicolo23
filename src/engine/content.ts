@@ -1,18 +1,22 @@
 // Content validation: checks content.json at startup against a schema that mirrors Content, so a
-// broken edit stops the game with the faulty field named instead of failing halfway through a room.
-import { CLUE_IDS, ROOM_IDS, type Content } from './types';
+// broken edit stops the game with the faulty field named instead of failing halfway through a room. Each
+// room adds its own fields to the ones every room shares.
+import { CLUE_IDS, ROOM_IDS, type Content, type Room } from './types';
 
 // Leaf kinds: text = non-empty string, texts = non-empty list of texts, seconds = number >= 0,
 // count = whole number >= 0, map = object of texts. A trailing "?" on a kind also accepts null;
 // a trailing "?" on a key makes the key optional.
 type Kind = 'text' | 'texts' | 'seconds' | 'seconds?' | 'count' | 'count?' | 'map';
-type Schema = Kind | { [key: string]: Schema };
+/** A leaf kind, [item] for a non-empty list whose every item follows item, or an object of fields. */
+export type Schema = Kind | readonly [Schema] | { readonly [key: string]: Schema };
 
 const each = (ids: readonly string[], schema: Schema): Schema => Object.fromEntries(ids.map((id) => [id, schema]));
 
 const SKIP: Schema = { button: 'text', body: 'text', yes: 'text', no: 'text' };
 
-const ROOM: Schema = {
+// The fields every room shares. A room's own schema adds its fields and replaces the common ones it names,
+// so a room with more witness lines lists intro among them.
+const ROOM: Record<string, Schema> = {
   name: 'text',
   header: 'text',
   from: 'text',
@@ -30,32 +34,36 @@ const ROOM: Schema = {
   'placeholder?': { solve: 'text', error: 'text' },
 };
 
-const SCHEMA: Schema = {
-  tokens: 'count',
-  audienceSeconds: 'seconds',
-  sounds: 'map',
-  witness: { board: 'text', help: 'text', wish: 'text' },
-  clues: each(CLUE_IDS, { label: 'text', missing: 'text' }),
-  rooms: each(ROOM_IDS, ROOM),
-  ui: {
-    file: 'text',
-    case: 'text',
-    witnessLabel: 'text',
-    clueLabel: 'text',
-    enter: 'text',
-    solved: 'text',
-    back: 'text',
-    link: { label: 'text', done: 'text' },
-    finale: { stamp: 'text', watch: 'text' },
-    intro: { label: 'text', question: 'text', yes: 'text', no: 'text' },
-    audience: { button: 'text', spent: 'text', label: 'text', title: 'text', seconds: 'text', tokens: 'text', done: 'text' },
-    hint: { button: 'text', label: 'text' },
-    skip: SKIP,
-    reset: { title: 'text', body: 'text', yes: 'text', no: 'text' },
-    debug: { title: 'text', close: 'text' },
-    wish: { label: 'text', clue: 'text', clues: 'text', from: 'text', continue: 'text' },
-  },
-};
+// The whole file, each room with the common fields and its own.
+function schemaOf(rooms: readonly Pick<Room, 'id' | 'schema'>[]): Schema {
+  const room = (id: string): Schema => ({ ...ROOM, ...rooms.find((candidate) => candidate.id === id)?.schema });
+  return {
+    tokens: 'count',
+    audienceSeconds: 'seconds',
+    sounds: 'map',
+    witness: { board: 'text', help: 'text', wish: 'text' },
+    clues: each(CLUE_IDS, { label: 'text', missing: 'text' }),
+    rooms: Object.fromEntries(ROOM_IDS.map((id) => [id, room(id)])),
+    ui: {
+      file: 'text',
+      case: 'text',
+      witnessLabel: 'text',
+      clueLabel: 'text',
+      enter: 'text',
+      solved: 'text',
+      back: 'text',
+      link: { label: 'text', done: 'text' },
+      finale: { stamp: 'text', watch: 'text' },
+      intro: { label: 'text', question: 'text', yes: 'text', no: 'text' },
+      audience: { button: 'text', spent: 'text', label: 'text', title: 'text', seconds: 'text', tokens: 'text', done: 'text' },
+      hint: { button: 'text', label: 'text' },
+      skip: SKIP,
+      reset: { title: 'text', body: 'text', yes: 'text', no: 'text' },
+      debug: { title: 'text', close: 'text' },
+      wish: { label: 'text', clue: 'text', clues: 'text', from: 'text', continue: 'text' },
+    },
+  };
+}
 
 const MEME: Schema = { 'text?': 'text', 'image?': 'text', 'sound?': 'text' };
 const NEEDED_MEMES = ['consolation']; // shown by the engine itself, after a confirmed skip
@@ -67,6 +75,7 @@ const MEME_IMAGE = /^assets\/memes\/[^/\\]+$/; // a file shipped in public/asset
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
+const isList = (schema: Schema): schema is readonly [Schema] => Array.isArray(schema);
 const isText = (value: unknown) => typeof value === 'string' && value.trim() !== '';
 const isSeconds = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value >= 0;
 const isCount = (value: unknown) => typeof value === 'number' && Number.isInteger(value) && value >= 0;
@@ -89,6 +98,11 @@ function check(value: unknown, schema: Schema, path: string): void {
   if (typeof schema === 'string') {
     const [ok, problem] = KINDS[schema];
     if (!ok(value)) fail(path, problem);
+    return;
+  }
+  if (isList(schema)) {
+    if (!Array.isArray(value) || value.length === 0) fail(path, 'must be a non-empty list');
+    value.forEach((item, i) => check(item, schema[0], `${path}[${i}]`));
     return;
   }
   if (!isObject(value)) fail(path, 'must be an object');
@@ -125,9 +139,10 @@ function checkMemes(memes: unknown, sounds: Record<string, string>): void {
   }
 }
 
-/** Returns the content typed, or throws an Error whose message names the faulty field. */
-export function validateContent(raw: unknown): Content {
-  check(raw, SCHEMA, '');
+/** Returns the content typed, or throws an Error whose message names the faulty field. The rooms bring their
+ *  own fields (Room.schema). */
+export function validateContent(raw: unknown, rooms: readonly Pick<Room, 'id' | 'schema'>[]): Content {
+  check(raw, schemaOf(rooms), '');
   const { sounds } = raw as Content;
   for (const id of NEEDED_SOUNDS) if (!Object.hasOwn(sounds, id)) fail(`sounds.${id}`, 'is missing');
   checkLink((raw as { link?: unknown }).link);

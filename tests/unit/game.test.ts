@@ -149,6 +149,14 @@ test('the context answers for the room', () => {
   expect(ctxOf(room('biblioteca')).hasClue('g4')).toBe(true);
 });
 
+test('a room reads the shared texts', () => {
+  const { game, room } = onBoard();
+  game.enter('studio');
+  const { common } = ctxOf(room('studio'));
+  expect(common.clues.g4.label).toBe('g4');
+  expect(common.ui.clueLabel).toBe('INDIZIO');
+});
+
 test('a room that throws on mount does not block the game', () => {
   const error = vi.spyOn(console, 'error').mockImplementation(() => {});
   const { game, ui, room } = onBoard();
