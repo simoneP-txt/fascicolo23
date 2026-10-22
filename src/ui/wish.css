@@ -1,7 +1,7 @@
 /* Wish (src/ui/wish.ts), mockup 13: a scene of its own over the board, so it takes no veil. The night fills
-   the stage and the scene clips whatever runs past its edges (rays, flash, the star on its way in), while
-   the bands continue its sky and its hill (tokens.css). Every animation lasts --duration-wish and holds its
-   last frame; the keyframes split it in percent:
+   the stage and the scene clips whatever runs past its edges (the star on its way in); the rays and the
+   flash fade out before the top edge. The bands continue its sky and its hill (tokens.css). Every
+   animation lasts --duration-wish and holds its last frame; the keyframes split it in percent:
      0-25 %    the shooting star crosses the sky to the corner of the card
      25-35 %   a flash where it lands; the rays and the halo come up, then turn slowly until the end
      35-60 %   the five stars land one after another
@@ -25,6 +25,16 @@
 .wish__column,
 .wish__witness {
   position: absolute;
+}
+
+/* The rays, the halo and the flash. Their box stays still while they turn, so its static mask can fade them
+   out over the top 192 px: they end before the top edge, where a 16:10 screen shows its band, instead of
+   being cut there. The hill covers them at the bottom, and at the sides they end inside the stage. The mask
+   also clips them to the stage. */
+.wish__light {
+  position: absolute;
+  inset: 0;
+  mask-image: linear-gradient(transparent, black 192px);
 }
 
 /* The rays and the halo, 1520 px around the middle of the card at (960, 552). */

@@ -3,7 +3,7 @@
 // checks the stage rules: nothing leaves the stage, no text is too small or overflows its box, at most
 // three font families. Later tasks add rows to the table.
 import { expect, test, type Page } from '@playwright/test';
-import { bandsMatchTokens, colorDistance, edgeColors, fontFamilies, hasBands, outsideStage, overflowingText, smallText } from './checks';
+import { bandsMatchTokens, edgeJumps, fontFamilies, hasBands, outsideStage, overflowingText, smallText } from './checks';
 import { board, consolation, content, enterRoom, FINISHED, MOCKUP_01, openCase, quick, roomScreen, seed, wish } from './helpers';
 
 const SIZES = [
@@ -13,14 +13,14 @@ const SIZES = [
 ] as const;
 
 /** The wish at its end, with "Continua?" on screen. On the party screen its bands hold the wish's backdrop
- *  tokens and continue the sky and the hill at the stage edges, not the cork of the board under it. */
+ *  tokens and continue the sky and the hill all along the stage edges, not the cork of the board under it,
+ *  and no ray ends cut straight at an edge. */
 async function wishEnded(page: Page): Promise<void> {
   await expect(wish(page).getByRole('button', { name: content.ui.wish.continue })).toBeVisible();
   if (!(await hasBands(page))) return;
   await bandsMatchTokens(page, 'wish');
   for (const edge of ['top', 'bottom'] as const) {
-    const { outside, inside } = await edgeColors(page, edge);
-    expect(colorDistance(outside, inside), `wish at the ${edge} edge of the stage`).toBeLessThanOrEqual(48);
+    expect(Math.max(...(await edgeJumps(page, edge))), `wish at the ${edge} edge of the stage`).toBeLessThanOrEqual(12);
   }
 }
 

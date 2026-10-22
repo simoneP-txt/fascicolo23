@@ -1,5 +1,6 @@
 // E2E checks: the average color of a patch of the window, read by decoding a screenshot in a canvas of
-// the page, the color a token holds, whether the bands continue the screen's backdrop, and the stage
+// the page, the color a token holds, whether the bands continue the screen's backdrop, at one patch or
+// along the whole edge of the stage, and the stage
 // rules of CLAUDE.md, measured at the 1920x1080 design size: nothing leaves the stage, no text under
 // 28 px (20 px for a .label), no text overflowing its box, at most three font families on screen.
 import { expect, type Page } from '@playwright/test';
@@ -17,20 +18,34 @@ export const colorDistance = (a: Rgb, b: Rgb) => Math.abs(a.r - b.r) + Math.abs(
 
 export const luminance = ({ r, g, b }: Rgb) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
+/** Average color of each PATCH-wide column of this box of the window, in window pixels. */
+async function columnColors(page: Page, clip: { x: number; y: number; width: number; height: number }): Promise<Rgb[]> {
+  const png = await page.screenshot({ clip, scale: 'css' });
+  return page.evaluate(
+    async ([base64, patch]) => {
+      const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+      const image = await createImageBitmap(new Blob([bytes], { type: 'image/png' }));
+      const context = new OffscreenCanvas(image.width, image.height).getContext('2d')!;
+      context.drawImage(image, 0, 0);
+      const { data, width, height } = context.getImageData(0, 0, image.width, image.height);
+      const columns: Rgb[] = [];
+      for (let left = 0; left + patch <= width; left += patch) {
+        const sum = [0, 0, 0];
+        for (let y = 0; y < height; y++) {
+          for (let x = left; x < left + patch; x++) for (let c = 0; c < 3; c++) sum[c] += data[(y * width + x) * 4 + c];
+        }
+        const count = patch * height;
+        columns.push({ r: sum[0] / count, g: sum[1] / count, b: sum[2] / count });
+      }
+      return columns;
+    },
+    [png.toString('base64'), PATCH] as const,
+  );
+}
+
 /** Average color of the PATCH x PATCH square whose top left corner is (x, y), in window pixels. */
 export async function patchColor(page: Page, x: number, y: number): Promise<Rgb> {
-  const png = await page.screenshot({ clip: { x, y, width: PATCH, height: PATCH }, scale: 'css' });
-  return page.evaluate(async (base64) => {
-    const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
-    const image = await createImageBitmap(new Blob([bytes], { type: 'image/png' }));
-    const context = new OffscreenCanvas(image.width, image.height).getContext('2d')!;
-    context.drawImage(image, 0, 0);
-    const { data } = context.getImageData(0, 0, image.width, image.height);
-    const sum = [0, 0, 0];
-    for (let i = 0; i < data.length; i += 4) for (let c = 0; c < 3; c++) sum[c] += data[i + c];
-    const count = data.length / 4;
-    return { r: sum[0] / count, g: sum[1] / count, b: sum[2] / count };
-  }, png.toString('base64'));
+  return (await columnColors(page, { x, y, width: PATCH, height: PATCH }))[0];
 }
 
 async function stageBox(page: Page) {
@@ -49,14 +64,28 @@ export async function bandColor(page: Page, band: 'top' | 'bottom'): Promise<Rgb
   return patchColor(page, Math.round((width - PATCH) / 2), Math.round(middle - PATCH / 2));
 }
 
+/** The tops of the patches just outside and just inside the top or bottom edge of the stage. */
+async function edgeRows(page: Page, edge: 'top' | 'bottom'): Promise<[outside: number, inside: number]> {
+  const stage = await stageBox(page);
+  const bottom = stage.y + stage.height;
+  return edge === 'top' ? [Math.floor(stage.y) - PATCH, Math.ceil(stage.y)] : [Math.ceil(bottom), Math.floor(bottom) - PATCH];
+}
+
 /** The patches just outside and just inside the top or bottom edge of the stage, mid-window. */
 export async function edgeColors(page: Page, edge: 'top' | 'bottom'): Promise<{ outside: Rgb; inside: Rgb }> {
-  const stage = await stageBox(page);
   const x = Math.round((page.viewportSize()!.width - PATCH) / 2);
-  const bottom = stage.y + stage.height;
-  const [outside, inside] =
-    edge === 'top' ? [Math.floor(stage.y) - PATCH, Math.ceil(stage.y)] : [Math.ceil(bottom), Math.floor(bottom) - PATCH];
+  const [outside, inside] = await edgeRows(page, edge);
   return { outside: await patchColor(page, x, outside), inside: await patchColor(page, x, inside) };
+}
+
+/** Patch by patch along the whole window, the color distance between just outside and just inside the top
+ *  or bottom edge of the stage: a drawing cut straight at the edge shows as a jump. */
+export async function edgeJumps(page: Page, edge: 'top' | 'bottom'): Promise<number[]> {
+  const { width } = page.viewportSize()!;
+  const row = (y: number) => columnColors(page, { x: 0, y, width, height: PATCH });
+  const [outside, inside] = await edgeRows(page, edge);
+  const [outer, inner] = [await row(outside), await row(inside)];
+  return outer.map((color, i) => colorDistance(color, inner[i]));
 }
 
 /** Whether the window leaves bands above and below the stage, as the 16:10 party screen does. */

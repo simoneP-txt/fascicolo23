@@ -76,10 +76,11 @@ export function showWish(parent: HTMLElement, content: Content, card: WishCard, 
   const scene = el('div', 'wish');
   scene.dataset.wish = '';
 
-  const glow = svg(GLOW);
-  glow.dataset.bleed = ''; // the rays run past the stage edges, where the scene clips them
-  const flash = el('div', 'wish__flash');
-  flash.dataset.bleed = '';
+  // The rays, the halo and the flash run past the stage edges, inside a still box that fades them out
+  // before the top edge (wish.css).
+  const light = el('div', 'wish__light');
+  light.dataset.bleed = '';
+  light.append(svg(GLOW), el('div', 'wish__flash'));
   const stars = el('div', 'wish__stars');
   for (let i = 0; i < 5; i++) {
     const star = svg(STAR);
@@ -121,7 +122,7 @@ export function showWish(parent: HTMLElement, content: Content, card: WishCard, 
   witness.el.classList.add('wish__witness');
   witness.say(content.witness.wish);
 
-  scene.append(glow, svg(SKY), flash, svg(COMET), stars, column, witness.el);
+  scene.append(light, svg(SKY), svg(COMET), stars, column, witness.el);
   parent.append(scene);
   hush();
   setTimeout(() => (next.hidden = false), durationOf('--duration-wish'));
