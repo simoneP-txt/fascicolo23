@@ -1,5 +1,6 @@
-// Audio: sounds listed in content.json play by name and load once, stopAll() stops every sound in
-// progress, and an unknown name or a failing device stays silent instead of breaking the game.
+// Audio: sounds listed in content.json play by name and load once, on first use or at preload(); stopAll()
+// stops every sound in progress, and an unknown name or a failing device stays silent instead of breaking
+// the game.
 import { expect, test, vi } from 'vitest';
 import { createAudio } from '../../src/engine/audio';
 
@@ -20,6 +21,23 @@ test('a listed sound plays and loads once', () => {
   audio.play('click');
   expect(make).toHaveBeenCalledOnce();
   expect(made.get('assets/sounds/click.wav')!.play).toHaveBeenCalledTimes(2);
+});
+
+test('preload loads every listed sound once, and a later play reuses it', () => {
+  const { made, make } = fakeSounds();
+  const audio = createAudio({ click: 'a.wav', wish: 'b.wav' }, make);
+  audio.preload();
+  expect(make).toHaveBeenCalledTimes(2);
+  audio.play('wish');
+  expect(make).toHaveBeenCalledTimes(2);
+  expect(made.get('b.wav')!.play).toHaveBeenCalledOnce();
+});
+
+test('a device that fails during preload stays silent', () => {
+  const audio = createAudio({ click: 'a.wav' }, () => {
+    throw new Error('no audio device');
+  });
+  expect(() => audio.preload()).not.toThrow();
 });
 
 test('stopAll stops the sounds in progress', () => {

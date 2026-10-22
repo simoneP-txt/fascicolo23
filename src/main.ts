@@ -49,6 +49,8 @@ try {
     reset: () => confirmDialog(stage.root, content.ui.reset, () => game.reset()),
   });
   game.start();
+  // Open the audio device while the first screen waits for its first click, so that click does not freeze.
+  requestIdleCallback(() => audio.preload(), { timeout: 1000 });
 } catch (error) {
   host.replaceChildren(el('pre', 'fatal', error instanceof Error ? error.message : String(error)));
 }

@@ -1,4 +1,5 @@
-// Board e2e: the case opens offline with local fonts, "No?" runs away, the doors follow the clue
+// Board e2e: the case opens offline with local fonts, every sound loads before the first click and a click
+// plays the click sound, "No?" runs away, the doors follow the clue
 // graph, earned fragments survive a reload and rooms lead back to the board. The board of mockup 01 has
 // its clue cards, strings, locks, stamps and tokens; a room won stamps its door and stretches its strings
 // only once the wish is over, moving nothing but transform, opacity and the strings' dash; the finished
@@ -14,7 +15,9 @@ import {
   MOCKUP_01,
   offline,
   openCase,
+  played,
   quick,
+  recordPlays,
   roomScreen,
   seed,
   solveRoom,
@@ -35,11 +38,22 @@ test('the case opens offline with local fonts', async ({ context, page, baseURL 
   expect(outside).toEqual([]);
 });
 
-test('a click plays the click sound', async ({ page }) => {
+test('every sound loads while the first screen waits for its first click', async ({ page }) => {
+  const loaded: string[] = [];
+  page.on('response', (response) => {
+    if (response.ok()) loaded.push(response.url());
+  });
   await page.goto('/');
-  const sound = page.waitForResponse((response) => response.url().endsWith(content.sounds.click));
+  for (const path of Object.values(content.sounds) as string[]) {
+    await expect.poll(() => loaded.some((url) => url.endsWith(path)), { message: path }).toBe(true);
+  }
+});
+
+test('a click plays the click sound', async ({ page }) => {
+  await recordPlays(page);
+  await page.goto('/');
   await page.getByRole('button', { name: content.ui.intro.yes }).click();
-  expect((await sound).ok()).toBe(true);
+  await expect.poll(() => played(page, 'click')).toBe(true);
 });
 
 test('"No?" runs away from the mouse', async ({ page }) => {
@@ -115,6 +129,7 @@ test('the board shows the mockup 01 state', async ({ page }) => {
 });
 
 test('a solved room gets its stamp and its strings after the wish', async ({ page }) => {
+  await recordPlays(page);
   await openCase(page);
   await enterRoom(page, 'studio');
   await page.getByRole('button', { name: content.rooms.studio.placeholder.solve }).click();
@@ -127,14 +142,13 @@ test('a solved room gets its stamp and its strings after the wish', async ({ pag
   for (const clue of await clues.all()) await expect(clue).toHaveCSS('opacity', '0');
   for (const string of await strings.all()) await expect(string).not.toHaveCSS('stroke-dashoffset', '0px');
 
-  const sound = page.waitForResponse((response) => response.url().endsWith(content.sounds.stamp));
   await continueWish(page);
   await expect(stamp).toHaveCSS('opacity', '1');
   await expect(clues).toHaveCount(2);
   for (const clue of await clues.all()) await expect(clue).toHaveCSS('opacity', '1');
   await expect(strings).toHaveCount(2);
   for (const string of await strings.all()) await expect(string).toHaveCSS('stroke-dashoffset', '0px');
-  expect((await sound).ok()).toBe(true);
+  await expect.poll(() => played(page, 'stamp')).toBe(true);
 });
 
 test('the reveal moves only transform, opacity and the dash of the strings', async ({ page }) => {

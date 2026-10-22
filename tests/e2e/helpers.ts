@@ -61,6 +61,29 @@ export async function duration(page: Page, token: `--duration-${string}`): Promi
   return parseDuration(await page.evaluate((name) => getComputedStyle(document.documentElement).getPropertyValue(name), token));
 }
 
+/** Records the source of every <audio> that starts playing, from before the page loads, for played(). The
+ *  game loads every sound right after its first screen, so a request on the network no longer says one
+ *  has played. */
+export async function recordPlays(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const sources: string[] = [];
+    (window as unknown as { e2ePlayed: string[] }).e2ePlayed = sources;
+    const play = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
+      sources.push(this.currentSrc || this.src);
+      return play.call(this);
+    };
+  });
+}
+
+/** Whether the sound of this name in content.json has started playing, as recordPlays() saw it. */
+export function played(page: Page, sound: string): Promise<boolean> {
+  return page.evaluate(
+    (path) => (window as unknown as { e2ePlayed: string[] }).e2ePlayed.some((src) => src.endsWith(path)),
+    content.sounds[sound] as string,
+  );
+}
+
 /** Waits until no screen change is under way and the click guard after the last change, or after the last
  *  overlay that came or went, is over, so a raw or forced click reaches the stage again. */
 export async function settled(page: Page): Promise<void> {

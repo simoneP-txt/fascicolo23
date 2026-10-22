@@ -5,7 +5,7 @@
 // comes with the board, as the screens swap under full ink, so no frame shows the bare board; where the page
 // clock stands still the test runs it to the swap.
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { board, content, continueWish, duration, enterRoom, fragment, settled, wish } from './helpers';
+import { board, content, continueWish, duration, enterRoom, fragment, played, recordPlays, settled, wish } from './helpers';
 
 const yes = (page: Page) => page.getByRole('button', { name: content.ui.intro.yes });
 const next = (page: Page) => page.getByRole('button', { name: content.ui.wish.continue });
@@ -41,10 +41,10 @@ async function framesUntilWish(page: Page, button: Locator): Promise<Frame[]> {
 }
 
 test('every fragment arrives with the wish', async ({ page }) => {
+  await recordPlays(page);
   await page.goto('/');
-  const sound = page.waitForResponse((response) => response.url().endsWith(content.sounds.wish));
   await yes(page).click();
-  expect((await sound).ok()).toBe(true);
+  await expect.poll(() => played(page, 'wish')).toBe(true);
   for (const text of [label(1), fragment('fascicolo'), content.ui.wish.from]) await expect(wish(page)).toContainText(text);
   await continueWish(page);
   await expect(board(page)).toBeVisible();
