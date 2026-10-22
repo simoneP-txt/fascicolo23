@@ -59,6 +59,10 @@ const SCHEMA: Schema = {
 
 const MEME: Schema = { 'text?': 'text', 'image?': 'text', 'sound?': 'text' };
 const NEEDED_MEMES = ['consolation']; // shown by the engine itself, after a confirmed skip
+// Played by name: click on every press, wish, stamp on a solved door, boom under the memes. audio.ts stays
+// silent on a name it does not know, so a renamed key would fail with no error.
+const NEEDED_SOUNDS = ['click', 'wish', 'boom', 'stamp'];
+const MEME_IMAGE = /^assets\/memes\/[^/\\]+$/; // a file shipped in public/assets/memes: a URL would reach the network
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -107,7 +111,8 @@ function checkLink(link: unknown): void {
   }
 }
 
-// Every meme shows a caption or an image, and its sound is one of the listed sounds.
+// Every meme shows a caption or an image, its image is a file in assets/memes, and its sound is one of the
+// listed sounds.
 function checkMemes(memes: unknown, sounds: Record<string, string>): void {
   if (!isObject(memes)) fail('memes', 'must be an object');
   for (const id of NEEDED_MEMES) if (memes[id] === undefined) fail(`memes.${id}`, 'is missing');
@@ -115,6 +120,7 @@ function checkMemes(memes: unknown, sounds: Record<string, string>): void {
     check(meme, MEME, `memes.${id}`);
     const { text, image, sound } = meme as Record<string, unknown>;
     if (text === undefined && image === undefined) fail(`memes.${id}`, 'needs a text or an image');
+    if (typeof image === 'string' && !MEME_IMAGE.test(image)) fail(`memes.${id}.image`, 'must be a file in assets/memes/');
     if (typeof sound === 'string' && !Object.hasOwn(sounds, sound)) fail(`memes.${id}.sound`, 'must name one of the sounds');
   }
 }
@@ -122,7 +128,9 @@ function checkMemes(memes: unknown, sounds: Record<string, string>): void {
 /** Returns the content typed, or throws an Error whose message names the faulty field. */
 export function validateContent(raw: unknown): Content {
   check(raw, SCHEMA, '');
+  const { sounds } = raw as Content;
+  for (const id of NEEDED_SOUNDS) if (!Object.hasOwn(sounds, id)) fail(`sounds.${id}`, 'is missing');
   checkLink((raw as { link?: unknown }).link);
-  checkMemes((raw as { memes?: unknown }).memes, (raw as Content).sounds);
+  checkMemes((raw as { memes?: unknown }).memes, sounds);
   return raw as Content;
 }

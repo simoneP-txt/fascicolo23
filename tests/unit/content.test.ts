@@ -1,6 +1,7 @@
 // Content schema: content.json must validate, a broken copy must name the faulty field, the help
 // thresholds and audience numbers must match the decisions, every witness sentence must end with "?",
-// and every meme must have something to show and a sound that exists.
+// every sound the game plays by name must be listed, and every meme must have something to show, a sound
+// that exists and, if any, an image shipped in assets/memes.
 import { expect, test } from 'vitest';
 import json from '../../content/content.json';
 import { validateContent } from '../../src/engine/content';
@@ -60,6 +61,26 @@ test('the consolation meme of the confirmed skip exists', () => {
   const broken = copy();
   delete broken.memes.consolation;
   expect(() => validateContent(broken)).toThrow(/memes\.consolation/);
+});
+
+test('the sounds the game plays by name are listed', () => {
+  for (const id of ['click', 'wish', 'boom', 'stamp']) {
+    const broken = copy();
+    delete broken.sounds[id];
+    expect(() => validateContent(broken), id).toThrow(new RegExp(`sounds\\.${id}`));
+  }
+});
+
+test('a meme image is a file shipped in assets/memes', () => {
+  // A URL would be a network request long before the finale.
+  for (const image of ['https://example.com/meme.png', '//example.com/meme.png', '/assets/memes/meme.png', 'assets/memes/../meme.png', 'assets/sounds/boom.wav']) {
+    const broken = copy();
+    broken.memes.error.image = image;
+    expect(() => validateContent(broken), image).toThrow(/memes\.error\.image/);
+  }
+  const local = copy();
+  local.memes.error.image = 'assets/memes/meme.png';
+  expect(() => validateContent(local)).not.toThrow();
 });
 
 test('thresholds follow decision 9', () => {
