@@ -149,7 +149,7 @@ test('Ctrl+Shift+N while a room comes in leaves one board and one wish', async (
 
   await enter(page, 'studio').click();
   await page.keyboard.press('Control+Shift+KeyN');
-  // Under the same dip the board won takes the study's place, and its wish waits for it to be on screen.
+  // Under the same dip the board won takes the study's place, and its wish comes with it at the swap.
   await expect(roomScreen(page, 'studio')).toHaveCount(0);
   await expect(wish(page)).toHaveCount(0);
   await page.clock.runFor(2 * dip);

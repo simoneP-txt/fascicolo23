@@ -2,13 +2,43 @@
 // The wish moves only transform and opacity and shows "Continua?" only at its end; its click gives the
 // board back once, with the bar of the fragment lifted off. A reset during the wish leaves nothing of it
 // behind, and a fragment still missing carries no text on the board, whatever the wish shows. The wish
-// starts once the board is on screen, so where the page clock stands still the test runs it through the dip.
-import { expect, test, type Page } from '@playwright/test';
-import { board, content, continueWish, duration, enterRoom, fragment, throughChange, wish } from './helpers';
+// comes with the board, as the screens swap under full ink, so no frame shows the bare board; where the page
+// clock stands still the test runs it to the swap.
+import { expect, test, type Locator, type Page } from '@playwright/test';
+import { board, content, continueWish, duration, enterRoom, fragment, settled, wish } from './helpers';
 
 const yes = (page: Page) => page.getByRole('button', { name: content.ui.intro.yes });
 const next = (page: Page) => page.getByRole('button', { name: content.ui.wish.continue });
 const label = (n: number) => content.ui.wish.label.replace('{n}', String(n));
+
+interface Frame {
+  ink: number; // opacity of the host's ink layer
+  board: boolean; // the board is on screen, no longer waiting hidden for the swap
+  wish: boolean;
+}
+
+/** Every frame, in real time, from a press on this button until the wish is there (3 s at most). */
+async function framesUntilWish(page: Page, button: Locator): Promise<Frame[]> {
+  await settled(page);
+  const frames = page.evaluate(
+    () =>
+      new Promise<Frame[]>((resolve) => {
+        const app = document.querySelector('#app')!;
+        const frames: Frame[] = [];
+        const end = performance.now() + 3000;
+        const frame = (now: number) => {
+          const board = document.querySelector('[data-screen="board"]');
+          const wish = !!document.querySelector('[data-wish]');
+          frames.push({ ink: Number(getComputedStyle(app, '::after').opacity), board: !!board && !board.hasAttribute('data-incoming'), wish });
+          if (wish || now > end) resolve(frames);
+          else requestAnimationFrame(frame);
+        };
+        requestAnimationFrame(frame);
+      }),
+  );
+  await button.click();
+  return frames;
+}
 
 test('every fragment arrives with the wish', async ({ page }) => {
   await page.goto('/');
@@ -50,14 +80,26 @@ test('"Continua?" waits for the end of the wish', async ({ page }) => {
   const length = await duration(page, '--duration-wish');
   await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
   await yes(page).click();
-  await throughChange(page);
-  await expect(wish(page)).toBeVisible();
+  await page.clock.runFor(await duration(page, '--duration-dip')); // the swap, under full ink
+  await expect(wish(page)).toBeAttached();
   await page.clock.runFor(1000);
   await expect(next(page)).toBeHidden();
   await page.clock.runFor(length - 1001);
   await expect(next(page)).toBeHidden();
   await page.clock.runFor(1);
   await expect(next(page)).toBeVisible();
+});
+
+test('no frame shows the board between the ink and the wish', async ({ page }) => {
+  await page.goto('/');
+  const opening = await framesUntilWish(page, yes(page));
+  await continueWish(page);
+  await enterRoom(page, 'studio');
+  const study = await framesUntilWish(page, page.getByRole('button', { name: content.rooms.studio.placeholder.solve }));
+  for (const frames of [opening, study]) {
+    expect(frames.at(-1)!.wish).toBe(true);
+    expect(frames.filter((frame) => frame.board && !frame.wish && frame.ink < 1)).toEqual([]);
+  }
 });
 
 test('a double click on "Continua?" reveals the board once', async ({ page }) => {

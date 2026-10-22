@@ -7,7 +7,8 @@
 // wish included, go on the stage root: they scale with the stage, leave with the screen under them and
 // stay outside the screen's clip, so a veil reaches the bands. A screen change tells the engine when the old
 // screen has gone, so it can unmount the room that left, and when a room is on screen, so its help clock
-// starts; the wish over a board waits until the board is on screen too.
+// starts. The wish comes with the board, as the screens swap under full ink, so the ink fades out onto the
+// wish and never onto the bare board.
 import './room.css';
 import type { AudienceStatus } from '../engine/audience';
 import { renderBoard } from '../engine/board';
@@ -54,7 +55,7 @@ export function createScreens(
       change.gone.then(screenGone);
       if (earned) {
         const card = wishCard(content, earned, gives(earned));
-        change.shown.then(() => showWish(stage.root, content, card, audio, () => board.reveal()));
+        change.gone.then(() => showWish(stage.root, content, card, audio, () => board.reveal()));
       }
     },
 
