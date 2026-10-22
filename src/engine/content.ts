@@ -60,7 +60,7 @@ const SCHEMA: Schema = {
 const MEME: Schema = { 'text?': 'text', 'image?': 'text', 'sound?': 'text' };
 const NEEDED_MEMES = ['consolation']; // shown by the engine itself, after a confirmed skip
 // Played by name: click on every press, wish, stamp on a solved door, boom under the memes. audio.ts stays
-// silent on a name it does not know, so a renamed key would fail with no error.
+// silent on a name it does not know, so a renamed key would mute its sound without an error.
 const NEEDED_SOUNDS = ['click', 'wish', 'boom', 'stamp'];
 const MEME_IMAGE = /^assets\/memes\/[^/\\]+$/; // a file shipped in public/assets/memes: a URL would reach the network
 
