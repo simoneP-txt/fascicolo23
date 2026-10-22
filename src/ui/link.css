@@ -1,0 +1,48 @@
+/* Classified link (src/ui/link.ts), from mockup 01: Special Elite at 40 px, the fragments won flush against
+   each other, the case opening's in ink and the rest in red; a missing fragment is a black bar 32 px tall and
+   as wide as its text, 8 px after whatever comes before it. When a fragment is won its bar lifts off by the
+   right end and fades, with transform and opacity only. */
+.link {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-report);
+  font-size: var(--text-heading);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.link__part {
+  position: relative;
+  color: var(--red);
+}
+.link__part[data-fragment='fascicolo'] {
+  color: var(--ink);
+}
+
+.link__part[data-hidden] {
+  height: var(--space-4);
+  background: var(--ink);
+}
+.link__part + .link__part[data-hidden] {
+  margin-left: var(--space-1);
+}
+
+/* The bar of a fragment just won, over its text, on its way off. */
+.link__part[data-peel]::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% - var(--space-2));
+  height: var(--space-4);
+  background: var(--ink);
+  transform-origin: 0 100%;
+  animation: link-peel var(--duration-peel) var(--ease) both;
+}
+
+@keyframes link-peel {
+  to {
+    opacity: 0;
+    transform: translateY(-24px) rotate(-12deg);
+  }
+}

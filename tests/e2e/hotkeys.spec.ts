@@ -1,12 +1,16 @@
 // Host hotkeys e2e: Ctrl+Shift+N solves the open room, H shows a hint even in Rapture, G gives a token
 // back, D leads to any room (Room 46 included) and R wipes progress only after the confirmation.
+// Durations are cut to 1 ms.
 import { expect, test } from '@playwright/test';
-import { board, content, enterRoom, openCase, roomScreen } from './helpers';
+import { board, content, continueWish, enterRoom, openCase, quick, roomScreen } from './helpers';
+
+test.beforeEach(({ page }) => quick(page));
 
 test('Ctrl+Shift+N completes the open room', async ({ page }) => {
   await openCase(page);
   await enterRoom(page, 'studio');
   await page.keyboard.press('Control+Shift+KeyN');
+  await continueWish(page);
   await expect(board(page)).toBeVisible();
   await expect(page.locator('[data-fragment="studio"]')).toHaveText('71');
 });

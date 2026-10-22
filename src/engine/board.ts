@@ -1,17 +1,25 @@
-// Board: the case board drawn from the game state. The case title, the classified link with a black bar
-// for every missing fragment, a card per room (solved, open, or closed with what it lacks), the clues
-// found so far and the audience tokens. Once every fragment is earned, the provisional finale: the
-// "CASO RISOLTO?" stamp and the button that opens the video (phase 5 moves both into Room 46).
+// Board: the case board drawn from the game state. The case title, the classified link (src/ui/link.ts)
+// with a black bar for every missing fragment, a card per room (solved, open, or closed with what it
+// lacks), the clues found so far and the audience tokens. Once every fragment is earned, the provisional
+// finale: the "CASO RISOLTO?" stamp and the button that opens the video (phase 5 moves both into Room 46).
+// The fragment just won stays under its bar until reveal(), which the screen calls once the wish is over.
 // The cards, buttons and stamps are the shared components; Task 3.6 lays the board out like mockup 01.
 import '../ui/board.css';
 import { tokenRow } from '../ui/audience';
 import { button } from '../ui/button';
 import { chip, clueCard, paper, stamp } from '../ui/card';
 import { el } from '../ui/dom';
+import { renderLink } from '../ui/link';
 import { isOpen } from './clues';
+import type { Earned } from './game';
 import { assembleLink, linkParts } from './link';
 import type { GameState } from './state';
 import type { ClueId, Content, Room, RoomId } from './types';
+
+export interface BoardView {
+  el: HTMLElement;
+  reveal(): void; // after the wish: the bar over the fragment won comes off
+}
 
 /** What a closed door says: the room's own line, or the line of the first clue it still misses. */
 export function doorText(room: Pick<Room, 'id' | 'requires'>, clues: readonly ClueId[], content: Content): string {
@@ -19,26 +27,23 @@ export function doorText(room: Pick<Room, 'id' | 'requires'>, clues: readonly Cl
   return content.rooms[room.id].locked ?? (missing ? content.clues[missing].missing : '');
 }
 
-export function renderBoard(content: Content, rooms: readonly Room[], state: GameState, onEnter: (id: RoomId) => void): HTMLElement {
+export function renderBoard(
+  content: Content,
+  rooms: readonly Room[],
+  state: GameState,
+  earned: Earned | null,
+  onEnter: (id: RoomId) => void,
+): BoardView {
   const screen = el('section', 'screen board');
   screen.dataset.screen = 'board';
 
   const title = paper('board__title');
   title.append(el('div', 'label', content.ui.file), el('h1', 'board__case', content.ui.case));
 
-  const parts = linkParts(content.link, state);
-  const line = el('div', 'link');
-  for (const part of parts) {
-    const fragment = el('span', 'link__part', part.shown ? part.text : '');
-    fragment.dataset.fragment = part.room;
-    if (!part.shown) {
-      fragment.dataset.hidden = '';
-      fragment.style.width = `${part.text.length}ch`; // the bar is as long as what it hides
-    }
-    line.append(fragment);
-  }
+  const complete = linkParts(content.link, state).every((part) => part.shown);
+  const line = renderLink(content, state, earned);
   const link = paper('board__link');
-  link.append(el('div', 'label', parts.every((part) => part.shown) ? content.ui.link.done : content.ui.link.label), line);
+  link.append(el('div', 'label', complete ? content.ui.link.done : content.ui.link.label), line.el);
 
   const doors = el('div', 'board__doors');
   doors.append(...rooms.map((room) => doorCard(room, content, state, onEnter)));
@@ -51,8 +56,8 @@ export function renderBoard(content: Content, rooms: readonly Room[], state: Gam
   tokens.append(el('div', 'board__tokens-title', content.ui.audience.button), tokenRow(state.tokens, content.tokens));
 
   screen.append(title, link, doors, clues, tokens);
-  if (parts.every((part) => part.shown)) screen.append(finale(content));
-  return screen;
+  if (complete) screen.append(finale(content));
+  return { el: screen, reveal: () => line.peel() };
 }
 
 function finale(content: Content): HTMLElement {

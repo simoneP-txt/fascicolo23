@@ -1,11 +1,14 @@
 // Stage e2e: the 16:9 stage fits the three test resolutions and paints nothing, so the host's art shows
 // through it; on the 16:10 party screen the bands above and below it take the colors of the screen and
 // darken with it, in one layer, under a dialog; the four fonts load from the build with the network cut.
+// Durations are cut to 1 ms.
 import { expect, test, type Page } from '@playwright/test';
-import { bandColor, colorDistance, edgeColors, luminance, tokenColor, type Rgb } from './checks';
-import { board, content, enterRoom, offline, openCase } from './helpers';
+import { bandColor, bandsMatchTokens, colorDistance, edgeColors, luminance, type Rgb } from './checks';
+import { board, content, continueWish, enterRoom, offline, openCase, quick } from './helpers';
 
 const BANDS = ['top', 'bottom'] as const;
+
+test.beforeEach(({ page }) => quick(page));
 
 test('the 16:9 stage fits 1707x1067 at 150%, 1920x1080 and 1366x768', async ({ browser, baseURL }) => {
   for (const [width, height, deviceScaleFactor] of [
@@ -15,6 +18,7 @@ test('the 16:9 stage fits 1707x1067 at 150%, 1920x1080 and 1366x768', async ({ b
   ]) {
     const context = await browser.newContext({ baseURL, viewport: { width, height }, deviceScaleFactor });
     const page = await context.newPage();
+    await quick(page);
     await openCase(page);
     const stage = (await page.locator('#stage').boundingBox())!;
     expect(stage.width / stage.height).toBeCloseTo(16 / 9, 2);
@@ -39,21 +43,6 @@ test('the stage paints nothing, so the art of the host shows through it', async 
 test.describe('on the 16:10 party screen', () => {
   test.use({ viewport: { width: 1707, height: 1067 }, deviceScaleFactor: 1.5 });
 
-  // Each band within 48 (sum of the three channels) of the screen's --backdrop-top or --backdrop-bottom,
-  // and nearer its own tone than the other one when the two differ (the intro's are only 42 apart).
-  async function bandsMatchTokens(page: Page, screen: string): Promise<void> {
-    const tones = { top: await tokenColor(page, '--backdrop-top'), bottom: await tokenColor(page, '--backdrop-bottom') };
-    for (const band of BANDS) {
-      const color = await bandColor(page, band);
-      const own = colorDistance(color, tones[band]);
-      expect(own, `${band} band of the ${screen}`).toBeLessThanOrEqual(48);
-      if (colorDistance(tones.top, tones.bottom) > 0) {
-        const other = colorDistance(color, tones[band === 'top' ? 'bottom' : 'top']);
-        expect(own, `${band} band of the ${screen}, against the other tone`).toBeLessThan(other);
-      }
-    }
-  }
-
   // Under an overlay each band falls under half its luminance and still continues the stage edge, which a
   // veil kept inside the stage, or a second one there, would break.
   async function bandsDarkenInOneLayer(page: Page, before: Record<(typeof BANDS)[number], Rgb>, what: string): Promise<void> {
@@ -70,6 +59,7 @@ test.describe('on the 16:10 party screen', () => {
     await bandsMatchTokens(page, 'case opening');
 
     await page.getByRole('button', { name: content.ui.intro.yes }).click();
+    await continueWish(page);
     await expect(board(page)).toBeVisible();
     // The board's frame and vignette sit at the window edge, so its bands only have to continue the stage.
     for (const edge of BANDS) {

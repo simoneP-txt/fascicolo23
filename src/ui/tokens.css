@@ -130,6 +130,7 @@
   --text-display: 64px;
   --text-digit: 72px;
   --text-question: 88px;
+  --text-fragment: 120px; /* the fragment on the wish card */
   --text-countdown: 128px;
   --text-meme: 160px; /* meme captions */
   --label-tracking: 0.12em;
@@ -171,7 +172,7 @@
   --shadow-sheet: 0 10px 18px rgba(31, 27, 23, 0.25); /* paper in a light room */
   --shadow-sheet-dark: 0 12px 22px rgba(0, 0, 0, 0.45); /* paper in a dark room */
   --shadow-button: 0 8px 14px rgba(31, 27, 23, 0.35);
-  --shadow-folder: 0 24px 40px rgba(0, 0, 0, 0.45); /* the case folder */
+  --shadow-folder: 0 24px 40px rgba(0, 0, 0, 0.45); /* the case folder, the wish card */
   --shadow-dialog: 0 32px 48px rgba(0, 0, 0, 0.5);
 
   /* Motion: one curve; the countdown alone runs linear */
@@ -183,6 +184,8 @@
   --duration-nope: 320ms; /* the shake of a switched-off button */
   --duration-dialog: 240ms; /* a dialog coming in */
   --duration-tick: 1000ms; /* one step of the countdown ring, which runs linear */
+  --duration-wish: 4000ms; /* the whole wish; wish.css times its steps in percent of it */
+  --duration-peel: 480ms; /* a bar lifting off the classified link */
   --press-shift: 2px; /* how far a pressed control sinks */
   --press-scale: 0.98;
   --meme-zoom: 1.35; /* the size a meme lands from */
@@ -266,5 +269,10 @@
 }
 [data-backdrop='stanza-46'] {
   --backdrop-top: var(--sea);
+  --backdrop-bottom: var(--sea);
+}
+/* The wish plays over the board, so the bands continue its night sky and its hill instead. */
+#app:has([data-wish]) {
+  --backdrop-top: var(--night);
   --backdrop-bottom: var(--sea);
 }

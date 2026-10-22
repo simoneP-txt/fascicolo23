@@ -1,8 +1,8 @@
 // E2E checks: the average color of a patch of the window, read by decoding a screenshot in a canvas of
-// the page, the color a token holds, and the stage rules of CLAUDE.md, measured at the 1920x1080 design
-// size: nothing leaves the stage, no text under 28 px (20 px for a .label), no text overflowing its box,
-// at most three font families on screen.
-import type { Page } from '@playwright/test';
+// the page, the color a token holds, whether the bands continue the screen's backdrop, and the stage
+// rules of CLAUDE.md, measured at the 1920x1080 design size: nothing leaves the stage, no text under
+// 28 px (20 px for a .label), no text overflowing its box, at most three font families on screen.
+import { expect, type Page } from '@playwright/test';
 
 export interface Rgb {
   r: number;
@@ -57,6 +57,26 @@ export async function edgeColors(page: Page, edge: 'top' | 'bottom'): Promise<{ 
   const [outside, inside] =
     edge === 'top' ? [Math.floor(stage.y) - PATCH, Math.ceil(stage.y)] : [Math.ceil(bottom), Math.floor(bottom) - PATCH];
   return { outside: await patchColor(page, x, outside), inside: await patchColor(page, x, inside) };
+}
+
+/** Whether the window leaves bands above and below the stage, as the 16:10 party screen does. */
+export async function hasBands(page: Page): Promise<boolean> {
+  return (await stageBox(page)).y >= PATCH;
+}
+
+/** Each band within 48 (sum of the three channels) of the screen's --backdrop-top or --backdrop-bottom,
+ *  and nearer its own tone than the other one when the two differ (the intro's are only 42 apart). */
+export async function bandsMatchTokens(page: Page, screen: string): Promise<void> {
+  const tones = { top: await tokenColor(page, '--backdrop-top'), bottom: await tokenColor(page, '--backdrop-bottom') };
+  for (const band of ['top', 'bottom'] as const) {
+    const color = await bandColor(page, band);
+    const own = colorDistance(color, tones[band]);
+    expect(own, `${band} band of the ${screen}`).toBeLessThanOrEqual(48);
+    if (colorDistance(tones.top, tones.bottom) > 0) {
+      const other = colorDistance(color, tones[band === 'top' ? 'bottom' : 'top']);
+      expect(own, `${band} band of the ${screen}, against the other tone`).toBeLessThan(other);
+    }
+  }
 }
 
 /** The color a token holds on the host, which carries the screen's backdrop. */

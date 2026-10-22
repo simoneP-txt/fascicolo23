@@ -1,8 +1,10 @@
 // Help e2e: the audience countdown spends one token at a time until the jury has spoken, Rapture shows
 // no audience button, and the auto-help ladder offers a hint and then the way out by itself, with its
-// own texts in Room 46. The page clock is faked, so minutes pass at once.
+// own texts in Room 46. The page clock is faked, so minutes pass at once, and durations are cut to 1 ms.
 import { expect, test } from '@playwright/test';
-import { board, content, enterRoom, openCase, solveRoom } from './helpers';
+import { board, content, continueWish, enterRoom, openCase, quick, solveRoom } from './helpers';
+
+test.beforeEach(({ page }) => quick(page));
 
 test('the audience countdown spends one token at a time', async ({ page }) => {
   await page.clock.install();
@@ -61,6 +63,7 @@ test('help appears by itself in the chessboard', async ({ page }) => {
   await skip.click();
   await expect(page.getByRole('dialog')).toContainText(content.ui.skip.body);
   await page.getByRole('button', { name: content.ui.skip.yes }).click();
+  await continueWish(page);
   await expect(board(page)).toBeVisible();
   await expect(page.locator('[data-fragment="scacchiera"]')).toHaveText('Kg4');
 });
@@ -77,5 +80,6 @@ test('Room 46 offers to show the culprit', async ({ page }) => {
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('button', { name: finale.skip.button }).click();
   await page.getByRole('button', { name: finale.skip.yes }).click();
+  await continueWish(page);
   await expect(page.locator('[data-fragment="stanza-46"]')).toHaveText('s');
 });

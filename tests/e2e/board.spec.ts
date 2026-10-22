@@ -1,7 +1,9 @@
 // Board e2e: the case opens offline with local fonts, "No?" runs away, the doors follow the clue
-// graph, earned fragments survive a reload and rooms lead back to the board.
+// graph, earned fragments survive a reload and rooms lead back to the board. Durations are cut to 1 ms.
 import { expect, test } from '@playwright/test';
-import { board, content, door, enterRoom, offline, openCase, roomScreen, solveRoom } from './helpers';
+import { board, content, door, enterRoom, offline, openCase, quick, roomScreen, solveRoom } from './helpers';
+
+test.beforeEach(({ page }) => quick(page));
 
 test('the case opens offline with local fonts', async ({ context, page, baseURL }) => {
   const outside = await offline(context, baseURL!);

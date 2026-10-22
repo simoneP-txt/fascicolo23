@@ -1,11 +1,13 @@
 // Full playthrough e2e: one game for each order the clue graph allows, with the network blocked. At every
 // step only the doors whose clues are found offer "Entra?" (Room 46 last), each solved room shows its
 // fragment, nothing leaves the local server before "Guarda la confessione?", and that button opens
-// exactly the video link.
+// exactly the video link. Durations are cut to 1 ms, so each wish ends at once.
 import { expect, test } from '@playwright/test';
 import { isOpen, validOrders } from '../../src/engine/clues';
 import { graphRooms } from '../../src/rooms/graph';
-import { board, content, door, offline, openCase, solveRoom } from './helpers';
+import { board, content, door, offline, openCase, quick, solveRoom } from './helpers';
+
+test.beforeEach(({ page }) => quick(page));
 
 const VIDEO = 'https://youtu.be/71Kg4_v7Qjs';
 

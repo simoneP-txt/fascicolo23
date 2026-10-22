@@ -1,16 +1,35 @@
-// Screens e2e: the game in the state of each mockup at the three test resolutions. Every pair saves
-// screenshots/<state>-<width>x<height>.png for review against docs/mockups and checks the stage rules:
-// nothing leaves the stage, no text is too small or overflows its box, at most three font families.
-// Later tasks add rows to the table.
+// Screens e2e: the game in the state of each mockup at the three test resolutions, with durations cut to
+// 1 ms. Every pair saves screenshots/<state>-<width>x<height>.png for review against docs/mockups and
+// checks the stage rules: nothing leaves the stage, no text is too small or overflows its box, at most
+// three font families. Later tasks add rows to the table.
 import { expect, test, type Page } from '@playwright/test';
-import { fontFamilies, outsideStage, overflowingText, smallText } from './checks';
-import { board, content, enterRoom, MOCKUP_01, openCase, roomScreen, seed } from './helpers';
+import { bandsMatchTokens, colorDistance, edgeColors, fontFamilies, hasBands, outsideStage, overflowingText, smallText } from './checks';
+import { board, consolation, content, enterRoom, MOCKUP_01, openCase, quick, roomScreen, seed, wish } from './helpers';
 
 const SIZES = [
   [1707, 1067, 1.5],
   [1920, 1080, 1],
   [1366, 768, 1],
 ] as const;
+
+/** The wish at its end, with "Continua?" on screen. On the party screen its bands hold the wish's backdrop
+ *  tokens and continue the sky and the hill at the stage edges, not the cork of the board under it. */
+async function wishEnded(page: Page): Promise<void> {
+  await expect(wish(page).getByRole('button', { name: content.ui.wish.continue })).toBeVisible();
+  if (!(await hasBands(page))) return;
+  await bandsMatchTokens(page, 'wish');
+  for (const edge of ['top', 'bottom'] as const) {
+    const { outside, inside } = await edgeColors(page, edge);
+    expect(colorDistance(outside, inside), `wish at the ${edge} edge of the stage`).toBeLessThanOrEqual(48);
+  }
+}
+
+/** Solves this room from the board with its placeholder button, up to the end of the wish. */
+async function solvedToWish(page: Page, id: string): Promise<void> {
+  await enterRoom(page, id);
+  await page.getByRole('button', { name: content.rooms[id].placeholder.solve }).click();
+  await wishEnded(page);
+}
 
 // Each state is named after its screen; the comment gives the mockup it is compared with.
 const STATES: Record<string, (page: Page) => Promise<void>> = {
@@ -77,17 +96,30 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
   // 04, the Anton sample: the consolation meme over the study once its zoom has landed, held on screen by
   // the page clock standing still
   meme: async (page) => {
-    await page.clock.install();
-    await seed(page, { opened: true, solved: [], clues: [], tokens: content.tokens });
-    await page.goto('/');
-    await enterRoom(page, 'studio');
-    await page.clock.runFor(content.rooms.studio.help.skipAfterSec * 1000);
-    await page.getByRole('button', { name: content.ui.skip.button }).click();
-    await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
-    await page.getByRole('button', { name: content.ui.skip.yes }).click();
+    await consolation(page);
     await expect(page.locator('[data-meme] figure')).toHaveCSS('transform', 'none');
   },
+  // 13: the library solved in the game of mockup 01, at the end of the wish
+  wish: async (page) => {
+    await seed(page, MOCKUP_01);
+    await page.goto('/');
+    await solvedToWish(page, 'biblioteca');
+  },
+  // 13 with the two long clues of the study: the card grows and "Continua?" moves down
+  'wish-studio': async (page) => {
+    await seed(page, { opened: true, solved: [], clues: [], tokens: content.tokens });
+    await page.goto('/');
+    await solvedToWish(page, 'studio');
+  },
+  // 13 for the case opening, whose fragment is too long for the card at full size
+  'wish-case': async (page) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: content.ui.intro.yes }).click();
+    await wishEnded(page);
+  },
 };
+
+test.beforeEach(({ page }) => quick(page));
 
 for (const [width, height, deviceScaleFactor] of SIZES) {
   test.describe(`${width}x${height}`, () => {
