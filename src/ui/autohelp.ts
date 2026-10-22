@@ -1,13 +1,15 @@
 // Auto-help on screen (mockups 07, 10, 11 and 15), bottom right in every room: the hint card ("AIUTO 1 DI
 // 2") edged in the room's accent, "Un indizio?" with its dot, and the way out with its door, which asks for
 // confirmation before it solves the room. Room 46 has its own texts ("Mostrami il colpevole?") and shows
-// a magnifier instead of the door.
+// a magnifier instead of the door. A press on "Un indizio?" usually hides it under the pointer, so clicks on
+// the stage wait a moment after it (hush), or the second click of a double click would reach the room.
 import type { HelpStatus } from '../engine/autohelp';
 import type { Content, RoomContent } from '../engine/types';
 import { button } from './button';
 import { paper } from './card';
 import { confirmDialog } from './confirm';
 import { el } from './dom';
+import { hush } from './stage';
 import type { Icon } from './svg';
 
 export interface HelpPanel {
@@ -33,7 +35,15 @@ export function createHelpPanel(
   card.hidden = true;
   card.append(label, line);
 
-  const hint = button(content.ui.hint.button, 'help', onHint, 'dot');
+  const hint = button(
+    content.ui.hint.button,
+    'help',
+    () => {
+      hush();
+      onHint();
+    },
+    'dot',
+  );
   hint.classList.add('help__hint');
   hint.hidden = true;
 

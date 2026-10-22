@@ -1,8 +1,9 @@
 // Transitions e2e, with the real durations: a screen change is an ink dip of 2 x --duration-dip on the
 // shared curve, and only the opacity of the host's ink layer moves. Pointer clicks on the stage are ignored
-// while the screen changes and for --duration-hush after it, and after a dialog opens or closes. Where a test
-// clicks inside those windows the page clock stands still, so every click lands at the moment it means to.
-// Ctrl+Shift+N while a room comes in sends the board under the same dip, with one wish.
+// while the screen changes and for --duration-hush after it, after any overlay comes or goes, and after
+// "Un indizio?" hides under the pointer. Where a test clicks inside those windows the page clock stands
+// still, so every click lands at the moment it means to. Ctrl+Shift+N while a room comes in sends the board
+// under the same dip, with one wish.
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { parseDuration } from '../../src/ui/dom';
 import { board, content, door, duration, enterRoom, fragment, roomScreen, seed, settled, wish } from './helpers';
@@ -138,6 +139,69 @@ test('clicks are ignored just after a dialog opens', async ({ page }) => {
   await page.clock.runFor(1000);
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(board(page)).toBeVisible();
+});
+
+test('a double click on "Un indizio?" reaches nothing under it', async ({ page }) => {
+  await page.clock.install();
+  await seed(page, OPEN);
+  await page.goto('/');
+  await enterRoom(page, 'studio');
+  await page.clock.runFor(content.rooms.studio.help.hintAfterSec * 1000);
+  const hint = page.getByRole('button', { name: content.ui.hint.button });
+  await expect(hint).toBeVisible();
+  await pauseClock(page);
+  // The room's area, where a phase 4 room lays out its puzzle, counts the clicks that reach it.
+  const area = page.locator('.room__area');
+  await area.evaluate((node) => {
+    node.dataset.clicks = '0';
+    node.addEventListener('click', () => (node.dataset.clicks = String(Number(node.dataset.clicks) + 1)));
+  });
+
+  await hint.dblclick(); // the first click shows the hint and hides the button, the second lands where it was
+  await expect(page.locator('[data-hint]')).toBeVisible();
+  await expect(hint).toBeHidden();
+  await expect(area).toHaveAttribute('data-clicks', '0');
+});
+
+test('every overlay holds clicks back as it comes and as it goes', async ({ page }) => {
+  await page.clock.install();
+  await seed(page, OPEN);
+  await page.goto('/');
+  const dip = await duration(page, '--duration-dip');
+  const hush = await duration(page, '--duration-hush');
+  const meme = await duration(page, '--duration-meme');
+  await pauseClock(page);
+  const hushed = page.locator('#app[data-hush]');
+  const press = (name: string) => () => page.getByRole('button', { name }).click();
+  /** Takes the step, checks that clicks on the stage are ignored at once, and lets the guard run out. */
+  const guarded = async (what: string, step: () => Promise<unknown>) => {
+    await expect(hushed, `before ${what}`).toHaveCount(0);
+    await step();
+    await expect(hushed, what).toHaveCount(1);
+    await page.clock.runFor(hush);
+  };
+
+  await guarded('the reset dialog comes', () => page.keyboard.press('Control+Shift+KeyR'));
+  await guarded('the reset dialog goes', press(content.ui.reset.no));
+  await guarded('the debug menu comes', () => page.keyboard.press('Control+Shift+KeyD'));
+  await guarded('the debug menu goes', press(content.ui.debug.close));
+
+  await enter(page, 'studio').click();
+  await page.clock.runFor(2 * dip + hush);
+  await guarded('the audience countdown comes', press(content.ui.audience.button));
+  await guarded('the audience countdown goes', press(content.ui.audience.done));
+  await guarded('a meme comes', press(content.rooms.studio.placeholder.error));
+  await guarded('the meme goes', () => page.clock.runFor(meme - hush));
+
+  // The wish comes inside the board's screen change, whose guard lasts until --duration-hush after it.
+  await guarded('the wish comes', async () => {
+    await page.getByRole('button', { name: content.rooms.studio.placeholder.solve }).click();
+    await page.clock.runFor(dip);
+    await expect(wish(page)).toBeAttached();
+  });
+  await page.clock.runFor(await duration(page, '--duration-wish'));
+  await guarded('the wish goes', () => wish(page).getByRole('button', { name: content.ui.wish.continue }).click());
+  await expect(hushed).toHaveCount(0);
 });
 
 test('Ctrl+Shift+N while a room comes in leaves one board and one wish', async ({ page }) => {
