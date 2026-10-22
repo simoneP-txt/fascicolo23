@@ -42,5 +42,7 @@ test('tokens.css has a single easing curve', () => {
 test('durations parse from their tokens', () => {
   expect(parseDuration('480ms')).toBe(480);
   expect(parseDuration(' 0.4s ')).toBe(400);
+  expect(parseDuration('1600MS')).toBe(1600);
+  expect(parseDuration('calc(2 * 240ms)')).toBe(0);
   expect(parseDuration('')).toBe(0);
 });

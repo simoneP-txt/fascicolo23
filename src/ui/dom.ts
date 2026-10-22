@@ -7,14 +7,19 @@ export function el<K extends keyof HTMLElementTagNameMap>(tag: K, className?: st
   return node;
 }
 
-/** A CSS time in ms: '480ms' → 480, '0.4s' → 400; an empty or unreadable value → 0. */
+/** A plain CSS time in ms: '480ms' → 480, '0.4s' → 400, '1600MS' → 1600; anything else ('', a calc()) → 0. */
 export function parseDuration(value: string): number {
-  const text = value.trim();
-  const amount = parseFloat(text) || 0;
-  return text.endsWith('ms') ? amount : amount * 1000;
+  const match = /^(\d*\.?\d+)(ms|s)$/i.exec(value.trim());
+  if (!match) return 0;
+  const amount = parseFloat(match[1]);
+  return match[2].toLowerCase() === 'ms' ? amount : amount * 1000;
 }
 
-/** The duration a token holds on :root, in ms. */
+/** The duration a token holds on :root, in ms. A missing token or one that is not a plain time warns and
+ *  gives 0, so a misspelled name shows up in the console instead of as a timer that fires at once. */
 export function durationOf(token: `--duration-${string}`): number {
-  return parseDuration(getComputedStyle(document.documentElement).getPropertyValue(token));
+  const value = getComputedStyle(document.documentElement).getPropertyValue(token);
+  const ms = parseDuration(value);
+  if (ms === 0 && !/^\s*0m?s\s*$/i.test(value)) console.warn(`${token} is not a plain time: "${value.trim()}"`);
+  return ms;
 }

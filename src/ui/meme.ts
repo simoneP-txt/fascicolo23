@@ -27,7 +27,6 @@ export function showMeme(parent: HTMLElement, meme: Meme, audio: Sfx, done: () =
   frame.append(figure);
   overlay.append(frame);
   parent.append(overlay);
-  if (meme.sound) audio.play(meme.sound);
 
   const finish = () => {
     clearTimeout(timer);
@@ -37,6 +36,8 @@ export function showMeme(parent: HTMLElement, meme: Meme, audio: Sfx, done: () =
   };
   const timer = setTimeout(finish, durationOf('--duration-meme'));
   finishShown = finish;
+  // The timer comes first, so nothing after it can leave an overlay that blocks every click.
+  if (meme.sound) audio.play(meme.sound);
   // Last, so that whatever the old done does, the new meme already has its timer.
   replaced?.();
 }

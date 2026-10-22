@@ -1,6 +1,7 @@
 // Meme e2e, with the real durations: a meme comes over the room with its caption in Anton and leaves by
 // itself after --duration-meme; the confirmed "Apri la porta?" consoles before the board comes back. While
-// a meme shows it takes every click on the stage, and a screen change takes it away with the old screen.
+// a meme shows it takes every click on the stage, a second meme replaces it, and a screen change takes it
+// away with the old screen.
 import { expect, test, type Page } from '@playwright/test';
 import { parseDuration } from '../../src/ui/dom';
 import { board, content, enterRoom, roomScreen, seed } from './helpers';
@@ -56,6 +57,17 @@ test('a meme takes every click, so the skip cannot be confirmed twice', async ({
   const box = (await skipButton(page).boundingBox())!;
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('a second meme replaces the first, and then it leaves too', async ({ page }) => {
+  await study(page);
+  const wrong = page.getByRole('button', { name: content.rooms.studio.placeholder.error });
+  await wrong.click();
+  await expect(meme(page)).toBeVisible();
+  await wrong.press('Space'); // the overlay takes the clicks, but the focused button still answers the keyboard
+  await expect(meme(page)).toHaveCount(1);
+  await expect(meme(page)).toHaveCount(0, { timeout: (await memeDuration(page)) + 1000 });
+  await expect(roomScreen(page, 'studio')).toBeVisible();
 });
 
 test('a screen change during a meme leaves no overlay behind', async ({ page }) => {
