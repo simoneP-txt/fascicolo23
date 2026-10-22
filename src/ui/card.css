@@ -1,0 +1,72 @@
+/* Cards (src/ui/card.ts), from mockups 01, 04 and 06: paper with a dot grain and an optional red pin, the
+   stamp, the fragment chip and the clue card. Tilts use the rotate property, so transform stays free for
+   the animations of the screens that place them. */
+@layer components {
+  .paper {
+    position: relative;
+    box-sizing: border-box;
+    background-color: var(--paper);
+    background-image: var(--paper-grain);
+    background-size: var(--space-1) var(--space-1);
+    color: var(--ink);
+  }
+  .paper__pin {
+    position: absolute;
+    top: calc(var(--pin) / -2);
+    left: 50%;
+    width: var(--pin);
+    height: var(--pin);
+    margin-left: calc(var(--pin) / -2);
+    border-radius: 50%;
+    background: var(--red);
+    box-shadow: var(--shadow-pin);
+  }
+
+  .stamp {
+    display: inline-block;
+    padding: 0 var(--space-1);
+    border: var(--border) solid var(--red);
+    background: var(--stamp-paper);
+    color: var(--red);
+    font-family: var(--font-report);
+    font-size: var(--text-small);
+    white-space: nowrap;
+    rotate: -8deg;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    height: var(--space-6);
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-chip);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-report);
+    font-size: var(--text-game);
+    white-space: nowrap;
+  }
+
+  .clue {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    width: 224px;
+    min-height: 128px;
+    padding: var(--space-2) var(--space-3);
+    border-top: var(--border) solid var(--red);
+    background-color: var(--paper-bright);
+    box-shadow: var(--shadow-clue);
+  }
+  .clue__text {
+    font-family: var(--font-witness);
+    font-size: var(--text-small);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  .clue__code {
+    font-family: var(--font-report);
+    font-size: var(--text-clue);
+    line-height: 1;
+  }
+}

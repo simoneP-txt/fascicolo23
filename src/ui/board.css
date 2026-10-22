@@ -1,0 +1,124 @@
+/* Board, phase 2 layout: a grid of the case title, the classified link, the door cards, the clues found,
+   the tokens, the provisional finale and the witness. The cards, buttons, stamps and chips are the shared
+   components; Task 3.6 replaces this layout with mockup 01. */
+.board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: 144px 320px 144px 1fr;
+  grid-template-areas:
+    'title title link link'
+    'doors doors doors doors'
+    'clues clues clues clues'
+    'tokens finale finale witness';
+  gap: var(--space-5) var(--space-4);
+  padding: var(--space-8) var(--space-12);
+}
+
+.board__title,
+.board__link,
+.board__tokens,
+.door {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--radius-chip);
+  box-shadow: var(--shadow-card);
+}
+
+.board__title {
+  grid-area: title;
+}
+.board__case {
+  margin: 0;
+  font-size: var(--text-heading);
+  line-height: 1.1;
+}
+
+.board__link {
+  grid-area: link;
+  gap: var(--space-2);
+}
+.link {
+  display: flex;
+  align-items: center;
+  font-size: var(--text-heading);
+  white-space: nowrap;
+}
+.link__part {
+  color: var(--red);
+}
+.link__part[data-fragment='fascicolo'] {
+  color: var(--ink);
+}
+.link__part[data-hidden] {
+  display: inline-block;
+  height: var(--space-4);
+  margin-left: var(--space-1);
+  background: var(--ink);
+}
+
+.board__doors {
+  grid-area: doors;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-4);
+}
+.door {
+  gap: var(--space-2);
+}
+.door--closed {
+  background-color: var(--paper-dim);
+}
+.door__name {
+  margin: 0;
+  font-size: var(--text-game);
+  line-height: 1.1;
+}
+.door__enter,
+.door__fragment {
+  align-self: flex-start;
+  margin-top: auto;
+  font-size: var(--text-game);
+}
+.door__missing {
+  margin-top: auto;
+  font-size: var(--text-small);
+  line-height: 1.2;
+}
+.door__stamp {
+  position: absolute;
+  right: var(--space-2);
+  top: var(--space-12);
+}
+
+.board__clues {
+  grid-area: clues;
+  display: flex;
+  gap: var(--space-3);
+}
+
+.board__tokens {
+  grid-area: tokens;
+  align-self: start;
+  gap: var(--space-2);
+}
+.board__tokens-title {
+  font-size: var(--text-game);
+}
+
+.board__finale {
+  grid-area: finale;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.board__stamp {
+  font-size: var(--text-heading);
+}
+
+.board .witness {
+  grid-area: witness;
+  align-self: start;
+}

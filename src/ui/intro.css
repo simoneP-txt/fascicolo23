@@ -1,0 +1,129 @@
+/* Case opening (mockup 05): the night fills the stage, the witness stands on the far hill, the folder leans
+   by a degree with its tab, grain and red elastic. "Sì?" and the empty dashed slot share the bottom of the
+   folder; the "No?" card waits outside it and jumps by a transform. */
+.intro__night {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.intro__figure {
+  position: absolute;
+  left: 1488px;
+  top: 688px;
+  width: 40px;
+  height: 112px;
+}
+
+.intro__folder {
+  position: absolute;
+  left: 512px;
+  top: 144px;
+  width: 896px;
+  height: 672px;
+  rotate: -1deg;
+}
+
+.intro__tab {
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: border-box;
+  width: 352px;
+  height: var(--space-9);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;
+  background: var(--folder-tab);
+  box-shadow: var(--shadow-button);
+  font-family: var(--font-report);
+  font-size: var(--text-tag);
+  line-height: var(--space-4);
+}
+
+.intro__body {
+  position: absolute;
+  left: 0;
+  top: var(--space-7);
+  width: 896px;
+  height: 616px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-9);
+  border-radius: 0 var(--radius-dialog) var(--radius-dialog) var(--radius-dialog);
+  background-color: var(--folder);
+  box-shadow: var(--shadow-folder);
+}
+
+/* The elastic runs 8 px past the folder at both ends. */
+.intro__band {
+  position: absolute;
+  left: 760px;
+  top: calc(-1 * var(--space-1));
+  width: var(--space-2);
+  height: calc(100% + var(--space-2));
+  background: var(--red);
+  box-shadow: var(--shadow-pin);
+}
+
+.intro__label {
+  font-family: var(--font-report);
+  font-size: var(--text-tag);
+}
+
+.intro__case {
+  margin: 0;
+  font-family: var(--font-witness);
+  font-size: var(--text-heading);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.intro__question {
+  margin: 0;
+  font-family: var(--font-witness);
+  font-size: var(--text-digit);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.intro__actions {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: auto;
+}
+
+.intro__yes,
+.intro__slot,
+.intro__no {
+  box-sizing: border-box;
+  width: 224px;
+  height: var(--space-11);
+  font-size: var(--text-heading);
+}
+
+.intro__slot {
+  position: relative;
+  border: var(--border) dashed var(--ink-faint);
+  border-radius: var(--radius);
+}
+
+.intro__lines {
+  position: absolute;
+  left: calc(100% + var(--space-2));
+  top: calc(-1 * var(--border));
+}
+
+/* The card leaves the pointer at once, so a hover look would only linger on it after the jump. */
+.intro__no {
+  position: absolute;
+  left: 1432px;
+  top: 576px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--shadow-sheet-dark);
+  filter: none;
+  transition: transform var(--duration-jump) var(--ease);
+}

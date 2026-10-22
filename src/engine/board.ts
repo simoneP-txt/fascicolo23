@@ -2,8 +2,11 @@
 // for every missing fragment, a card per room (solved, open, or closed with what it lacks), the clues
 // found so far and the audience tokens. Once every fragment is earned, the provisional finale: the
 // "CASO RISOLTO?" stamp and the button that opens the video (phase 5 moves both into Room 46).
-// Phase 3 dresses the board like mockup 01.
+// The cards, buttons and stamps are the shared components; Task 3.6 lays the board out like mockup 01.
+import '../ui/board.css';
 import { tokenRow } from '../ui/audience';
+import { button } from '../ui/button';
+import { chip, clueCard, paper, stamp } from '../ui/card';
 import { el } from '../ui/dom';
 import { isOpen } from './clues';
 import { assembleLink, linkParts } from './link';
@@ -20,7 +23,7 @@ export function renderBoard(content: Content, rooms: readonly Room[], state: Gam
   const screen = el('section', 'screen board');
   screen.dataset.screen = 'board';
 
-  const title = el('div', 'card board__title');
+  const title = paper('board__title');
   title.append(el('div', 'label', content.ui.file), el('h1', 'board__case', content.ui.case));
 
   const parts = linkParts(content.link, state);
@@ -34,22 +37,17 @@ export function renderBoard(content: Content, rooms: readonly Room[], state: Gam
     }
     line.append(fragment);
   }
-  const link = el('div', 'card board__link');
+  const link = paper('board__link');
   link.append(el('div', 'label', parts.every((part) => part.shown) ? content.ui.link.done : content.ui.link.label), line);
 
   const doors = el('div', 'board__doors');
   doors.append(...rooms.map((room) => doorCard(room, content, state, onEnter)));
 
   const clues = el('div', 'board__clues');
-  for (const clue of state.clues) {
-    const card = el('div', 'card clue');
-    card.dataset.clue = clue;
-    card.append(el('div', 'label', content.ui.clueLabel), el('div', 'clue__text', content.clues[clue].label));
-    clues.append(card);
-  }
+  for (const clue of state.clues) clues.append(clueCard(content, clue));
 
   // The tokens left, shown here but used inside the rooms.
-  const tokens = el('div', 'card board__tokens');
+  const tokens = paper('board__tokens');
   tokens.append(el('div', 'board__tokens-title', content.ui.audience.button), tokenRow(state.tokens, content.tokens));
 
   screen.append(title, link, doors, clues, tokens);
@@ -58,25 +56,31 @@ export function renderBoard(content: Content, rooms: readonly Room[], state: Gam
 }
 
 function finale(content: Content): HTMLElement {
-  const watch = el('button', 'button', content.ui.finale.watch);
   // Electron hands https links to the system browser (electron/main.ts).
-  watch.addEventListener('click', () => window.open(assembleLink(content.link.map((part) => part.text)), '_blank'));
+  const watch = button(content.ui.finale.watch, 'primary', () =>
+    window.open(assembleLink(content.link.map((part) => part.text)), '_blank'),
+  );
+  const solved = stamp(content.ui.finale.stamp);
+  solved.classList.add('board__stamp');
   const block = el('div', 'board__finale');
-  block.append(el('div', 'case-stamp', content.ui.finale.stamp), watch);
+  block.append(solved, watch);
   return block;
 }
 
 function doorCard(room: Room, content: Content, state: GameState, onEnter: (id: RoomId) => void): HTMLElement {
-  const card = el('article', 'card door');
+  const card = paper('door');
   card.dataset.door = room.id;
   card.append(el('h2', 'door__name', content.rooms[room.id].name));
   if (state.solved.includes(room.id)) {
-    const fragment = content.link.find((part) => part.room === room.id)?.text ?? '';
+    const fragment = chip(content.link.find((part) => part.room === room.id)?.text ?? '');
+    fragment.classList.add('door__fragment');
+    const solved = stamp(content.ui.solved);
+    solved.classList.add('door__stamp');
     card.classList.add('door--solved');
-    card.append(el('div', 'door__fragment', fragment), el('div', 'stamp', content.ui.solved));
+    card.append(fragment, solved);
   } else if (isOpen(room, state.clues)) {
-    const enter = el('button', 'button door__enter', content.ui.enter);
-    enter.addEventListener('click', () => onEnter(room.id));
+    const enter = button(content.ui.enter, 'primary', () => onEnter(room.id));
+    enter.classList.add('door__enter');
     card.append(enter);
   } else {
     card.classList.add('door--closed');

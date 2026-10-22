@@ -1,10 +1,14 @@
-// Auto-help on screen (mockups 07, 10, 11 and 15), bottom right in every room: the hint card ("AIUTO 1
-// DI 2"), the "Un indizio?" button and the skip button, which asks for confirmation before it solves
-// the room. In Room 46 the skip has its own texts ("Mostrami il colpevole?").
+// Auto-help on screen (mockups 07, 10, 11 and 15), bottom right in every room: the hint card ("AIUTO 1 DI
+// 2") edged in the room's accent, "Un indizio?" with its dot, and the way out with its door, which asks for
+// confirmation before it solves the room. Room 46 has its own texts ("Mostrami il colpevole?") and shows
+// a magnifier instead of the door.
 import type { HelpStatus } from '../engine/autohelp';
 import type { Content, RoomContent } from '../engine/types';
+import { button } from './button';
+import { paper } from './card';
 import { confirmDialog } from './confirm';
 import { el } from './dom';
+import type { Icon } from './svg';
 
 export interface HelpPanel {
   el: HTMLElement;
@@ -20,23 +24,23 @@ export function createHelpPanel(
   onSkip: () => void,
 ): HelpPanel {
   const skipText = room.skip ?? content.ui.skip;
+  const skipIcon: Icon = room.skip ? 'magnifier' : 'door';
 
   const label = el('div', 'label');
   const line = el('p', 'help__text');
-  const card = el('div', 'card help__card');
+  const card = paper('help__card');
   card.dataset.hint = '';
   card.hidden = true;
   card.append(label, line);
 
-  const hint = el('button', 'button button--quiet', content.ui.hint.button);
+  const hint = button(content.ui.hint.button, 'help', onHint, 'dot');
+  hint.classList.add('help__hint');
   hint.hidden = true;
-  hint.addEventListener('click', onHint);
 
-  const skip = el('button', 'button', skipText.button);
+  const confirmText = { title: skipText.button, body: skipText.body, yes: skipText.yes, no: skipText.no };
+  const skip = button(skipText.button, 'help', () => confirmDialog(dialogParent, confirmText, onSkip, skipIcon), skipIcon);
+  skip.classList.add('help__skip');
   skip.hidden = true;
-  skip.addEventListener('click', () =>
-    confirmDialog(dialogParent, { title: skipText.button, body: skipText.body, yes: skipText.yes, no: skipText.no }, onSkip),
-  );
 
   const panel = el('div', 'help');
   panel.append(card, hint, skip);

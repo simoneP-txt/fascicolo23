@@ -4,7 +4,7 @@
 // Later tasks add rows to the table.
 import { expect, test, type Page } from '@playwright/test';
 import { fontFamilies, outsideStage, overflowingText, smallText } from './checks';
-import { board, content, enterRoom, MOCKUP_01, openCase, seed } from './helpers';
+import { board, content, enterRoom, MOCKUP_01, openCase, roomScreen, seed } from './helpers';
 
 const SIZES = [
   [1707, 1067, 1.5],
@@ -47,6 +47,23 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
     await page.clock.runFor(16_500);
     await expect(page.locator('[data-seconds]')).toHaveText('14');
   },
+  // 10, the frame: Rapture with the way out, offered after skipAfterSec
+  'room-rapture': async (page) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.keyboard.press('Control+Shift+KeyD');
+    await page.getByRole('button', { name: content.rooms.rapture.name }).click();
+    await expect(roomScreen(page, 'rapture')).toBeVisible();
+    await page.clock.runFor(content.rooms.rapture.help.skipAfterSec * 1000);
+    await expect(page.getByRole('button', { name: content.ui.skip.button })).toBeVisible();
+  },
+  // the host's debug menu over the board, in the style of 14 and 15
+  debug: async (page) => {
+    await seed(page, MOCKUP_01);
+    await page.goto('/');
+    await page.keyboard.press('Control+Shift+KeyD');
+    await expect(page.getByRole('dialog')).toBeVisible();
+  },
   // 15: the way out of the library, offered after skipAfterSec
   skip: async (page) => {
     await page.clock.install();
@@ -80,7 +97,8 @@ for (const [width, height, deviceScaleFactor] of SIZES) {
       test(state, async ({ page }) => {
         await reach(page);
         await page.evaluate(() => document.fonts.ready);
-        await page.screenshot({ path: `screenshots/${state}-${width}x${height}.png` });
+        // Entrances (a dialog, the witness bubble) finish first, so every shot is the settled screen.
+        await page.screenshot({ path: `screenshots/${state}-${width}x${height}.png`, animations: 'disabled' });
         expect(await outsideStage(page)).toEqual([]);
         expect(await smallText(page)).toEqual([]);
         expect(await overflowingText(page)).toEqual([]);

@@ -1,0 +1,164 @@
+/* Dialogs (mockups 14 and 15) and the audience tokens. A dialog is paper with grain and a 16 px radius that
+   comes in over the veil of its .overlay with opacity and transform. The countdown's red arc steps once a
+   second, linearly, over a grey track; the confirmation shows its icon large; the debug menu wears the
+   same paper. A token is a "?" in Anton: filled while left, haloed while in use, dashed once spent. */
+@layer components {
+  .dialog {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    width: 768px;
+    padding: var(--space-5) var(--space-8);
+    border-radius: var(--radius-dialog);
+    box-shadow: var(--shadow-dialog);
+    animation: dialog-in var(--duration-dialog) var(--ease);
+  }
+  .dialog__tag {
+    font-size: var(--text-tag);
+  }
+  .dialog__title {
+    margin: 0;
+    font-family: var(--font-witness);
+    font-size: var(--text-title);
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+  }
+  .dialog__body {
+    max-width: 640px;
+    margin: 0;
+    font-size: var(--text-small);
+    line-height: 1.3;
+    text-align: center;
+  }
+  .dialog__actions {
+    display: flex;
+    gap: var(--space-3);
+  }
+  .dialog__actions .btn {
+    min-width: 288px;
+    min-height: var(--space-9);
+  }
+
+  /* Confirmation (15): the icon drawn large, a larger title, the answers further down. */
+  .dialog--confirm {
+    gap: var(--space-2);
+    padding: var(--space-7) var(--space-8);
+  }
+  .dialog--confirm .dialog__title {
+    font-size: var(--text-display);
+  }
+  .dialog--confirm .dialog__actions {
+    margin-top: var(--space-5);
+  }
+  .dialog__icon {
+    width: 192px;
+    height: 192px;
+  }
+
+  /* Countdown (14): the ring around the seconds left, then the tokens, spent first, then "Abbiamo finito?". */
+  .countdown {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 288px;
+    height: 288px;
+  }
+  .countdown__ring {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .countdown__arc {
+    transition: stroke-dashoffset var(--duration-tick) linear;
+  }
+  /* Anton keeps its normal line height, since a tighter one counts as overflow, so its line box runs well
+     below the digits: the label tucks up under them, and the face rises to sit the digits a little above
+     the ring's center, as in 14. */
+  .countdown__face {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    translate: 0 calc(-1 * var(--space-3));
+  }
+  .countdown__seconds {
+    font-family: var(--font-meme);
+    font-size: var(--text-countdown);
+    line-height: normal;
+  }
+  .countdown__label {
+    margin-top: calc(-1 * var(--space-4));
+    letter-spacing: 0.14em;
+  }
+  .countdown__tokens {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .countdown__tokens .tokens {
+    flex-direction: row-reverse;
+  }
+  .countdown__tokens .token {
+    width: var(--space-8);
+    height: var(--space-8);
+    font-size: var(--text-heading);
+  }
+  .dialog__done {
+    min-width: 320px;
+  }
+
+  /* Debug menu: the rooms in two columns. */
+  .debug__rooms {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2);
+    width: 100%;
+  }
+
+  /* Tokens. Anton's metrics are balanced around its capitals: at its normal line height the "?" sits in the
+     middle of the circle. The dashed ring of a spent token is drawn over the circle, not as a border, so
+     the "?" keeps the whole circle to sit in. */
+  .tokens {
+    display: inline-flex;
+    gap: var(--space-2);
+  }
+  .token {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--space-6);
+    height: var(--space-6);
+    border-radius: 50%;
+    font-family: var(--font-meme);
+    font-size: var(--text-token);
+    line-height: normal;
+  }
+  .token--left,
+  .token--in-use {
+    background: var(--red);
+    color: var(--paper);
+  }
+  .token--in-use {
+    box-shadow: 0 0 0 var(--space-1) var(--red-glow);
+  }
+  .token--used {
+    color: var(--token-used);
+  }
+  .token--used::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: var(--border) dashed;
+    border-radius: 50%;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-3)) scale(var(--dialog-scale));
+  }
+}

@@ -1,8 +1,9 @@
 /* Tokens: the only file with literal colors, fonts, text sizes, spacing, radii, borders, shadows,
    durations and the easing curve, all taken from docs/mockups. A shade the mockups paint as a palette
    color at some opacity is mixed from the palette here, so retouching a base color carries it along;
-   SVG drawings that fade a palette color keep the token and an opacity. At the bottom, every screen
-   names the tones of its top and bottom edges, which the bands around the stage continue. */
+   SVG drawings that fade a palette color keep the token and an opacity. Then the frame theme of each
+   room, and at the bottom every screen names the tones of its top and bottom edges, which the bands
+   around the stage continue. */
 :root {
   /* Palette of 04-sistema, with one gold for its brass and its deco gold */
   --red: #e94535;
@@ -31,6 +32,7 @@
   --paper-faint: color-mix(in srgb, var(--paper) 45%, transparent); /* spent tokens, empty slots in dark rooms */
   --paper-wash: color-mix(in srgb, var(--paper) 40%, transparent); /* the hint button in a light room */
   --paper-halo: color-mix(in srgb, var(--paper) 16%, transparent); /* halo of a light button in a dark room */
+  --paper-grain: radial-gradient(var(--grain) 1px, transparent 1.5px); /* a grain dot; card.css tiles it every 8 px */
 
   /* Ink */
   --veil: color-mix(in srgb, var(--ink) 82%, transparent); /* behind dialogs, over stage and bands */
@@ -112,7 +114,7 @@
   --font-witness: 'Cormorant Garamond', serif;
   --font-meme: 'Anton', sans-serif;
   --font-deco: 'Poiret One', sans-serif;
-  --font-ui: var(--font-report); /* Rapture switches it to --font-deco (3.3) */
+  --font-ui: var(--font-report); /* Rapture switches it to --font-deco, in its frame theme below */
 
   /* Text sizes at the 1920x1080 design size: game text at least 28 px, labels at least 20 px */
   --text-label: 20px;
@@ -177,9 +179,63 @@
   --duration-press: 80ms;
   --duration-jump: 160ms;
   --duration-meme: 1600ms; /* a meme on screen; its zoom takes the first eighth */
+  --duration-pop: 240ms; /* the witness bubble, at each new line */
+  --duration-nope: 320ms; /* the shake of a switched-off button */
+  --duration-dialog: 240ms; /* a dialog coming in */
+  --duration-tick: 1000ms; /* one step of the countdown ring, which runs linear */
   --press-shift: 2px; /* how far a pressed control sinks */
   --press-scale: 0.98;
   --meme-zoom: 1.35; /* the size a meme lands from */
+  --pop-scale: 0.9; /* the size the witness bubble pops from */
+  --dialog-scale: 0.96; /* the size a dialog comes in from */
+}
+
+/* Frame themes: the colors of the room frame (header, way back, audience button, witness, auto-help)
+   over each room's drawing. The light defaults fit the study and every paper screen. A dark room sets its
+   own on its room screen ([data-room]), so a dialog over it keeps the light ones. Rapture's interface
+   speaks Poiret One (decision 10). */
+:root {
+  --frame-label: var(--ink); /* the header */
+  --frame-text: var(--ink); /* the way back, the audience button, the text of the hint button */
+  --figure: var(--ink); /* the witness */
+  --bubble-border: var(--ink);
+  --bubble-label: var(--ink-soft);
+  --help-accent: var(--ink); /* edge of the hint card and the help buttons, the hint dot */
+  --help-wash: var(--paper-wash); /* inside the hint button */
+  --help-tray: var(--ink-halo); /* the ring around the help buttons */
+  --token-used: var(--ink-spent); /* a spent token */
+  --sheet-shadow: var(--shadow-sheet); /* the hint card and the way out */
+}
+[data-room='scacchiera'],
+[data-room='biblioteca'],
+[data-room='rapture'],
+[data-room='stanza-46'] {
+  --frame-label: var(--gold);
+  --frame-text: var(--paper);
+  --help-accent: var(--gold);
+  --help-wash: var(--gold-wash);
+  --help-tray: var(--gold-wash);
+  --token-used: var(--paper-faint);
+  --sheet-shadow: var(--shadow-sheet-dark);
+}
+[data-room='scacchiera'] {
+  --figure: var(--sea);
+}
+[data-room='biblioteca'] {
+  --figure: var(--figure-walnut);
+  --token-used: var(--token-spent);
+}
+[data-room='rapture'] {
+  --frame-label: var(--paper);
+  --figure: var(--sea);
+  --bubble-border: var(--gold);
+  --bubble-label: var(--teal);
+  --help-tray: var(--gold-glow);
+  --font-ui: var(--font-deco);
+}
+[data-room='stanza-46'] {
+  --frame-label: var(--paper);
+  --figure: var(--figure-sea);
 }
 
 /* Backdrops: the tones of each screen's top and bottom edge. The rooms keep one tone until phase 4

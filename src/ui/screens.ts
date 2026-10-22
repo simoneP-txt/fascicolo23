@@ -1,15 +1,18 @@
 // Screens: the GameUi the engine talks to. It puts the case opening, the board or a room on the stage;
-// a room gets a frame (header, way back to the board, audience help, witness, auto-help) and the area
-// it mounts into. Overlays, the meme included, go on the stage root: they scale with the stage, leave
-// with the screen under them and stay outside the screen's clip, so their veil reaches the bands. The
-// stage swaps screens at once for now, so the old screen is gone and a room is on screen as soon as
+// a room gets the frame of mockups 06, 07 and 10 (header, way back to the board, audience button, the
+// witness top right with its silhouette, auto-help bottom right), colored by the room's frame theme, and
+// the area it mounts into. Overlays, the meme included, go on the stage root: they scale with the stage,
+// leave with the screen under them and stay outside the screen's clip, so their veil reaches the bands.
+// The stage swaps screens at once for now, so the old screen is gone and a room is on screen as soon as
 // show() returns.
+import './room.css';
 import type { AudienceStatus } from '../engine/audience';
 import { renderBoard } from '../engine/board';
 import type { Game, GameUi, Sfx } from '../engine/game';
 import type { Content, Room } from '../engine/types';
 import { createAudienceButton, createAudienceOverlay, type AudienceView } from './audience';
 import { createHelpPanel, type HelpPanel } from './autohelp';
+import { button } from './button';
 import { el } from './dom';
 import { renderIntro } from './intro';
 import { showMeme as showMemeOverlay } from './meme';
@@ -39,7 +42,7 @@ export function createScreens(
 
     showBoard(state) {
       const screen = renderBoard(content, rooms, state, (id) => game.enter(id));
-      witness = createWitness(content);
+      witness = createWitness(content, 'right');
       audience = [];
       help = null;
       screen.append(witness.el);
@@ -53,12 +56,12 @@ export function createScreens(
       screen.dataset.room = room.id;
 
       const area = el('div', 'room__area');
-      const back = el('button', 'button button--quiet', content.ui.back);
-      back.addEventListener('click', () => game.leave());
+      const back = button(content.ui.back, 'link', () => game.leave(), 'back');
+      back.classList.add('room__back');
       const header = el('header', 'room__header');
       header.append(el('div', 'label room__title', content.rooms[room.id].header), back);
 
-      witness = createWitness(content);
+      witness = createWitness(content, 'down');
       help = createHelpPanel(content, content.rooms[room.id], stage.root, () => game.hint(false), () => game.skip());
       screen.append(area, header, witness.el, help.el);
 

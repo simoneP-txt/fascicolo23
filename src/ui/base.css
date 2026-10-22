@@ -1,7 +1,21 @@
 /* Base: the host fills the window with the backdrop of the current screen, two tones split at the middle,
    so the bands left by the 16:9 stage on a 16:10 screen continue its top and bottom edges. The stage
-   sits centered, scaled by --stage-scale, and paints nothing, so the host's art shows through it. An
-   open overlay spreads its veil past the stage edges: one layer darkens the screen and the bands. */
+   sits centered, scaled by --stage-scale, and paints nothing, so the host's art shows through it; no
+   text on it can be selected. An open overlay spreads its veil past the stage edges: one layer darkens
+   the screen and the bands.
+   Cascade layers: shared typography sits in "base" and the shared components (buttons, cards, witness,
+   dialogs) in "components", so the unlayered stylesheet of a screen or a room always wins over them,
+   whatever order the modules load in. */
+@layer base, components;
+
+@layer base {
+  .label {
+    color: var(--ink-soft);
+    font-size: var(--text-label);
+    letter-spacing: var(--label-tracking);
+  }
+}
+
 html,
 body {
   margin: 0;
@@ -34,6 +48,7 @@ body {
   width: var(--stage-width);
   height: var(--stage-height);
   transform: translate(-50%, -50%) scale(var(--stage-scale));
+  user-select: none;
 }
 
 /* The screen clips its content to the stage; overlays stay unclipped, so their veil reaches the bands. */

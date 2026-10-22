@@ -1,0 +1,106 @@
+/* Room frame (mockups 06, 07 and 10): the room draws on the whole stage and the frame sits on top, in the
+   colors and font of the room's frame theme (tokens.css): the header with the way back and the audience
+   button, the witness top right with the silhouette under it, and the auto-help bottom right, where the
+   hint button and the way out keep their own slots. */
+.room {
+  color: var(--frame-text);
+  font-family: var(--font-ui);
+}
+
+.room__area {
+  position: absolute;
+  inset: 0;
+}
+
+.room__header {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 128px;
+}
+.room__title {
+  position: absolute;
+  left: var(--space-12);
+  top: var(--space-6);
+  color: var(--frame-label);
+  font-size: var(--text-tag);
+}
+.room__back {
+  position: absolute;
+  left: 640px;
+  top: var(--space-5);
+}
+.room__header .audience {
+  position: absolute;
+  right: var(--space-11);
+  top: var(--space-4);
+  gap: var(--space-2);
+  min-height: var(--space-8);
+}
+
+.room .witness {
+  position: absolute;
+  left: 1472px;
+  top: 128px;
+  width: 360px;
+}
+
+/* Auto-help: the hint card above two fixed slots, "Un indizio?" then the way out, so a button keeps its
+   place whether the other one shows or not. Clicks pass through the empty slots. */
+.help {
+  position: absolute;
+  right: var(--space-11);
+  bottom: var(--space-11);
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto var(--space-9) var(--space-9);
+  row-gap: var(--space-2);
+  width: 360px;
+  pointer-events: none;
+}
+.help > * {
+  pointer-events: auto;
+}
+.room[data-room='stanza-46'] .help {
+  width: 408px; /* "Mostrami il colpevole?" is the longest way out (mockup 11) */
+}
+.help__card {
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-1);
+  padding: var(--space-3);
+  border-top: var(--border-thick) solid var(--help-accent);
+  box-shadow: var(--sheet-shadow);
+}
+.help__text {
+  margin: 0;
+  font-size: var(--text-small);
+  line-height: 1.3;
+}
+.help__hint,
+.help__skip {
+  padding: 0 var(--space-2);
+}
+.help__hint {
+  grid-row: 2;
+}
+.help__skip {
+  grid-row: 3;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow:
+    0 0 0 var(--space-1) var(--help-tray),
+    var(--sheet-shadow);
+}
+
+/* Placeholder rooms, until phase 4 draws each room: their two buttons, left under the header. */
+.placeholder-room {
+  position: absolute;
+  left: var(--space-12);
+  top: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}

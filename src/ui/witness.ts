@@ -1,7 +1,10 @@
-// Witness: the speech bubble on the board and in every room. Every line it says ends with exactly one
-// question mark, the running gag, whatever text a room hands it.
+// Witness: the speech bubble with the silhouette under it (tail 'down', as in the rooms) or beside it
+// ('right'). Every line it says ends with exactly one question mark, the running gag, whatever text a room
+// hands it, and pops the bubble out of its tail.
+import './witness.css';
 import type { Content } from '../engine/types';
-import { el } from './dom';
+import { el, replay } from './dom';
+import { figure } from './svg';
 
 export interface Witness {
   el: HTMLElement;
@@ -13,15 +16,20 @@ export function question(text: string): string {
   return `${text.trim().replace(/[\s.!?…]+$/u, '')}?`;
 }
 
-export function createWitness(content: Content): Witness {
-  const bubble = el('aside', 'card witness');
-  bubble.dataset.witness = '';
+export function createWitness(content: Content, tail: 'down' | 'right'): Witness {
+  const witness = el('div', `witness witness--${tail}`);
+  witness.dataset.witness = '';
   const line = el('p', 'witness__line');
-  bubble.append(el('div', 'label', content.ui.witnessLabel), line);
+  const bubble = el('aside', 'witness__bubble');
+  bubble.append(el('div', 'label witness__label', content.ui.witnessLabel), line);
+  const silhouette = figure();
+  silhouette.classList.add('witness__figure');
+  witness.append(bubble, silhouette);
   return {
-    el: bubble,
+    el: witness,
     say(text) {
       line.textContent = question(text);
+      replay(bubble, 'pop');
     },
   };
 }

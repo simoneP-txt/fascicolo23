@@ -1,0 +1,88 @@
+/* Witness (src/ui/witness.ts), from mockups 01, 06, 07 and 11: a paper bubble with a 24 px tail, drawn as a
+   square turned 45 degrees with two of its borders, and the silhouette under the tail ('down') or beside
+   it ('right'). Border, label and silhouette take the frame theme of the room. A new line pops the bubble
+   out of its tail. */
+@layer components {
+  .witness {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-6);
+  }
+  .witness--right {
+    flex-direction: row;
+    gap: var(--space-3);
+  }
+
+  .witness__bubble {
+    position: relative;
+    box-sizing: border-box;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-3);
+    border: var(--border) solid var(--bubble-border);
+    border-radius: var(--radius-bubble);
+    background: var(--paper);
+    color: var(--ink);
+    transform-origin: var(--space-8) 100%;
+  }
+  .witness--right .witness__bubble {
+    flex: 1 1 auto;
+    align-self: flex-start;
+    min-width: 0;
+    transform-origin: 100% var(--space-7);
+  }
+  .witness__bubble[data-pop] {
+    animation: witness-pop var(--duration-pop) var(--ease);
+  }
+  .witness__bubble::after {
+    content: '';
+    position: absolute;
+    width: var(--space-3);
+    height: var(--space-3);
+    background: var(--paper);
+    border: 0 solid var(--bubble-border);
+    rotate: 45deg;
+  }
+  .witness--down .witness__bubble::after {
+    left: var(--space-6);
+    bottom: calc(-1 * var(--space-2));
+    border-right-width: var(--border);
+    border-bottom-width: var(--border);
+  }
+  .witness--right .witness__bubble::after {
+    top: var(--space-5);
+    right: calc(-1 * var(--space-2));
+    border-top-width: var(--border);
+    border-right-width: var(--border);
+  }
+
+  .witness__label {
+    color: var(--bubble-label);
+  }
+  .witness__line {
+    margin: 0;
+    font-family: var(--font-witness);
+    font-size: var(--text-witness);
+    font-style: italic;
+    font-weight: 500;
+    line-height: 1.2;
+  }
+
+  .witness__figure {
+    flex: none;
+    margin-left: var(--space-1);
+  }
+  .witness--right .witness__figure {
+    margin-left: 0;
+  }
+}
+
+@keyframes witness-pop {
+  from {
+    opacity: 0;
+    transform: scale(var(--pop-scale));
+  }
+}

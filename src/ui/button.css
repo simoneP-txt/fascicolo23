@@ -1,0 +1,93 @@
+/* Buttons (src/ui/button.ts), from mockups 04, 05, 06, 13, 14 and 15: red "primary", "outline" in the ink
+   of its context, "dark", "gold", a bare "link" and "help", which sits in a tray of the room's accent. A
+   press sinks the button; a switched-off one (aria-disabled) does not sink but shakes once per press.
+   The screen that places a button gives it its size. */
+@layer components {
+  .btn {
+    appearance: none;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--space-8);
+    margin: 0;
+    padding: 0 var(--space-3);
+    border: var(--border) solid transparent;
+    border-radius: var(--radius);
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-family: var(--font-ui);
+    font-size: var(--text-small);
+    line-height: 1.1;
+    text-align: center;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      transform var(--duration-press) var(--ease),
+      filter var(--duration-press) var(--ease);
+  }
+  .btn:hover {
+    filter: brightness(1.08);
+  }
+  .btn:active:not([aria-disabled='true']) {
+    transform: translateY(var(--press-shift)) scale(var(--press-scale));
+  }
+  .btn:focus-visible {
+    outline: var(--border) solid var(--red);
+    outline-offset: var(--border);
+  }
+  .btn[aria-disabled='true'] {
+    cursor: default;
+    filter: none;
+  }
+  .btn[data-nope] {
+    animation: btn-nope var(--duration-nope) var(--ease);
+  }
+  .btn > .icon {
+    flex: none;
+  }
+
+  .btn--primary {
+    background: var(--red);
+    color: var(--paper);
+    box-shadow: var(--shadow-button);
+  }
+  .btn--outline {
+    border-color: currentColor;
+  }
+  .btn--dark {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .btn--gold {
+    background: var(--gold);
+    color: var(--ink);
+    box-shadow: var(--shadow-sheet-dark);
+  }
+  .btn--link {
+    gap: var(--space-1);
+    min-height: var(--space-6);
+    padding: 0;
+    border: 0;
+  }
+  .btn--help {
+    border-color: var(--help-accent);
+    background: var(--help-wash);
+    box-shadow: 0 0 0 var(--space-1) var(--help-tray);
+    color: var(--frame-text);
+  }
+}
+
+@keyframes btn-nope {
+  20%,
+  60% {
+    transform: translateX(calc(-1 * var(--space-1)));
+  }
+  40%,
+  80% {
+    transform: translateX(var(--space-1));
+  }
+}
