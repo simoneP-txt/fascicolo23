@@ -37,7 +37,7 @@ body {
 #app {
   position: fixed;
   inset: 0;
-  overflow: hidden;
+  overflow: clip; /* not hidden: an overlay's veil runs past the window, and nothing may scroll the host to it */
   font-family: var(--font-ui);
   background: linear-gradient(var(--backdrop-top) 50%, var(--backdrop-bottom) 50%);
 }
@@ -52,11 +52,12 @@ body {
   user-select: none;
 }
 
-/* The screen clips its content to the stage; overlays stay unclipped, so their veil reaches the bands. */
+/* The screen clips its content to the stage, and nothing can scroll it; overlays stay unclipped, so their
+   veil reaches the bands. */
 .screen {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  overflow: clip;
 }
 
 /* A screen change (stage.ts): the host's ink layer covers the window, stage and bands alike. It fades in

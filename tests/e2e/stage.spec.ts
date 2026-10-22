@@ -40,6 +40,15 @@ test('the stage paints nothing, so the art of the host shows through it', async 
   expect(paint).toEqual({ backgroundColor: 'rgba(0, 0, 0, 0)', backgroundImage: 'none' });
 });
 
+test('nothing can scroll the host, even when an overlay veil runs past the window', async ({ page }) => {
+  await openCase(page);
+  const before = await page.locator('#stage').boundingBox();
+  await page.keyboard.press('Control+Shift+KeyR');
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.locator('#app').evaluate((host) => host.scrollTo(600, 600)); // as a click's scrollIntoView would
+  expect(await page.locator('#stage').boundingBox()).toEqual(before);
+});
+
 test.describe('on the 16:10 party screen', () => {
   test.use({ viewport: { width: 1707, height: 1067 }, deviceScaleFactor: 1.5 });
 
