@@ -49,8 +49,9 @@
 
   /* Glows and highlights */
   --red-glow: color-mix(in srgb, var(--red) 25%, transparent); /* token in use, the finale button, a wrong order */
-  --square-check: color-mix(in srgb, var(--red) 55%, transparent); /* the king in check */
-  --square-free: color-mix(in srgb, var(--gold) 55%, transparent); /* the free square of the hint */
+  --square-check: color-mix(in srgb, var(--red) 55%, transparent); /* the king in check, a wrong square */
+  --square-target: color-mix(in srgb, var(--gold) 55%, transparent); /* a square the selected piece can reach */
+  --target-mark: color-mix(in srgb, var(--ink) 55%, transparent); /* the dot, or the ring round a piece to take, on it */
   --gold-dim: color-mix(in srgb, var(--gold) 50%, transparent); /* outline of an empty code slot */
   --gold-glow: color-mix(in srgb, var(--gold) 25%, transparent); /* drop target, halo of the way out in Rapture */
   --gold-wash: color-mix(in srgb, var(--gold) 12%, transparent); /* the hint button in a dark room, deco glow, the shelf in play */
@@ -160,6 +161,7 @@
   --border: 4px;
   --border-thick: 8px;
   --border-frame: 16px; /* window frames */
+  --square-ring: 6px; /* the gold ring of the selected square on the chessboard */
   --meme-outline: 10px; /* ink around a meme caption: 2 px at the 32 px of the sample */
   --pin: 24px;
 
@@ -173,6 +175,7 @@
   --shadow-sheet-dark: 0 12px 22px rgba(0, 0, 0, 0.45); /* paper in a dark room */
   --shadow-button: 0 8px 14px rgba(31, 27, 23, 0.35);
   --shadow-folder: 0 24px 40px rgba(0, 0, 0, 0.45); /* the case folder, the wish card */
+  --shadow-board: 0 18px 32px rgba(0, 0, 0, 0.45); /* the chessboard */
   --shadow-dialog: 0 32px 48px rgba(0, 0, 0, 0.5);
 
   /* Motion: one curve; the countdown alone runs linear */
@@ -192,6 +195,8 @@
   --duration-dip: 240ms; /* each half of a screen change: the ink comes in, the screens swap, the ink goes */
   --duration-hush: 300ms; /* clicks ignored after a screen change, and after an overlay comes or goes */
   --duration-beat: 2000ms; /* a solved room keeps its result on screen this long, then the board comes */
+  --duration-slide: 400ms; /* a chess piece moving to its square */
+  --duration-reply: 1000ms; /* from a right move on the chessboard to black's answer */
   --press-shift: 2px; /* how far a pressed control sinks */
   --press-scale: 0.98;
   --meme-zoom: 1.35; /* the size a meme lands from */
@@ -248,8 +253,8 @@
   --figure: var(--figure-sea);
 }
 
-/* Backdrops: the tones of each screen's top and bottom edge. The rooms keep one tone until phase 4
-   draws them. */
+/* Backdrops: the tones of each screen's top and bottom edge. A room phase 4 has not drawn yet keeps one
+   tone; the chessboard's night ends in its near hedge. */
 [data-backdrop='intro'] {
   --backdrop-top: var(--night);
   --backdrop-bottom: var(--hill-near);
@@ -264,7 +269,7 @@
 }
 [data-backdrop='scacchiera'] {
   --backdrop-top: var(--night);
-  --backdrop-bottom: var(--night);
+  --backdrop-bottom: var(--hedge-near);
 }
 [data-backdrop='biblioteca'] {
   --backdrop-top: var(--walnut);

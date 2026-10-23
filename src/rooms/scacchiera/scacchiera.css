@@ -1,0 +1,206 @@
+/* Chessboard (mockup 07): the night with its stars and hedges fills the stage; the position card leans on the
+   left under its pin; the board stands in the middle, a wooden frame with an ink edge, the ranks on its left
+   and the files below, 64 square buttons and the layer of pieces over them, which takes no clicks. The
+   selected square wears a gold ring and the squares it reaches a gold wash with a dot, or with a ring round a
+   piece to take; the king in check stands on red. A wrong square flashes red and shakes, and a piece slides
+   to its square, moving transform and opacity only. */
+.scacchiera__night {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.scacchiera__card {
+  position: absolute;
+  left: var(--space-12);
+  top: 136px;
+  width: 408px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sheet-dark);
+}
+.scacchiera__title {
+  margin: 0;
+  font-family: var(--font-witness);
+  font-size: var(--text-heading);
+  font-weight: 600;
+  line-height: 1.2; /* the mockup's 1.05 cuts the ascenders of Cormorant Garamond */
+}
+.scacchiera__task {
+  margin: 0;
+  font-size: var(--text-small);
+  line-height: 1.3;
+}
+.scacchiera__rule {
+  height: var(--border);
+  background: var(--ink-rule);
+}
+.scacchiera__moves {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.scacchiera__move {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-heading);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.scacchiera__n {
+  color: var(--ink-soft);
+}
+/* A move still to find: a line to write on, sitting on the baseline of its number. */
+.scacchiera__san:empty {
+  flex: 1;
+  height: var(--space-4);
+  border-bottom: var(--border) solid var(--ink-faint);
+}
+
+.scacchiera__board {
+  position: absolute;
+  left: 552px;
+  top: 136px;
+  width: 848px;
+  height: 848px;
+  border-radius: var(--radius);
+  background: var(--frame);
+  box-shadow:
+    var(--shadow-board),
+    inset 0 0 0 var(--border) var(--ink);
+  color: var(--paper);
+  font-size: var(--text-small);
+}
+.scacchiera__ranks,
+.scacchiera__files {
+  position: absolute;
+  display: grid;
+}
+.scacchiera__ranks {
+  left: 0;
+  top: var(--space-5);
+  width: var(--space-5);
+  grid-template-rows: repeat(8, var(--space-12));
+}
+.scacchiera__files {
+  left: var(--space-5);
+  top: 808px;
+  height: var(--space-5);
+  grid-template-columns: repeat(8, var(--space-12));
+}
+.scacchiera__ranks > span,
+.scacchiera__files > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scacchiera__grid,
+.scacchiera__pieces {
+  position: absolute;
+  left: var(--space-5);
+  top: var(--space-5);
+  width: 768px;
+  height: 768px;
+}
+.scacchiera__grid {
+  display: grid;
+  grid-template-columns: repeat(8, var(--space-12));
+  background: var(--paper);
+}
+.scacchiera__pieces {
+  overflow: visible;
+  pointer-events: none;
+}
+
+.scacchiera__square {
+  position: relative;
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background-color: var(--paper);
+  cursor: pointer;
+  transition: transform var(--duration-press) var(--ease);
+}
+.scacchiera__square[data-dark] {
+  background-color: var(--sage);
+}
+.scacchiera__square:active {
+  transform: translateY(var(--press-shift)) scale(var(--press-scale));
+}
+.scacchiera__square:focus-visible {
+  outline: var(--border) solid var(--red);
+  outline-offset: calc(-1 * var(--border));
+}
+.scacchiera__square[data-target] {
+  background-color: var(--square-target);
+}
+.scacchiera__square[data-target='move'] {
+  background-image: radial-gradient(circle closest-side, var(--target-mark) 37.5%, transparent 40%);
+}
+.scacchiera__square[data-target='take'] {
+  background-image: radial-gradient(
+    circle closest-side,
+    transparent 82%,
+    var(--target-mark) 84%,
+    var(--target-mark) 94%,
+    transparent 96%
+  );
+}
+.scacchiera__square[data-check] {
+  background-color: var(--square-check);
+}
+.scacchiera__square[data-selected] {
+  box-shadow: inset 0 0 0 var(--square-ring) var(--gold);
+}
+/* The red flash of a wrong square, faded out at rest. */
+.scacchiera__square::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--square-check);
+  opacity: 0;
+}
+.scacchiera__square[data-nope] {
+  animation: square-nope var(--duration-nope) var(--ease);
+}
+.scacchiera__square[data-nope]::after {
+  animation: square-flash var(--duration-nope) var(--ease);
+}
+
+.scacchiera__piece {
+  transition:
+    transform var(--duration-slide) var(--ease),
+    opacity var(--duration-slide) var(--ease);
+}
+.scacchiera__piece[data-taken] {
+  opacity: 0;
+}
+
+@keyframes square-nope {
+  20%,
+  60% {
+    transform: translateX(calc(-1 * var(--space-1)));
+  }
+  40%,
+  80% {
+    transform: translateX(var(--space-1));
+  }
+}
+
+/* The red holds for half the shake, then fades. */
+@keyframes square-flash {
+  from,
+  50% {
+    opacity: 1;
+  }
+}

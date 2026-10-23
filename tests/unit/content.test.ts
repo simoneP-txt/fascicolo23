@@ -44,7 +44,10 @@ test('a negative threshold names its field', () => {
 const withFields = (raw: unknown, id: RoomId, schema: Record<string, Schema>) => () => validateContent(raw, [{ id, schema }]);
 
 test('a room schema adds its own fields', () => {
-  expect(withFields(json, 'scacchiera', { fen: 'text' })).toThrow(/rooms\.scacchiera\.fen/);
+  const broken = copy();
+  delete broken.rooms.scacchiera.fen;
+  expect(withFields(broken, 'scacchiera', { fen: 'text' })).toThrow(/rooms\.scacchiera\.fen/);
+  expect(() => validateContent(broken, rooms)).toThrow(/rooms\.scacchiera\.fen/); // the chessboard declares it
 });
 
 test('a room field replaces the common one of that name', () => {

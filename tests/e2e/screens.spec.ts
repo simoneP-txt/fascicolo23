@@ -59,10 +59,15 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
     await openCase(page);
     await enterRoom(page, 'studio');
   },
-  // 07, with the first hint shown by Ctrl+Shift+H
+  // 07 after 1.Bxf7+ Kh8: the knight selected with the squares it reaches, the first hint shown by Ctrl+Shift+H
   'room-scacchiera': async (page) => {
     await openCase(page);
     await enterRoom(page, 'scacchiera');
+    await page.locator('[data-square="c4"]').click();
+    await page.locator('[data-square="f7"]').click();
+    await expect(page.locator('[data-piece="k"][data-at="h8"]')).toHaveCount(1);
+    await page.locator('[data-square="e5"]').click();
+    await expect(page.locator('[data-target]')).not.toHaveCount(0);
     await page.keyboard.press('Control+Shift+KeyH');
     await expect(page.locator('[data-hint]')).toBeVisible();
   },

@@ -3,7 +3,7 @@
 // darken with it, in one layer, under a dialog; the four fonts load from the build with the network cut.
 // Durations are cut to 1 ms.
 import { expect, test, type Page } from '@playwright/test';
-import { bandColor, bandsMatchTokens, colorDistance, edgeColors, luminance, type Rgb } from './checks';
+import { bandColor, bandsMatchTokens, colorDistance, edgeColors, edgeJumps, luminance, type Rgb } from './checks';
 import { board, content, continueWish, enterRoom, offline, openCase, quick } from './helpers';
 
 const BANDS = ['top', 'bottom'] as const;
@@ -78,6 +78,15 @@ test.describe('on the 16:10 party screen', () => {
 
     await enterRoom(page, 'studio');
     await bandsMatchTokens(page, 'study');
+
+    // The chessboard's night and hedges run on into the bands, with no seam along either edge.
+    await page.getByRole('button', { name: content.ui.back }).click();
+    await expect(board(page)).toBeVisible();
+    await enterRoom(page, 'scacchiera');
+    await bandsMatchTokens(page, 'chessboard');
+    for (const edge of BANDS) {
+      expect(Math.max(...(await edgeJumps(page, edge))), `chessboard at the ${edge} edge of the stage`).toBeLessThanOrEqual(12);
+    }
   });
 
   test('an open dialog darkens the bands too, on the board and in a room', async ({ page }) => {

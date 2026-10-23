@@ -48,13 +48,33 @@
       "name": "La scacchiera",
       "header": "FASCICOLO N. 23 · LA SCACCHIERA",
       "from": "dalla scacchiera",
-      "witness": { "intro": "Cosa c'è dietro quel muro di pezzi?" },
+      "witness": {
+        "intro": "Cosa c'è dietro quel muro di pezzi?",
+        "black": "Muove il bianco?",
+        "wrong": [
+          "E se il nero non avesse tempo di respirare?",
+          "Nell'angolo il re si sente al sicuro, vero?",
+          "Chi lascia passare la torre?"
+        ],
+        "replies": [
+          "Il re è scappato nell'angolo, e adesso?",
+          "Chi è rimasto sulla colonna h?"
+        ],
+        "solved": "Il Re parla inglese?"
+      },
       "hints": [
-        "Il re può andare solo dove nessun pezzo bianco arriva.",
-        "Prova le case intorno al re una per una: solo una è libera."
+        "Dai scacco a ogni mossa: il nero non deve avere tempo.",
+        "L'ultimo scacco lo dà la torre in h1: lasciala passare."
       ],
       "help": { "hintAfterSec": 120, "secondHintAfterSec": 240, "hintAfterErrors": 3, "skipAfterSec": 300, "skipAfterErrors": null },
-      "placeholder": { "solve": "Risolvi la stanza?", "error": "Sbaglia apposta?" }
+      "fen": "rn3bk1/ppp2ppp/8/4N1P1/2B1PP1K/6P1/PPP5/7R w - - 0 1",
+      "line": ["Bxf7+", "Kh8", "Ng6+", "hxg6", "Kg4#"],
+      "card": {
+        "tag": "LA POSIZIONE",
+        "title": "Matto in tre?",
+        "task": "Muove il bianco, il nero risponde da solo.",
+        "moves": "LE TUE MOSSE"
+      }
     },
     "biblioteca": {
       "name": "La biblioteca",
