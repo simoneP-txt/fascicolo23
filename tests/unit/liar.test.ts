@@ -1,8 +1,8 @@
 // Library: the hedge mystery behind the shelf has one consistent liar, the custode, and then a single cut
 // time, the clue the room gives. Each witness matters: the vicina's first walk rules her out, the lattaio's
 // time closes the minute. The texts of content.json name the witnesses of the model and say the minutes of
-// its claims, the witness answers each wrong accusation, the secret book sits on the chessboard's square and
-// the shelf is drawn the same on every visit.
+// its claims, the witness answers each wrong accusation, the schema checks the time and the questions of a
+// quick guess, the secret book sits on the chessboard's square and the shelf is drawn the same on every visit.
 import { expect, test } from 'vitest';
 import json from '../../content/content.json';
 import { validateContent } from '../../src/engine/content';
@@ -58,6 +58,15 @@ test('the witness answers every wrong accusation', () =>
 test('the secret book sits where the chessboard sends you', () => expect(room.secret).toBe(content.clues.g4.label));
 
 test('the solution names the time', () => expect(room.mystery.solution.text).toContain('{time}'));
+
+test('the library checks the time and the questions of a quick guess', () => {
+  const noTime: any = structuredClone(json);
+  delete noTime.rooms.biblioteca.quickGuessSec;
+  expect(() => validateContent(noTime, rooms)).toThrow(/rooms\.biblioteca\.quickGuessSec/);
+  const noQuestions: any = structuredClone(json);
+  noQuestions.rooms.biblioteca.witness.sure = [];
+  expect(() => validateContent(noQuestions, rooms)).toThrow(/rooms\.biblioteca\.witness\.sure/);
+});
 
 test('the shelf is drawn the same every time', () => {
   const shelf = shelfSpines();

@@ -116,13 +116,15 @@
           "vicina": "Se mentisse su tutto, alle cinque meno sedici la siepe sarebbe già stata a terra?",
           "lattaio": "Se mente il lattaio, vicina e custode possono dire il vero tutti e due?"
         },
-        "solved": "Il custode non sapeva che la vicina porta fuori il cane?"
+        "solved": "Il custode non sapeva che la vicina porta fuori il cane?",
+        "sure": ["Sicura?", "Sicura sicura?"]
       },
       "hints": [
         "Le coordinate della scacchiera valgono anche sullo scaffale.",
         "Chi mente, mente su tutto: anche sulla prima passeggiata della vicina."
       ],
       "help": { "hintAfterSec": 240, "secondHintAfterSec": 360, "hintAfterErrors": 3, "skipAfterSec": 420, "skipAfterErrors": null },
+      "quickGuessSec": 30,
       "secret": "g4",
       "shelf": {
         "tag": "SCAFFALE {square}",

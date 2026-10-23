@@ -1,10 +1,12 @@
 // Library e2e: the shelf is the chessboard's grid, a chosen square shows its title or none, every title fits
 // its card at 1366x768, wrong books show the shelf meme and count once each even under a double click, and
 // the secret square turns the shelf into the hedge mystery. There a truthful witness accused counts an error
-// and gets an answer, while the liar gives up the time, the clue and the room, once. Curtains, leaves and
-// pages move by transform and opacity only, and each visit starts from the shelf. The game starts with the
-// chessboard solved; durations are cut to 1 ms, and the tests that watch a meme or the beat stop the page
-// clock once the room is on screen.
+// and gets an answer, while the liar gives up the time, the clue and the room, once. A right guess sooner
+// than quickGuessSec after the mystery comes in is asked "Sicura?" and "Sicura sicura?" first, with no error
+// counted, a double click asking once and another accusation starting the questions over. Curtains, leaves
+// and pages move by transform and opacity only, and each visit starts from the shelf, its quick guess too.
+// The game starts with the chessboard solved; durations are cut to 1 ms, and the tests that watch a meme,
+// the questions or the beat stop the page clock once the room is on screen.
 import { expect, test, type Page } from '@playwright/test';
 import { SAVE_KEY } from '../../src/engine/save';
 import { consistentLiars } from '../../src/rooms/biblioteca/liar';
@@ -19,6 +21,7 @@ const square = (page: Page, at: string) => page.locator(`[data-square="${at}"]`)
 const shelfCard = (page: Page) => page.locator('[data-shelf-card]');
 const statement = (page: Page, id: string) => page.locator(`[data-statement="${id}"]`);
 const witness = (page: Page) => page.locator('[data-witness]');
+const line = (page: Page) => page.locator('[data-witness] .witness__line');
 const hintButton = (page: Page) => page.getByRole('button', { name: content.ui.hint.button });
 const accuse = (page: Page, id: string) =>
   statement(page, id).getByRole('button', { name: room.mystery.statements.find((item: { id: string }) => item.id === id).accuse });
@@ -41,6 +44,16 @@ async function pull(page: Page, at: string): Promise<void> {
 /** The secret book pulled and the mystery on screen. */
 async function openPassage(page: Page): Promise<void> {
   await pull(page, room.secret);
+  await expect(page.locator('[data-view="mystery"]')).toBeVisible();
+}
+
+/** The mystery on screen a second after it came in, the page clock standing still: a right guess now is quick,
+ *  however long the search on the shelf took before. */
+async function quickMystery(page: Page): Promise<void> {
+  await enterLibrary(page, true);
+  await page.clock.runFor(room.quickGuessSec * 1000); // the time of a quick guess starts with the mystery
+  await pull(page, room.secret);
+  await page.clock.runFor(1000);
   await expect(page.locator('[data-view="mystery"]')).toBeVisible();
 }
 
@@ -155,10 +168,9 @@ test('a wrong accusation counts an error and the witness answers', async ({ page
   await expect(page.getByText(room.mystery.solution.tag)).toBeHidden();
 });
 
-test('the liar gives up the time and the room', async ({ page }) => {
-  await enterLibrary(page, true);
-  await pull(page, room.secret);
-  await page.clock.runFor(1000);
+test('after quickGuessSec seconds the liar gives up the time and the room at once', async ({ page }) => {
+  await quickMystery(page);
+  await page.clock.runFor(room.quickGuessSec * 1000);
   await accuse(page, LIAR).click();
   await expect(statement(page, LIAR).locator('[data-stamp]')).toHaveText(room.mystery.stamp);
   const time = content.clues['time-0451'].label;
@@ -174,10 +186,52 @@ test('the liar gives up the time and the room', async ({ page }) => {
   await expect(board(page).locator('[data-clue="time-0451"]')).toBeVisible();
 });
 
-test('a double click on the liar solves the room once', async ({ page }) => {
-  await enterLibrary(page);
-  await openPassage(page);
+test('a quick right guess is asked twice, then it counts', async ({ page }) => {
+  await quickMystery(page);
+  for (const question of room.witness.sure) {
+    await accuse(page, LIAR).click();
+    await expect(line(page)).toHaveText(question);
+    await expect(statement(page, LIAR).locator('[data-stamp]')).toHaveCount(0);
+    await expect(page.getByText(room.mystery.solution.tag)).toBeHidden();
+    await page.clock.runFor(1000);
+  }
+  await accuse(page, LIAR).click();
+  await expect(statement(page, LIAR).locator('[data-stamp]')).toHaveText(room.mystery.stamp);
+  await expect(line(page)).toHaveText(room.witness.solved);
+  await page.clock.resume();
+  await expect(wish(page)).toContainText(fragment('biblioteca'));
+});
+
+test('another accusation starts the questions over, and no question counts an error', async ({ page }) => {
+  await quickMystery(page);
+  for (const question of room.witness.sure) {
+    await accuse(page, LIAR).click();
+    await expect(line(page)).toHaveText(question);
+    await page.clock.runFor(1000);
+  }
+  await accuse(page, 'vicina').click();
+  await expect(line(page)).toHaveText(room.witness.wrong.vicina);
+  await page.clock.runFor(1000);
+  await accuse(page, LIAR).click();
+  await expect(line(page)).toHaveText(room.witness.sure[0]);
+  await page.clock.runFor(1000);
+  await expect(hintButton(page)).toBeHidden(); // the vicina's error only
+});
+
+test('a double click on a quick right guess asks once', async ({ page }) => {
+  await quickMystery(page);
   await accuse(page, LIAR).dblclick();
+  await expect(line(page)).toHaveText(room.witness.sure[0]);
+  await page.clock.runFor(1000);
+  await accuse(page, LIAR).click();
+  await expect(line(page)).toHaveText(room.witness.sure[1]);
+});
+
+test('a double click on the liar solves the room once', async ({ page }) => {
+  await quickMystery(page);
+  await page.clock.runFor(room.quickGuessSec * 1000);
+  await accuse(page, LIAR).dblclick();
+  await page.clock.resume();
   await expect(wish(page)).toHaveCount(1);
   await continueWish(page);
   await expect(board(page)).toBeVisible();
@@ -198,8 +252,10 @@ test('curtains and leaves move with the wind, by transform and opacity', async (
 });
 
 test('the room starts over after leaving', async ({ page }) => {
+  await page.clock.install();
   await enterLibrary(page);
   await openPassage(page);
+  await page.clock.runFor(room.quickGuessSec * 1000); // this visit's quick guess is over
   await page.getByRole('button', { name: content.ui.back }).click();
   await expect(board(page)).toBeVisible();
   await enterRoom(page, 'biblioteca');
@@ -207,4 +263,7 @@ test('the room starts over after leaving', async ({ page }) => {
   await expect(page.locator('[data-view="mystery"]')).toBeHidden();
   await expect(page.locator('[data-square]')).toHaveCount(64);
   await expect(page.locator('[data-chosen]')).toHaveCount(0);
+  await openPassage(page);
+  await accuse(page, LIAR).click();
+  await expect(line(page)).toHaveText(room.witness.sure[0]); // and the new one gets its own
 });

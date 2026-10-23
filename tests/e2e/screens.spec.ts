@@ -97,14 +97,14 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
     await page.clock.runFor(content.rooms.biblioteca.help.skipAfterSec * 1000);
     await expect(page.getByRole('button', { name: content.ui.skip.button })).toBeVisible();
   },
-  // 08: the liar accused, the clock standing still during the beat
+  // 08: the liar accused once the time of a quick guess is over, the clock standing still during the beat
   'room-biblioteca-giallo': async (page) => {
-    const { secret, shelf, mystery } = content.rooms.biblioteca;
+    const { secret, shelf, mystery, quickGuessSec } = content.rooms.biblioteca;
     await enterLibrary(page);
     await page.locator(`[data-square="${secret}"]`).click();
     await page.getByRole('button', { name: shelf.pull }).click();
     await expect(page.locator('[data-view="mystery"]')).toBeVisible();
-    await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
+    await page.clock.pauseAt((await page.evaluate(() => Date.now())) + quickGuessSec * 1000);
     const liar = mystery.statements.find((statement: { id: string }) => statement.id === consistentLiars()[0]);
     await page.locator(`[data-statement="${liar.id}"]`).getByRole('button', { name: liar.accuse }).click();
     await expect(page.locator('[data-statement] [data-stamp]')).toBeVisible();

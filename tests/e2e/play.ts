@@ -1,9 +1,9 @@
 // E2E play: how a test solves each room, and solveRoom(), which enters a room from the board, solves it and
 // closes the wish. A room is solved by playing it, with the answers taken from content.json, or by the host's
 // Ctrl+Shift+N for the tests that prove the engine. The study picks the right phenomenon of each report, the
-// chessboard plays its line, the library pulls its secret book and accuses the liar of liar.ts; the rooms
-// still waiting for phase 4 press their placeholder's solve button, until each one replaces its entry with
-// the real game.
+// chessboard plays its line, the library pulls its secret book and accuses the liar of liar.ts until the room
+// takes the answer; the rooms still waiting for phase 4 press their placeholder's solve button, until each
+// one replaces its entry with the real game.
 import { expect, type Page } from '@playwright/test';
 import { Chess } from 'chess.js';
 import type { RoomId } from '../../src/engine/types';
@@ -35,13 +35,18 @@ async function playChess(page: Page): Promise<void> {
   }
 }
 
-/** The secret book of content.json pulled from the shelf, then the one liar of the mystery accused. */
+/** The secret book of content.json pulled from the shelf, then the one liar of the mystery accused again and
+ *  again until the room takes it: a guess quicker than quickGuessSec is asked "Sicura?" first. */
 async function playLibrary(page: Page): Promise<void> {
   const { secret, shelf, mystery } = content.rooms.biblioteca;
   await page.locator(`[data-square="${secret}"]`).click();
   await page.getByRole('button', { name: shelf.pull }).click();
   const liar = mystery.statements.find((statement: { id: string }) => statement.id === consistentLiars()[0]);
-  await page.locator(`[data-statement="${liar.id}"]`).getByRole('button', { name: liar.accuse }).click();
+  const sheet = page.locator(`[data-statement="${liar.id}"]`);
+  await expect(async () => {
+    await sheet.getByRole('button', { name: liar.accuse }).click();
+    await expect(sheet).toHaveAttribute('data-liar', '', { timeout: 100 });
+  }).toPass();
 }
 
 export const play: Record<RoomId, (page: Page) => Promise<void>> = {

@@ -4,9 +4,12 @@
 // out and back, counts an error and shows the shelf meme, and stays off for that book; on the secret square the
 // book stays out and the shelf turns on itself to the mystery behind it: the hedge card and three statement
 // cards, each with its accusation. A truthful witness accused shakes the card, counts an error and turns that
-// accusation off; the liar gets the red outline and the stamp, the solution names the time the model finds,
-// the time clue comes, the area is marked solved and the room completes after --duration-beat. Clicks wait
-// while a book moves, the shelf turns or a card shakes, and every visit starts from the shelf.
+// accusation off. The liar accused sooner than quickGuessSec after the mystery came in is questioned first:
+// the witness asks each line of witness.sure ("Sicura?", "Sicura sicura?") and the click after the last one
+// counts, while another accusation starts the questions over. Once the liar is taken he gets the red outline
+// and the stamp, the solution names the time the model finds, the time clue comes, the area is marked solved
+// and the room completes after --duration-beat. Clicks wait while a book moves, the shelf turns, a card
+// shakes or a question comes, and every visit starts from the shelf, with a new time for a quick guess.
 import './biblioteca.css';
 import type { Room } from '../../engine/types';
 import { button, setEnabled } from '../../ui/button';
@@ -56,9 +59,11 @@ export const biblioteca: Room<LibraryContent> = {
     const texts = ctx.content;
     const { shelf, mystery } = texts;
     const name = (square: Square) => shelf.tag.replace('{square}', square.toUpperCase());
-    let busy = false; // a book moves, the shelf turns or a card shakes
+    let busy = false; // a book moves, the shelf turns, a card shakes or a question comes
     let chosen: Square | null = null;
     const tried = new Set<Square>(); // wrong books already pulled
+    let shown = 0; // when the mystery came in, the start of the time for a quick guess
+    let asked = 0; // questions on the liar in a row, since the last other accusation
 
     const wait = (ms: number) => {
       busy = true;
@@ -112,7 +117,8 @@ export const biblioteca: Room<LibraryContent> = {
       sheet.dataset.statement = statement.id;
       const accuse = button(statement.accuse, 'outline', () => {
         if (busy) return;
-        if (statement.id === liar) return unmask(sheet, accuse);
+        if (statement.id === liar) return accuseLiar(sheet, accuse);
+        asked = 0;
         setEnabled(accuse, false);
         replay(sheet, 'nope');
         ctx.reportError();
@@ -165,6 +171,7 @@ export const biblioteca: Room<LibraryContent> = {
       scope.later(out + durationOf('--duration-turn'), () => {
         shelfView.hidden = true;
         mysteryView.hidden = false;
+        shown = Date.now();
         busy = false;
         ctx.narrate(texts.witness.passage);
       });
@@ -180,6 +187,17 @@ export const biblioteca: Room<LibraryContent> = {
       ctx.reportError();
       ctx.meme('shelf');
       wait(durationOf('--duration-pull'));
+    };
+
+    // The liar accused: taken at once when the guess took quickGuessSec or more, or when every question of
+    // witness.sure has been asked in a row; otherwise the next question, which counts no error and holds clicks
+    // back as an answer does, so a double click asks once.
+    const accuseLiar = (sheet: HTMLElement, accuse: HTMLButtonElement) => {
+      const { sure } = texts.witness;
+      if (Date.now() - shown >= texts.quickGuessSec * 1000 || asked === sure.length) return unmask(sheet, accuse);
+      ctx.narrate(sure[asked]);
+      asked++;
+      wait(durationOf('--duration-nope'));
     };
 
     // The liar unmasked: red outline, the stamp and its sound, the solution and the time, then the beat.

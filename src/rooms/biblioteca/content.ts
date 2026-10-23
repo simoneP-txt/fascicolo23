@@ -1,6 +1,7 @@
 // Library texts: the room's own fields in content.json, the shelf with its secret square and its titles, the
-// hedge mystery behind it, and the schema that checks them at startup. liar.test.ts proves the statements of
-// the mystery a puzzle with one liar, so they change only together with STATEMENTS in liar.ts.
+// hedge mystery behind it, the time and the questions of a quick guess, and the schema that checks them at
+// startup. liar.test.ts proves the statements of the mystery a puzzle with one liar, so they change only
+// together with STATEMENTS in liar.ts.
 import type { Schema } from '../../engine/content';
 import type { RoomContent } from '../../engine/types';
 import type { Square } from '../../ui/grid8';
@@ -22,15 +23,18 @@ export interface LibraryContent extends RoomContent {
     stamp: string; // "MENTE?"
     solution: { tag: string; text: string }; // the text holds {time}
   };
+  quickGuessSec: number; // the liar accused sooner than this after the mystery comes in is asked witness.sure
   witness: {
     intro: string;
     passage: string; // the shelf turns
     wrong: Partial<Record<WitnessId, string>>; // an accusation of someone who tells the truth
     solved: string;
+    sure: string[]; // "Sicura?", "Sicura sicura?": one question per click on a quick right guess, then it counts
   };
 }
 
 export const LIBRARY_SCHEMA: Record<string, Schema> = {
+  quickGuessSec: 'seconds',
   secret: 'text',
   shelf: { tag: 'text', pull: 'text', untitled: 'text', titles: 'map' },
   mystery: {
@@ -41,5 +45,5 @@ export const LIBRARY_SCHEMA: Record<string, Schema> = {
     stamp: 'text',
     solution: { tag: 'text', text: 'text' },
   },
-  witness: { intro: 'text', passage: 'text', wrong: 'map', solved: 'text' },
+  witness: { intro: 'text', passage: 'text', wrong: 'map', solved: 'text', sure: 'texts' },
 };
