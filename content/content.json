@@ -113,14 +113,14 @@
         "intro": "Lo senti anche tu, questo fruscio?",
         "passage": "Chi ha lasciato entrare il vento?",
         "wrong": {
-          "vicina": "Se mente lei, chi ha ragione tra il lattaio e il custode?",
+          "vicina": "Se mentisse su tutto, alle cinque meno sedici la siepe sarebbe già stata a terra?",
           "lattaio": "Se mente il lattaio, vicina e custode possono dire il vero tutti e due?"
         },
-        "solved": "Il custode non sapeva che il lattaio passa sempre presto?"
+        "solved": "Il custode non sapeva che la vicina porta fuori il cane?"
       },
       "hints": [
         "Le coordinate della scacchiera valgono anche sullo scaffale.",
-        "Vicina e custode si accusano: il lattaio dice il vero."
+        "Chi mente, mente su tutto: anche sulla prima passeggiata della vicina."
       ],
       "help": { "hintAfterSec": 240, "secondHintAfterSec": 360, "hintAfterErrors": 3, "skipAfterSec": 420, "skipAfterErrors": null },
       "secret": "g4",
@@ -149,24 +149,24 @@
       "mystery": {
         "tag": "DIETRO LO SCAFFALE",
         "title": "Il delitto della siepe",
-        "intro": "Stanotte qualcuno ha tagliato la siepe. Tre testimoni, uno solo mente.",
+        "intro": "Stanotte qualcuno ha tagliato la siepe. Tre testimoni: uno mente sempre, due mai.",
         "statements": [
           {
             "id": "vicina",
             "name": "La vicina",
-            "says": "«Il custode mente. Ho sentito le cesoie nove minuti prima delle cinque.»",
+            "says": "«Sono uscita col cane alle cinque meno sedici e rientrata alle cinque meno dieci: la siepe era intera, all'andata e al ritorno.»",
             "accuse": "Mente lei?"
           },
           {
             "id": "lattaio",
             "name": "Il lattaio",
-            "says": "«Alle cinque meno cinque la siepe era già tagliata.»",
+            "says": "«Alle cinque meno otto ho lasciato il latte al cancello: la siepe era già a terra.»",
             "accuse": "Mente lui?"
           },
           {
             "id": "custode",
             "name": "Il custode",
-            "says": "«La vicina mente: alle cinque meno cinque la siepe era ancora intera.»",
+            "says": "«Ero al capanno: alle cinque meno tredici ho sentito le cesoie.»",
             "accuse": "Mente lui?"
           }
         ],

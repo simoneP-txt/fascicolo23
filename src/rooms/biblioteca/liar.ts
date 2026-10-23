@@ -1,26 +1,27 @@
-// Hedge mystery (mockup 08): the three statements of content.json as claims about who lies and when the hedge
-// was cut, and the search that proves the puzzle fair. Under the guess "L lies and the cut came at minute T",
-// every claim of L is false and every claim of the others is true; a liar fits when some minute of the night
-// makes that guess hold. liar.test.ts proves the custode the only one and 04:51 his only minute, so the texts
-// and STATEMENTS change only together, with that test.
+// Hedge mystery (mockup 08): the three statements of content.json as claims about when the hedge was cut, and
+// the search that proves the puzzle fair. Under the guess "L lies and the cut came at minute T", every claim
+// of L is false and every claim of the others is true, as the title card says; a liar fits when some minute
+// of the night makes that guess hold. The vicina and the custode cannot both tell the truth; if the vicina
+// lied about both her walks, the hedge would be down before the custode's shears, so the custode lies, and
+// the vicina's return and the lattaio's round close the cut on one minute. liar.test.ts proves the custode
+// the only liar and 04:51 his only minute, so the texts and STATEMENTS change only together, with that test.
 export const WITNESS_IDS = ['vicina', 'lattaio', 'custode'] as const;
 export type WitnessId = (typeof WITNESS_IDS)[number];
 
-/** What a statement claims, the times in minutes after midnight: who lies, the minute of the cut, a minute
- *  the hedge was already cut by, or a minute it was still whole at. */
-export type Claim = { liar: WitnessId } | { cutAt: number } | { cutBefore: number } | { intactAt: number };
+/** What a statement claims, the times in minutes after midnight: the minute of the cut, a minute the hedge
+ *  was already cut by, or a minute it was still whole at. */
+export type Claim = { cutAt: number } | { cutBefore: number } | { intactAt: number };
 
 /** What the texts of content.json claim, witness by witness. */
 export const STATEMENTS: Record<WitnessId, Claim[]> = {
-  vicina: [{ liar: 'custode' }, { cutAt: 291 }], // "Il custode mente", nine minutes to five
-  lattaio: [{ cutBefore: 295 }], // already cut at five to five
-  custode: [{ liar: 'vicina' }, { intactAt: 295 }], // "La vicina mente", still whole at five to five
+  vicina: [{ intactAt: 284 }, { intactAt: 290 }], // whole when she went out with the dog and when she came back
+  lattaio: [{ cutBefore: 292 }], // already down at eight to five
+  custode: [{ cutAt: 287 }], // the shears at thirteen to five
 };
 
 const MINUTES = Array.from({ length: 24 * 60 }, (_, minute) => minute);
 
-function holds(claim: Claim, liar: WitnessId, cut: number): boolean {
-  if ('liar' in claim) return claim.liar === liar;
+function holds(claim: Claim, cut: number): boolean {
   if ('cutAt' in claim) return cut === claim.cutAt;
   if ('cutBefore' in claim) return cut < claim.cutBefore;
   return cut > claim.intactAt;
@@ -29,7 +30,7 @@ function holds(claim: Claim, liar: WitnessId, cut: number): boolean {
 /** The minutes of the cut that fit if this witness is the liar. */
 export function cutTimes(liar: WitnessId, statements = STATEMENTS): number[] {
   return MINUTES.filter((cut) =>
-    WITNESS_IDS.every((id) => statements[id].every((claim) => holds(claim, liar, cut) === (id !== liar))),
+    WITNESS_IDS.every((id) => statements[id].every((claim) => holds(claim, cut) === (id !== liar))),
   );
 }
 

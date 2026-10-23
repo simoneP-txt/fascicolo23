@@ -234,10 +234,10 @@
   left: 480px;
   top: 128px;
   width: 960px;
-  height: 240px;
+  height: 224px;
   display: flex;
   gap: var(--space-4);
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-3) var(--space-5);
   box-shadow: var(--shadow-sheet-dark);
 }
 .biblioteca__case-text {
@@ -265,18 +265,28 @@
 .biblioteca__statements {
   position: absolute;
   left: 480px;
-  top: 400px;
+  top: 384px;
   display: flex;
   gap: var(--space-3);
 }
 .biblioteca__statement {
-  width: 304px;
-  height: 384px;
+  height: 432px;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-3);
   box-shadow: var(--shadow-sheet-dark);
+}
+/* The three cards share the width of the hedge card by the length of their statements, seven lines at most:
+   the vicina's two walks take the widest, and the custode's card keeps room under his text for the stamp. */
+.biblioteca__statement[data-statement='vicina'] {
+  width: 368px;
+}
+.biblioteca__statement[data-statement='lattaio'] {
+  width: 256px;
+}
+.biblioteca__statement[data-statement='custode'] {
+  width: 288px;
 }
 .biblioteca__statement[data-nope] {
   animation: library-nope var(--duration-nope) var(--ease);
@@ -305,11 +315,11 @@
 .biblioteca__statement .btn {
   margin-top: auto;
 }
-/* The stamp sits where mockup 08 has it, moved past the right edge, over the empty end of the last line. */
+/* The stamp sits where mockup 08 has it, in the room the custode's five lines leave above his button. */
 .biblioteca__stamp {
   position: absolute;
-  right: calc(-1 * var(--space-3));
-  top: 216px;
+  right: var(--space-3);
+  top: 264px;
   padding: 0 var(--space-2);
   font-size: var(--text-witness);
   rotate: -10deg;
@@ -319,7 +329,7 @@
 .biblioteca__solution {
   position: absolute;
   left: 480px;
-  top: 816px;
+  top: 848px;
   width: 696px;
   height: 160px;
   display: flex;
@@ -340,7 +350,7 @@
 .biblioteca__clock {
   position: absolute;
   left: 1208px;
-  top: 808px;
+  top: 840px;
   width: 232px;
   min-height: 168px;
   padding: var(--space-3);
