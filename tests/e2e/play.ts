@@ -8,7 +8,7 @@ import { expect, type Page } from '@playwright/test';
 import { Chess } from 'chess.js';
 import type { RoomId } from '../../src/engine/types';
 import { consistentLiars } from '../../src/rooms/biblioteca/liar';
-import { board, content, continueWish, enterRoom } from './helpers';
+import { board, content, continueWish, enterRoom, wish } from './helpers';
 
 const pressSolve = (id: RoomId) => (page: Page) => page.getByRole('button', { name: content.rooms[id].placeholder.solve }).click();
 
@@ -36,16 +36,20 @@ async function playChess(page: Page): Promise<void> {
 }
 
 /** The secret book of content.json pulled from the shelf, then the one liar of the mystery accused again and
- *  again until the room takes it: a guess quicker than quickGuessSec is asked "Sicura?" first. */
+ *  again until the room takes it: a guess quicker than quickGuessSec is asked "Sicura?" first. Taken means his
+ *  card marked or the wish up, because under quick() the beat lasts 1 ms and the card can be gone before a check
+ *  sees its mark. */
 async function playLibrary(page: Page): Promise<void> {
   const { secret, shelf, mystery } = content.rooms.biblioteca;
   await page.locator(`[data-square="${secret}"]`).click();
   await page.getByRole('button', { name: shelf.pull }).click();
   const liar = mystery.statements.find((statement: { id: string }) => statement.id === consistentLiars()[0]);
   const sheet = page.locator(`[data-statement="${liar.id}"]`);
+  const taken = page.locator(`[data-statement="${liar.id}"][data-liar]`).or(wish(page));
   await expect(async () => {
-    await sheet.getByRole('button', { name: liar.accuse }).click();
-    await expect(sheet).toHaveAttribute('data-liar', '', { timeout: 100 });
+    if ((await taken.count()) > 0) return;
+    await sheet.getByRole('button', { name: liar.accuse }).click({ timeout: 1000 });
+    await expect(taken.first()).toBeVisible({ timeout: 100 });
   }).toPass();
 }
 
