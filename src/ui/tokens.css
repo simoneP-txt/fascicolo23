@@ -202,7 +202,7 @@
   --duration-string: 560ms; /* their strings stretching to the doors, last */
   --duration-dip: 240ms; /* each half of a screen change: the ink comes in, the screens swap, the ink goes */
   --duration-hush: 300ms; /* clicks ignored after a screen change, and after an overlay comes or goes */
-  --duration-beat: 2000ms; /* a solved room keeps its result on screen this long, then the board comes */
+  --duration-beat: 5000ms; /* how long a solved room stays on screen before the wish, in every room: the one value to change */
   --duration-slide: 400ms; /* a chess piece moving to its square */
   --duration-reply: 1000ms; /* from a right move on the chessboard to black's answer */
   --duration-pull: 640ms; /* a book coming out of the shelf and going back */

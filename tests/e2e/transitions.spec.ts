@@ -2,8 +2,9 @@
 // shared curve, and only the opacity of the host's ink layer moves. Pointer clicks on the stage are ignored
 // while the screen changes and for --duration-hush after it, after any overlay comes or goes, and after
 // "Un indizio?" hides under the pointer. Where a test clicks inside those windows the page clock stands
-// still, so every click lands at the moment it means to. Ctrl+Shift+N while a room comes in sends the board
-// under the same dip, with one wish.
+// still, so every click lands at the moment it means to. A room solved by playing keeps the screen for five
+// seconds before the board comes back. Ctrl+Shift+N while a room comes in sends the board under the same
+// dip, with one wish.
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { parseDuration } from '../../src/ui/dom';
 import { board, content, door, duration, enterRoom, fragment, MOCKUP_01, roomScreen, seed, settled, wish } from './helpers';
@@ -203,6 +204,30 @@ test('every overlay holds clicks back as it comes and as it goes', async ({ page
   await page.clock.runFor(await duration(page, '--duration-wish'));
   await guarded('the wish goes', () => wish(page).getByRole('button', { name: content.ui.wish.continue }).click());
   await expect(hushed).toHaveCount(0);
+});
+
+test('a solved room stays on screen five seconds before the board comes back', async ({ page }) => {
+  const beat = 5000; // Simone, after playing the .exe: about five seconds before the wish
+  await page.clock.install();
+  await seed(page, OPEN);
+  await page.goto('/');
+  const dip = await duration(page, '--duration-dip');
+  const unlock = await duration(page, '--duration-unlock');
+  await pauseClock(page);
+  await enter(page, 'studio').click();
+  await page.clock.runFor(2 * dip + (await duration(page, '--duration-hush')));
+
+  const { testimonies } = content.rooms.studio;
+  for (const [i, { answer }] of testimonies.entries()) {
+    if (i > 0) await page.clock.runFor(unlock); // the next report opens
+    await page.locator(`[data-report="${i + 1}"] [data-option="${answer}"]`).click();
+  }
+  await page.clock.runFor(beat - 1);
+  await expect(roomScreen(page, 'studio')).toBeVisible();
+  await expect(page.locator('#app[data-dip]')).toHaveCount(0);
+  await expect(wish(page)).toHaveCount(0);
+  await page.clock.runFor(1 + 2 * dip);
+  await expect(wish(page)).toContainText(fragment('studio'));
 });
 
 test('Ctrl+Shift+N while a room comes in leaves one board and one wish', async ({ page }) => {
