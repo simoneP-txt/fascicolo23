@@ -1,6 +1,6 @@
 /* Case opening (mockup 05): the night fills the stage, the witness stands on the far hill, the folder leans
-   by a degree with its tab, grain and red elastic. "Sì?" and the empty dashed slot share the bottom of the
-   folder; the "No?" card waits outside it and jumps by a transform. */
+   by a degree with its tab, grain and red elastic. "Sì?" and "No?" share the bottom of the folder; once the
+   mouse reaches the "No?" card, it jumps around the stage by a transform and an empty dashed slot stays. */
 .intro__night {
   position: absolute;
   inset: 0;
@@ -116,14 +116,16 @@
   top: calc(-1 * var(--border));
 }
 
-/* The card leaves the pointer at once, so a hover look would only linger on it after the jump. */
+/* The card leaves the pointer at once, so a hover look would only linger on it after the jump. Loose, it
+   stands on the stage where it left the row (intro.ts sets left and top). */
 .intro__no {
-  position: absolute;
-  left: 1432px;
-  top: 576px;
   background: var(--paper);
   color: var(--ink);
   box-shadow: var(--shadow-sheet-dark);
   filter: none;
   transition: transform var(--duration-jump) var(--ease);
+}
+
+.intro__no[data-loose] {
+  position: absolute;
 }

@@ -56,7 +56,17 @@ test('a click plays the click sound', async ({ page }) => {
   await expect.poll(() => played(page, 'click')).toBe(true);
 });
 
-test('"No?" runs away from the mouse', async ({ page }) => {
+test('"No?" waits beside "Sì?" until the mouse reaches it', async ({ page }) => {
+  await page.goto('/');
+  const yes = (await page.getByRole('button', { name: content.ui.intro.yes }).boundingBox())!;
+  const no = (await page.getByRole('button', { name: content.ui.intro.no }).boundingBox())!;
+  expect(Math.abs(no.y - yes.y)).toBeLessThan(8);
+  expect(no.x).toBeGreaterThan(yes.x + yes.width);
+  expect(no.x - (yes.x + yes.width)).toBeLessThan(48);
+  await expect(page.locator('.intro__slot')).toHaveCount(0);
+});
+
+test('"No?" runs away from the mouse and leaves its slot empty', async ({ page }) => {
   await page.goto('/');
   const no = page.getByRole('button', { name: content.ui.intro.no });
   const where = async () => {
@@ -66,6 +76,11 @@ test('"No?" runs away from the mouse', async ({ page }) => {
   const before = await where();
   await no.hover();
   await expect.poll(where).not.toBe(before);
+  await expect(page.locator('.intro__slot')).toBeVisible();
+  const jumped = await where();
+  await page.mouse.move(0, 0); // a real mouse leaves the card on its way back to it
+  await no.hover();
+  await expect.poll(where).not.toBe(jumped);
 
   const stage = (await page.locator('#stage').boundingBox())!;
   const after = (await no.boundingBox())!;

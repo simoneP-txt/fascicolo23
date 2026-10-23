@@ -1,7 +1,7 @@
 // Case opening (mockup 05): a night sky with stars, a moon and two hills, the witness on the far hill, and
-// the case folder with its tab, grain and red elastic. "Vuoi aprire il caso?" with a "Sì?" that opens it,
-// and an empty dashed slot with three speed lines, because its "No?" has already run off: a tilted card
-// that jumps somewhere else on the stage, with a transform, as soon as the mouse reaches it.
+// the case folder with its tab, grain and red elastic. "Vuoi aprire il caso?" with a "Sì?" that opens it
+// and a "No?" beside it. As soon as the mouse reaches the "No?", it leaves the row for the stage and jumps
+// somewhere else, tilted, with a transform; an empty dashed slot with three speed lines takes its place.
 import './intro.css';
 import type { Content } from '../engine/types';
 import { button } from './button';
@@ -75,8 +75,11 @@ export function renderIntro(content: Content, stage: Stage, onOpen: () => void):
   const slot = el('div', 'intro__slot');
   slot.setAttribute('aria-hidden', 'true');
   slot.append(svg(SPEED_LINES));
+  let tilt = TILT;
+  const no = button(texts.no, 'outline', () => runAway(centerOf(no)));
+  no.classList.add('intro__no');
   const actions = el('div', 'intro__actions');
-  actions.append(yes, slot);
+  actions.append(yes, no);
 
   const band = el('div', 'intro__band');
   band.setAttribute('aria-hidden', 'true');
@@ -91,12 +94,20 @@ export function renderIntro(content: Content, stage: Stage, onOpen: () => void):
   const folder = el('div', 'intro__folder');
   folder.append(el('div', 'label intro__tab', content.ui.file), body);
 
-  // The card stays where intro.css puts it; each jump moves it by a transform from there.
-  let tilt = TILT;
-  const no = button(texts.no, 'outline', () => runAway(centerOf(no)));
-  no.classList.add('intro__no');
-  no.style.transform = `rotate(${tilt}deg)`;
+  // The first jump moves the card from the row onto the stage, at the spot where it stands, and puts the
+  // slot in its place; every jump moves it by a transform from that spot.
+  const leaveRow = () => {
+    const box = no.getBoundingClientRect();
+    const at = stage.toStage(box.left, box.top);
+    no.replaceWith(slot);
+    no.dataset.loose = '';
+    no.style.left = `${at.x}px`;
+    no.style.top = `${at.y}px`;
+    screen.append(no);
+    void no.offsetWidth; // so the jump starts from the row, not from where the card lands first
+  };
   const runAway = (pointer: Point) => {
+    if (no.dataset.loose === undefined) leaveRow();
     const spot = pickSpot(pointer, { width: no.offsetWidth, height: no.offsetHeight }, Math.random);
     tilt = -tilt;
     no.style.transform = `translate(${spot.x - no.offsetLeft}px, ${spot.y - no.offsetTop}px) rotate(${tilt}deg)`;
@@ -107,6 +118,6 @@ export function renderIntro(content: Content, stage: Stage, onOpen: () => void):
   };
   no.addEventListener('pointerenter', (event) => runAway(stage.toStage(event.clientX, event.clientY)));
 
-  screen.append(svg(NIGHT), onHill, folder, no);
+  screen.append(svg(NIGHT), onHill, folder);
   return screen;
 }
