@@ -4,7 +4,10 @@
 // three font families. Later tasks add rows to the table.
 import { expect, test, type Page } from '@playwright/test';
 import { bandsMatchTokens, edgeJumps, fontFamilies, hasBands, outsideStage, overflowingText, smallText } from './checks';
+import type { RoomId } from '../../src/engine/types';
+import { consistentLiars } from '../../src/rooms/biblioteca/liar';
 import { board, consolation, content, enterRoom, FINISHED, MOCKUP_01, openCase, quick, roomScreen, seed, wish } from './helpers';
+import { play } from './play';
 
 const SIZES = [
   [1707, 1067, 1.5],
@@ -24,11 +27,19 @@ async function wishEnded(page: Page): Promise<void> {
   }
 }
 
-/** Solves this room from the board with its placeholder button, up to the end of the wish. */
-async function solvedToWish(page: Page, id: string): Promise<void> {
+/** Solves this room from the board as play.ts does, up to the end of the wish. */
+async function solvedToWish(page: Page, id: RoomId): Promise<void> {
   await enterRoom(page, id);
-  await page.getByRole('button', { name: content.rooms[id].placeholder.solve }).click();
+  await play[id](page);
   await wishEnded(page);
+}
+
+/** The library in the game of mockup 01, with the page clock installed. */
+async function enterLibrary(page: Page): Promise<void> {
+  await page.clock.install();
+  await seed(page, MOCKUP_01);
+  await page.goto('/');
+  await enterRoom(page, 'biblioteca');
 }
 
 // Each state is named after its screen; the comment gives the mockup it is compared with.
@@ -70,6 +81,25 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
     await expect(page.locator('[data-target]')).not.toHaveCount(0);
     await page.keyboard.press('Control+Shift+KeyH');
     await expect(page.locator('[data-hint]')).toBeVisible();
+  },
+  // 02: d5 chosen, the clock run to skipAfterSec, so "Un indizio?" and "Apri la porta?" are on screen
+  'room-biblioteca': async (page) => {
+    await enterLibrary(page);
+    await page.locator('[data-square="d5"]').click();
+    await page.clock.runFor(content.rooms.biblioteca.help.skipAfterSec * 1000);
+    await expect(page.getByRole('button', { name: content.ui.skip.button })).toBeVisible();
+  },
+  // 08: the liar accused, the clock standing still during the beat
+  'room-biblioteca-giallo': async (page) => {
+    const { secret, shelf, mystery } = content.rooms.biblioteca;
+    await enterLibrary(page);
+    await page.locator(`[data-square="${secret}"]`).click();
+    await page.getByRole('button', { name: shelf.pull }).click();
+    await expect(page.locator('[data-view="mystery"]')).toBeVisible();
+    await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
+    const liar = mystery.statements.find((statement: { id: string }) => statement.id === consistentLiars()[0]);
+    await page.locator(`[data-statement="${liar.id}"]`).getByRole('button', { name: liar.accuse }).click();
+    await expect(page.locator('[data-statement] [data-stamp]')).toBeVisible();
   },
   // 14: over the library, one token spent before, 14 seconds left
   audience: async (page) => {

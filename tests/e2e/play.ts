@@ -1,10 +1,12 @@
 // E2E play: how a test solves each room, and solveRoom(), which enters a room from the board, solves it and
 // closes the wish. A room is solved by playing it, with the answers taken from content.json, or by the host's
-// Ctrl+Shift+N for the tests that prove the engine. The chessboard plays its line; the rooms still waiting
-// for phase 4 press their placeholder's solve button, until each one replaces its entry with the real game.
+// Ctrl+Shift+N for the tests that prove the engine. The chessboard plays its line, the library pulls its secret
+// book and accuses the liar of liar.ts; the rooms still waiting for phase 4 press their placeholder's solve
+// button, until each one replaces its entry with the real game.
 import { expect, type Page } from '@playwright/test';
 import { Chess } from 'chess.js';
 import type { RoomId } from '../../src/engine/types';
+import { consistentLiars } from '../../src/rooms/biblioteca/liar';
 import { board, content, continueWish, enterRoom } from './helpers';
 
 const pressSolve = (id: RoomId) => (page: Page) => page.getByRole('button', { name: content.rooms[id].placeholder.solve }).click();
@@ -24,10 +26,19 @@ async function playChess(page: Page): Promise<void> {
   }
 }
 
+/** The secret book of content.json pulled from the shelf, then the one liar of the mystery accused. */
+async function playLibrary(page: Page): Promise<void> {
+  const { secret, shelf, mystery } = content.rooms.biblioteca;
+  await page.locator(`[data-square="${secret}"]`).click();
+  await page.getByRole('button', { name: shelf.pull }).click();
+  const liar = mystery.statements.find((statement: { id: string }) => statement.id === consistentLiars()[0]);
+  await page.locator(`[data-statement="${liar.id}"]`).getByRole('button', { name: liar.accuse }).click();
+}
+
 export const play: Record<RoomId, (page: Page) => Promise<void>> = {
   studio: pressSolve('studio'),
   scacchiera: playChess,
-  biblioteca: pressSolve('biblioteca'),
+  biblioteca: playLibrary,
   rapture: pressSolve('rapture'),
   'stanza-46': pressSolve('stanza-46'),
 };

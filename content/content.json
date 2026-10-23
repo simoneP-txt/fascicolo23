@@ -22,7 +22,8 @@
   },
   "memes": {
     "error": { "text": "Sicura?", "sound": "boom" },
-    "consolation": { "text": "Capita anche a Poirot?", "sound": "boom" }
+    "consolation": { "text": "Capita anche a Poirot?", "sound": "boom" },
+    "shelf": { "text": "Ritenta, Sherlock?", "sound": "boom" }
   },
   "clues": {
     "rule": { "label": "Obbedisce solo alle domande", "missing": "Serve una regola?" },
@@ -80,13 +81,70 @@
       "name": "La biblioteca",
       "header": "FASCICOLO N. 23 · LA BIBLIOTECA",
       "from": "dalla biblioteca",
-      "witness": { "intro": "Lo senti anche tu, questo fruscio?" },
+      "witness": {
+        "intro": "Lo senti anche tu, questo fruscio?",
+        "passage": "Chi ha lasciato entrare il vento?",
+        "wrong": {
+          "vicina": "Se mente lei, chi ha ragione tra il lattaio e il custode?",
+          "lattaio": "Se mente il lattaio, vicina e custode possono dire il vero tutti e due?"
+        },
+        "solved": "Il custode non sapeva che il lattaio passa sempre presto?"
+      },
       "hints": [
         "Le coordinate della scacchiera valgono anche sullo scaffale.",
-        "Cerca il libro nella colonna g, alla riga 4."
+        "Vicina e custode si accusano: il lattaio dice il vero."
       ],
       "help": { "hintAfterSec": 240, "secondHintAfterSec": 360, "hintAfterErrors": 3, "skipAfterSec": 420, "skipAfterErrors": null },
-      "placeholder": { "solve": "Risolvi la stanza?", "error": "Sbaglia apposta?" }
+      "secret": "g4",
+      "shelf": {
+        "tag": "SCAFFALE {square}",
+        "pull": "Sfila il libro?",
+        "untitled": "Il titolo è sbiadito",
+        "titles": {
+          "a8": "Il barboncino dei Baskerville",
+          "g8": "La donna del lunedì mattina",
+          "c7": "Assassinio sul Naviglio",
+          "h7": "Il mistero della camera in disordine",
+          "b6": "Il giorno della cornacchia",
+          "e6": "Delitto e merenda",
+          "d5": "Dieci piccoli punti interrogativi",
+          "g4": "Scacco matto in biblioteca",
+          "b3": "Uno studio in beige",
+          "d3": "Poirot va in vacanza",
+          "h3": "Il maggiordomo ha un alibi",
+          "c2": "Maigret e la pipa smarrita",
+          "f2": "C'è un segnalibro in biblioteca",
+          "a1": "La lettera rubata due volte",
+          "e1": "Psicologia forense per gatti"
+        }
+      },
+      "mystery": {
+        "tag": "DIETRO LO SCAFFALE",
+        "title": "Il delitto della siepe",
+        "intro": "Stanotte qualcuno ha tagliato la siepe. Tre testimoni, uno solo mente.",
+        "statements": [
+          {
+            "id": "vicina",
+            "name": "La vicina",
+            "says": "«Il custode mente. Ho sentito le cesoie nove minuti prima delle cinque.»",
+            "accuse": "Mente lei?"
+          },
+          {
+            "id": "lattaio",
+            "name": "Il lattaio",
+            "says": "«Alle cinque meno cinque la siepe era già tagliata.»",
+            "accuse": "Mente lui?"
+          },
+          {
+            "id": "custode",
+            "name": "Il custode",
+            "says": "«La vicina mente: alle cinque meno cinque la siepe era ancora intera.»",
+            "accuse": "Mente lui?"
+          }
+        ],
+        "stamp": "MENTE?",
+        "solution": { "tag": "LA SOLUZIONE", "text": "Vicina e lattaio dicono il vero: la siepe è stata tagliata alle {time}." }
+      }
     },
     "rapture": {
       "name": "Rapture?",

@@ -3,7 +3,8 @@
    color at some opacity is mixed from the palette here, so retouching a base color carries it along;
    SVG drawings that fade a palette color keep the token and an opacity. Then the frame theme of each
    room, and at the bottom every screen names the tones of its top and bottom edges, which the bands
-   around the stage continue; last, the board's cork, frame and vignette, painted on the host. */
+   around the stage continue; last, the board's cork, frame and vignette and the library's walnut, painted
+   on the host. */
 :root {
   /* Palette of 04-sistema, with one gold for its brass and its deco gold */
   --red: #e94535;
@@ -92,6 +93,9 @@
   --figure-walnut: #0f0b08; /* the witness against the walnut */
   --ground-shadow: #000000; /* under the witness on the walnut, drawn at 35% */
   --spine-shade: rgba(0, 0, 0, 0.18); /* shaded edge of a spine */
+  --spine-edge: 3px; /* width of that shaded edge */
+  --spine-band: 2px; /* the gold band at the top of some spines */
+  --spine-gap: 2px; /* between two books on a shelf */
   --book-1: #5b3a29;
   --book-2: #2f4a3a;
   --book-3: #263a5a;
@@ -197,6 +201,10 @@
   --duration-beat: 2000ms; /* a solved room keeps its result on screen this long, then the board comes */
   --duration-slide: 400ms; /* a chess piece moving to its square */
   --duration-reply: 1000ms; /* from a right move on the chessboard to black's answer */
+  --duration-pull: 640ms; /* a book coming out of the shelf and going back */
+  --duration-turn: 800ms; /* the shelf turning on itself, then the mystery turning in */
+  --duration-sway: 4000ms; /* a curtain swaying one way in the library window */
+  --duration-drift: 6000ms; /* a leaf crossing the window, a loose page fluttering */
   --press-shift: 2px; /* how far a pressed control sinks */
   --press-scale: 0.98;
   --meme-zoom: 1.35; /* the size a meme lands from */
@@ -309,4 +317,18 @@
     inset 0 0 0 calc(24 * var(--stage-px)) var(--frame),
     inset 0 0 0 calc(32 * var(--stage-px)) var(--frame-dark),
     inset 0 0 calc(96 * var(--stage-px)) calc(32 * var(--stage-px)) var(--vignette);
+}
+
+/* The library's host paints the walnut wall of mockups 02 and 08 across the whole window: a stripe of light
+   grain every 8 stage pixels, scaled with the stage, so the bands carry on the wall around the stage. */
+#app[data-backdrop='biblioteca'] {
+  --stage-px: calc(1px * var(--stage-scale));
+  background-color: var(--walnut);
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--wood-grain) 0,
+    var(--wood-grain) calc(2 * var(--stage-px)),
+    transparent calc(2 * var(--stage-px)),
+    transparent calc(8 * var(--stage-px))
+  );
 }

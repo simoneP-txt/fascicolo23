@@ -1,0 +1,438 @@
+/* Library (mockups 02 and 08, decision 8): the host paints the walnut wall (tokens.css). The open window stands
+   top left on its sill, its curtains swaying and leaves crossing it; under it the shelf card and the g4 clue.
+   The shelf in the middle is a walnut case with its files above and ranks beside in gold, 64 square buttons of
+   spines on their boards; the chosen square wears a gold outline and wash, its spines lifted. A book pulled
+   slides out and back; the secret one stays out while the shelf turns away and the mystery turns in: the
+   hedge card, three statement cards that shake when a truthful witness is accused, the liar's red outline and
+   stamp, then the solution and the time clue dropping in. Loose pages flutter beside it. Everything moves by
+   transform and opacity. */
+.biblioteca,
+.biblioteca__view {
+  position: absolute;
+  inset: 0;
+}
+
+/* The window, a 16 px frame round the glass, and its sill. */
+.biblioteca__window {
+  position: absolute;
+  left: var(--space-12);
+  top: 128px;
+  box-sizing: border-box;
+  width: 360px;
+  height: 384px;
+  border: var(--border-frame) solid var(--frame);
+  background: var(--night);
+  box-shadow: var(--shadow-sheet-dark);
+}
+.biblioteca__glass {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.biblioteca__sill {
+  position: absolute;
+  left: var(--space-10);
+  top: 504px;
+  width: 392px;
+  height: var(--space-2);
+  background: var(--shelf-board);
+  box-shadow: var(--shadow-sheet-dark);
+}
+
+/* The wind: the curtains sway from their rod, out of step, and the leaves cross the glass one after another. */
+.biblioteca__curtain {
+  transform-box: fill-box;
+  transform-origin: top left;
+  animation: library-sway var(--duration-sway) var(--ease) infinite alternate;
+}
+.biblioteca__curtain[data-side='right'] {
+  transform-origin: top right;
+  animation-delay: calc(var(--duration-sway) / -2);
+}
+.biblioteca__leaf {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: library-leaf var(--duration-drift) var(--ease) infinite;
+  animation-delay: calc(var(--duration-drift) * var(--flutter) / -3);
+}
+
+/* The shelf card: the square, its title on two lines at most, and "Sfila il libro?". Out of sight until a
+   square is chosen. */
+.biblioteca__card {
+  position: absolute;
+  left: var(--space-12);
+  top: 560px;
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-sheet-dark);
+}
+.biblioteca__card[data-empty] {
+  visibility: hidden;
+}
+.biblioteca__title {
+  height: var(--space-12);
+  overflow: hidden;
+  font-family: var(--font-witness);
+  font-size: var(--text-heading);
+  font-weight: 600;
+  line-height: var(--space-6);
+}
+.biblioteca__title[data-untitled] {
+  color: var(--ink-soft);
+  font-style: italic;
+  font-weight: 500;
+}
+.biblioteca .btn {
+  align-self: flex-start;
+  min-height: var(--space-7);
+  padding: 0 var(--space-2);
+}
+/* A book already pulled, a witness already cleared: the button fades and only shakes. */
+.biblioteca .btn--outline[aria-disabled='true'] {
+  color: var(--ink-faint);
+}
+.biblioteca .clue {
+  box-shadow: var(--shadow-sheet-dark);
+}
+.biblioteca__g4 {
+  position: absolute;
+  left: 160px;
+  top: 864px;
+}
+
+/* The shelf: a walnut case, the files above and the ranks beside in gold, 8x8 squares of 104x96. */
+.biblioteca__shelf {
+  position: absolute;
+  left: 512px;
+  top: 128px;
+  box-sizing: border-box;
+  width: 928px;
+  height: 864px;
+  border: var(--border-thick) solid var(--frame);
+  background: var(--shelf);
+  box-shadow: var(--shadow-board);
+  color: var(--gold);
+  font-family: var(--font-report);
+  font-size: var(--text-small);
+}
+.biblioteca__files,
+.biblioteca__ranks,
+.biblioteca__grid {
+  position: absolute;
+  display: grid;
+}
+.biblioteca__files {
+  left: var(--space-8);
+  top: var(--space-2);
+  height: var(--space-6);
+  grid-template-columns: repeat(8, 104px);
+}
+.biblioteca__ranks {
+  left: var(--space-2);
+  top: var(--space-8);
+  width: var(--space-6);
+  grid-template-rows: repeat(8, var(--space-12));
+}
+.biblioteca__files > span,
+.biblioteca__ranks > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.biblioteca__grid {
+  left: var(--space-8);
+  top: var(--space-8);
+  grid-template-columns: repeat(8, 104px);
+  grid-template-rows: repeat(8, var(--space-12));
+}
+
+.biblioteca__cell {
+  appearance: none;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--spine-gap);
+  margin: 0;
+  padding: 0 var(--space-1);
+  border: 0;
+  border-bottom: var(--border-thick) solid var(--shelf-board);
+  border-radius: 0;
+  background: none;
+  cursor: pointer;
+  transition: transform var(--duration-press) var(--ease);
+}
+.biblioteca__cell:active {
+  transform: translateY(var(--press-shift)) scale(var(--press-scale));
+}
+.biblioteca__cell:focus-visible {
+  outline: var(--border) solid var(--red);
+  outline-offset: calc(-1 * var(--border));
+}
+.biblioteca__cell[data-chosen] {
+  outline: var(--border) solid var(--gold);
+  outline-offset: calc(-1 * var(--border));
+  background: var(--gold-wash);
+}
+
+.biblioteca__spine {
+  position: relative;
+  flex: none;
+  box-shadow: inset calc(-1 * var(--spine-edge)) 0 0 var(--spine-shade);
+  transition: transform var(--duration-press) var(--ease);
+}
+.biblioteca__spine[data-band] {
+  box-shadow:
+    inset 0 var(--spine-band) 0 var(--gold),
+    inset calc(-1 * var(--spine-edge)) 0 0 var(--spine-shade);
+}
+.biblioteca__cell[data-chosen] .biblioteca__spine {
+  transform: translateY(calc(-1 * var(--space-1)));
+}
+.biblioteca__spine[data-pull] {
+  z-index: 1;
+  animation: library-pull var(--duration-pull) var(--ease);
+}
+.biblioteca__spine[data-out] {
+  z-index: 1;
+  animation: library-out var(--duration-pull) var(--ease) both;
+}
+
+/* The passage: the shelf turns away while the card and the clue fade, then the mystery turns in. */
+.biblioteca__view[data-turn] .biblioteca__shelf {
+  animation: library-turn var(--duration-turn) var(--ease) both;
+}
+.biblioteca__view[data-turn] :is(.biblioteca__card, .biblioteca__g4) {
+  animation: library-fade var(--duration-turn) var(--ease) both;
+}
+.biblioteca__view[data-view='mystery'] {
+  animation: library-fade var(--duration-turn) var(--ease) reverse;
+}
+.biblioteca__view[data-view='mystery'] > :is(.biblioteca__case, .biblioteca__statements) {
+  animation: library-turn var(--duration-turn) var(--ease) reverse;
+}
+
+/* The mystery: the hedge card across the top, under it the three statements, then the solution and the time. */
+.biblioteca__gusts {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.biblioteca__page {
+  position: absolute;
+  animation: library-flutter var(--duration-drift) var(--ease) infinite alternate;
+  animation-delay: calc(var(--duration-drift) * var(--flutter) / -3);
+}
+
+.biblioteca__case {
+  position: absolute;
+  left: 480px;
+  top: 128px;
+  width: 960px;
+  height: 240px;
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-sheet-dark);
+}
+.biblioteca__case-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.biblioteca__case-title {
+  margin: 0;
+  font-family: var(--font-witness);
+  font-size: var(--text-clue);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.biblioteca__intro {
+  margin: 0;
+  font-size: var(--text-small);
+  line-height: 1.3;
+}
+.biblioteca__hedge {
+  flex: none;
+}
+
+.biblioteca__statements {
+  position: absolute;
+  left: 480px;
+  top: 400px;
+  display: flex;
+  gap: var(--space-3);
+}
+.biblioteca__statement {
+  width: 304px;
+  height: 384px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-sheet-dark);
+}
+.biblioteca__statement[data-nope] {
+  animation: library-nope var(--duration-nope) var(--ease);
+}
+.biblioteca__statement[data-liar] {
+  box-shadow:
+    0 0 0 var(--border) var(--red),
+    var(--shadow-sheet-dark);
+}
+.biblioteca__name {
+  margin: 0;
+  font-family: var(--font-witness);
+  font-size: var(--text-witness);
+  font-weight: 600;
+  line-height: 1.2;
+}
+/* The statement takes the room left above the button, so a text too long for the card shows as overflow. */
+.biblioteca__says {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--text-small);
+  line-height: 1.25;
+}
+.biblioteca__statement .btn {
+  margin-top: auto;
+}
+/* The stamp sits where mockup 08 has it, moved past the right edge, over the empty end of the last line. */
+.biblioteca__stamp {
+  position: absolute;
+  right: calc(-1 * var(--space-3));
+  top: 216px;
+  padding: 0 var(--space-2);
+  font-size: var(--text-witness);
+  rotate: -10deg;
+  animation: library-stamp var(--duration-stamp) var(--ease) both;
+}
+
+.biblioteca__solution {
+  position: absolute;
+  left: 480px;
+  top: 816px;
+  width: 696px;
+  height: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: var(--shadow-sheet-dark);
+  animation: library-drop var(--duration-drop) var(--ease) var(--duration-stamp) both;
+}
+.biblioteca__answer {
+  margin: 0;
+  font-size: var(--text-small);
+  line-height: 1.3;
+}
+.biblioteca__time {
+  color: var(--red);
+}
+.biblioteca__clock {
+  position: absolute;
+  left: 1208px;
+  top: 808px;
+  width: 232px;
+  min-height: 168px;
+  padding: var(--space-3);
+  animation: library-drop var(--duration-drop) var(--ease) var(--duration-stamp) both;
+}
+.biblioteca__clock .clue__code {
+  font-size: var(--text-display);
+}
+
+@keyframes library-sway {
+  from {
+    transform: skewX(-2deg);
+  }
+  to {
+    transform: skewX(3deg);
+  }
+}
+
+/* A leaf comes in at the left edge of the glass, turns once and leaves at the right, a little higher. */
+@keyframes library-leaf {
+  from {
+    transform: translate(calc(-1 * var(--space-4)), 0) rotate(0);
+    opacity: 0;
+  }
+  15%,
+  85% {
+    opacity: 1;
+  }
+  to {
+    transform: translate(360px, calc(-1 * var(--space-8))) rotate(1turn);
+    opacity: 0;
+  }
+}
+
+@keyframes library-flutter {
+  to {
+    transform: translate(var(--space-2), calc(-1 * var(--space-2))) rotate(8deg);
+  }
+}
+
+/* A wrong book comes out of the shelf toward the player and goes back. */
+@keyframes library-pull {
+  45%,
+  60% {
+    transform: translateY(calc(-1 * var(--space-3))) scale(1.12);
+  }
+}
+
+@keyframes library-out {
+  to {
+    transform: translateY(calc(-1 * var(--space-3))) scale(1.12);
+  }
+}
+
+/* The case swivels on its middle and fades only once it is nearly edge-on. */
+@keyframes library-turn {
+  80% {
+    opacity: 1;
+  }
+  to {
+    transform: perspective(2400px) rotateY(90deg);
+    opacity: 0;
+  }
+}
+
+@keyframes library-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes library-nope {
+  20%,
+  60% {
+    transform: translateX(calc(-1 * var(--space-1)));
+  }
+  40%,
+  80% {
+    transform: translateX(var(--space-1));
+  }
+}
+
+@keyframes library-stamp {
+  from {
+    opacity: 0;
+    transform: scale(var(--stamp-scale));
+  }
+}
+
+@keyframes library-drop {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--space-8)));
+  }
+}

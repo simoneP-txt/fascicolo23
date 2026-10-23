@@ -1,6 +1,7 @@
 // Stage e2e: the 16:9 stage fits the three test resolutions and paints nothing, so the host's art shows
-// through it; on the 16:10 party screen the bands above and below it take the colors of the screen and
-// darken with it, in one layer, under a dialog; the four fonts load from the build with the network cut.
+// through it; on the 16:10 party screen the bands above and below it take the colors of the screen, the
+// library's walnut wall among them, and darken with it, in one layer, under a dialog; the four fonts load
+// from the build with the network cut.
 // Durations are cut to 1 ms.
 import { expect, test, type Page } from '@playwright/test';
 import { bandColor, bandsMatchTokens, colorDistance, edgeColors, edgeJumps, luminance, type Rgb } from './checks';
@@ -86,6 +87,15 @@ test.describe('on the 16:10 party screen', () => {
     await bandsMatchTokens(page, 'chessboard');
     for (const edge of BANDS) {
       expect(Math.max(...(await edgeJumps(page, edge))), `chessboard at the ${edge} edge of the stage`).toBeLessThanOrEqual(12);
+    }
+
+    // The host paints the library's walnut wall, so it runs on into the bands along both edges.
+    await page.keyboard.press('Control+Shift+KeyN');
+    await continueWish(page);
+    await enterRoom(page, 'biblioteca');
+    await bandsMatchTokens(page, 'library');
+    for (const edge of BANDS) {
+      expect(Math.max(...(await edgeJumps(page, edge))), `library at the ${edge} edge of the stage`).toBeLessThanOrEqual(12);
     }
   });
 
