@@ -147,7 +147,7 @@ test('a solved room gets its stamp and its strings after the wish', async ({ pag
   await recordPlays(page);
   await openCase(page);
   await enterRoom(page, 'studio');
-  await page.getByRole('button', { name: content.rooms.studio.placeholder.solve }).click();
+  await page.keyboard.press('Control+Shift+KeyN');
   await expect(wish(page)).toBeVisible();
   const stamp = door(page, 'studio').locator('[data-stamp]');
   const strings = page.locator('[data-string]');

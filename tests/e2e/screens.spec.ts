@@ -65,10 +65,18 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
     await page.goto('/');
     await expect(board(page)).toBeVisible();
   },
-  // 06
+  // 06: one token spent, the first report solved and the second open, the clock run to hintAfterSec, so
+  // "Un indizio?" is on screen
   'room-studio': async (page) => {
-    await openCase(page);
+    const { help, testimonies } = content.rooms.studio;
+    await page.clock.install();
+    await seed(page, { opened: true, solved: [], clues: [], tokens: content.tokens - 1 });
+    await page.goto('/');
     await enterRoom(page, 'studio');
+    await page.locator(`[data-report="1"] [data-option="${testimonies[0].answer}"]`).click();
+    await expect(page.locator('[data-report="2"]')).toHaveAttribute('data-state', 'open');
+    await page.clock.runFor(help.hintAfterSec * 1000);
+    await expect(page.getByRole('button', { name: content.ui.hint.button })).toBeVisible();
   },
   // 07 after 1.Bxf7+ Kh8: the knight selected with the squares it reaches, the first hint shown by Ctrl+Shift+H
   'room-scacchiera': async (page) => {

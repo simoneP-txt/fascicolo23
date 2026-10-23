@@ -37,13 +37,41 @@
       "name": "Lo studio",
       "header": "FASCICOLO N. 23 · LO STUDIO",
       "from": "dallo studio",
-      "witness": { "intro": "Cosa vede una mente quando chiude gli occhi?" },
+      "reports": { "tag": "VERBALE {n} DI {total}", "question": "Quale fenomeno lo spiega?" },
+      "testimonies": [
+        {
+          "quote": "«Ricordo solo il microfono, la faccia no.»",
+          "options": ["Prosopagnosia?", "Focalizzazione sull'arma?", "Cecità disattentiva?", "Amnesia retrograda?"],
+          "answer": 1
+        },
+        {
+          "quote": "«Mi hanno chiesto quanto urlava mentre massacrava il discorso. Urlava tantissimo.»",
+          "options": ["Formulazione della domanda?", "Effetto ancoraggio?", "Desiderabilità sociale?", "Senno di poi?"],
+          "answer": 0
+        },
+        {
+          "quote": "«Lo giuro, era sul palco. Nel video è in fondo alla sala.»",
+          "options": ["Effetto alone?", "Bias di conferma?", "Eccesso di sicurezza?", "Dissonanza cognitiva?"],
+          "answer": 2
+        }
+      ],
+      "plate": "TAVOLA I",
+      "stake": { "tag": "IN PALIO", "fragment": "un frammento", "clues": "e due indizi" },
+      "witness": {
+        "intro": "Cosa vede una mente quando chiude gli occhi?",
+        "plate": "Interessante?",
+        "wrong": [
+          "Dove guardavano gli occhi, se non sulla faccia?",
+          "Chi ha scelto quel verbo, il testimone?",
+          "Basta giurarlo per ricordarlo bene?"
+        ],
+        "solved": "Tre ricordi, tre trappole, e le hai viste tutte?"
+      },
       "hints": [
         "Ogni testimone sbaglia per un motivo diverso.",
-        "Conta come è formulata la domanda, non solo la risposta."
+        "Chiediti cosa ha guidato il ricordo: un oggetto, una parola, la certezza."
       ],
-      "help": { "hintAfterSec": 180, "secondHintAfterSec": 300, "hintAfterErrors": 3, "skipAfterSec": 360, "skipAfterErrors": null },
-      "placeholder": { "solve": "Risolvi la stanza?", "error": "Sbaglia apposta?" }
+      "help": { "hintAfterSec": 180, "secondHintAfterSec": 300, "hintAfterErrors": 3, "skipAfterSec": 360, "skipAfterErrors": null }
     },
     "scacchiera": {
       "name": "La scacchiera",

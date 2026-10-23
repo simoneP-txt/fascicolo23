@@ -3,8 +3,8 @@
    color at some opacity is mixed from the palette here, so retouching a base color carries it along;
    SVG drawings that fade a palette color keep the token and an opacity. Then the frame theme of each
    room, and at the bottom every screen names the tones of its top and bottom edges, which the bands
-   around the stage continue; last, the board's cork, frame and vignette and the library's walnut, painted
-   on the host. */
+   around the stage continue; last, the board's cork, frame and vignette, the library's walnut and the
+   study's wall and desk, painted on the host. */
 :root {
   /* Palette of 04-sistema, with one gold for its brass and its deco gold */
   --red: #e94535;
@@ -166,6 +166,7 @@
   --border-thick: 8px;
   --border-frame: 16px; /* window frames */
   --square-ring: 6px; /* the gold ring of the selected square on the chessboard */
+  --dot-ring: 3px; /* the ring of an option's dot in the study */
   --meme-outline: 10px; /* ink around a meme caption: 2 px at the 32 px of the sample */
   --pin: 24px;
 
@@ -180,6 +181,9 @@
   --shadow-button: 0 8px 14px rgba(31, 27, 23, 0.35);
   --shadow-folder: 0 24px 40px rgba(0, 0, 0, 0.45); /* the case folder, the wish card */
   --shadow-board: 0 18px 32px rgba(0, 0, 0, 0.45); /* the chessboard */
+  --shadow-report: 0 16px 28px rgba(31, 27, 23, 0.3); /* the open report in the study */
+  --shadow-locked: 0 8px 14px rgba(31, 27, 23, 0.15); /* a report still locked */
+  --shadow-plate: 0 12px 20px rgba(31, 27, 23, 0.3); /* the plate in the study */
   --shadow-dialog: 0 32px 48px rgba(0, 0, 0, 0.5);
 
   /* Motion: one curve; the countdown alone runs linear */
@@ -205,6 +209,8 @@
   --duration-turn: 800ms; /* the shelf turning on itself, then the mystery turning in */
   --duration-sway: 4000ms; /* a curtain swaying one way in the library window */
   --duration-drift: 6000ms; /* a leaf crossing the window, a loose page fluttering */
+  --duration-unlock: 480ms; /* the next report in the study opening, once the one above is solved */
+  --duration-swing: 800ms; /* the plate in the study swinging on its pin */
   --press-shift: 2px; /* how far a pressed control sinks */
   --press-scale: 0.98;
   --meme-zoom: 1.35; /* the size a meme lands from */
@@ -262,7 +268,7 @@
 }
 
 /* Backdrops: the tones of each screen's top and bottom edge. A room phase 4 has not drawn yet keeps one
-   tone; the chessboard's night ends in its near hedge. */
+   tone; the study's wall stands on its desk, the chessboard's night ends in its near hedge. */
 [data-backdrop='intro'] {
   --backdrop-top: var(--night);
   --backdrop-bottom: var(--hill-near);
@@ -273,7 +279,7 @@
 }
 [data-backdrop='studio'] {
   --backdrop-top: var(--sage);
-  --backdrop-bottom: var(--sage);
+  --backdrop-bottom: var(--desk);
 }
 [data-backdrop='scacchiera'] {
   --backdrop-top: var(--night);
@@ -331,4 +337,16 @@
     transparent calc(2 * var(--stage-px)),
     transparent calc(8 * var(--stage-px))
   );
+}
+
+/* The study's host paints the sage wall of mockup 06 with a stripe every 96 stage pixels, lined up with the
+   stage's middle, down to stage line 592, where the desk begins and runs on to the bottom of the window. So
+   the top band carries on the wall and its stripes, and the bottom band the desk. */
+#app[data-backdrop='studio'] {
+  --stage-px: calc(1px * var(--stage-scale));
+  --desk-line: calc(50% + 52 * var(--stage-px)); /* stage line 592, 52 below the middle of the window */
+  background:
+    linear-gradient(90deg, var(--grain) calc(2 * var(--stage-px)), transparent 0) calc(50% + 48 * var(--stage-px)) 0 /
+      calc(96 * var(--stage-px)) var(--desk-line) repeat-x,
+    linear-gradient(var(--backdrop-top) var(--desk-line), var(--backdrop-bottom) 0);
 }

@@ -1,28 +1,40 @@
 // Meme e2e, with the real durations: a meme comes over the room with its caption in Anton and leaves by
 // itself after --duration-meme; the confirmed "Apri la porta?" consoles before the wish and the board. While
 // a meme shows it takes every click on the stage, a second meme replaces it, and a screen change takes it
-// away with the old screen. Where the page clock stands still, the test runs it through each screen change.
+// away with the old screen. The memes of a wrong answer come from wrong books of the library, in the game of
+// mockup 01. Where the page clock stands still, the test runs it through each screen change.
 import { expect, test, type Page } from '@playwright/test';
-import { board, consolation, content, continueWish, duration, enterRoom, roomScreen, seed, throughChange } from './helpers';
+import { board, consolation, content, continueWish, duration, enterRoom, MOCKUP_01, roomScreen, seed, throughChange } from './helpers';
 
 const meme = (page: Page) => page.locator('[data-meme]');
 const skipButton = (page: Page) => page.getByRole('button', { name: content.ui.skip.button });
+const square = (page: Page, at: string) => page.locator(`[data-square="${at}"]`);
+const pull = (page: Page) => page.getByRole('button', { name: content.rooms.biblioteca.shelf.pull });
 
-/** The study, with the case open and nothing solved. */
-async function study(page: Page): Promise<void> {
-  await seed(page, { opened: true, solved: [], clues: [], tokens: content.tokens });
+/** The library in the game of mockup 01; with clock, the page clock is installed first and stands still once
+ *  the room is on screen. */
+async function library(page: Page, clock = false): Promise<void> {
+  if (clock) await page.clock.install();
+  await seed(page, MOCKUP_01);
   await page.goto('/');
-  await enterRoom(page, 'studio');
+  await enterRoom(page, 'biblioteca');
+  if (clock) await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
+}
+
+/** A wrong book chosen and pulled: it shows the shelf meme. */
+async function wrongBook(page: Page, at: string): Promise<void> {
+  await square(page, at).click();
+  await pull(page).click();
 }
 
 test('a wrong answer shows a meme that leaves by itself', async ({ page }) => {
-  await study(page);
-  await page.getByRole('button', { name: content.rooms.studio.placeholder.error }).click();
-  const caption = meme(page).getByText(content.memes.error.text);
+  await library(page);
+  await wrongBook(page, 'a8');
+  const caption = meme(page).getByText(content.memes.shelf.text);
   await expect(caption).toBeVisible();
   await expect(caption).toHaveCSS('font-family', /^Anton\b/);
   await expect(meme(page)).toHaveCount(0, { timeout: (await duration(page, '--duration-meme')) + 1000 });
-  await expect(roomScreen(page, 'studio')).toBeVisible();
+  await expect(roomScreen(page, 'biblioteca')).toBeVisible();
 });
 
 test('"Apri la porta?" consoles before it opens', async ({ page }) => {
@@ -50,14 +62,20 @@ test('a meme takes every click, so the skip cannot be confirmed twice', async ({
 });
 
 test('a second meme replaces the first, and then it leaves too', async ({ page }) => {
-  await study(page);
-  const wrong = page.getByRole('button', { name: content.rooms.studio.placeholder.error });
-  await wrong.click();
+  await library(page, true);
+  const [back, shown] = [await duration(page, '--duration-pull'), await duration(page, '--duration-meme')];
+  await wrongBook(page, 'a8');
   await expect(meme(page)).toBeVisible();
-  await wrong.press('Space'); // the overlay takes the clicks, but the focused button still answers the keyboard
+  await page.clock.runFor(back); // the book is back on its shelf
+  // The overlay takes the clicks, but the focused buttons still answer the keyboard: another wrong book.
+  await square(page, 'b8').press('Space');
+  await pull(page).press('Space');
   await expect(meme(page)).toHaveCount(1);
-  await expect(meme(page)).toHaveCount(0, { timeout: (await duration(page, '--duration-meme')) + 1000 });
-  await expect(roomScreen(page, 'studio')).toBeVisible();
+  await page.clock.runFor(shown - back); // the first meme would leave now; the second one stays
+  await expect(meme(page)).toHaveCount(1);
+  await page.clock.runFor(back);
+  await expect(meme(page)).toHaveCount(0);
+  await expect(roomScreen(page, 'biblioteca')).toBeVisible();
 });
 
 test('a screen change during a meme leaves no overlay behind', async ({ page }) => {
@@ -74,10 +92,8 @@ test('a screen change during a meme leaves no overlay behind', async ({ page }) 
 });
 
 test(`the caption's outline lies under its letters`, async ({ page }) => {
-  await page.clock.install();
-  await study(page);
-  await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000); // the meme stays until the test is done
-  await page.getByRole('button', { name: content.rooms.studio.placeholder.error }).click();
+  await library(page, true); // the meme stays until the test is done
+  await wrongBook(page, 'a8');
   await expect(meme(page).locator('figure')).toHaveCSS('transform', 'none'); // the zoom has landed
   const outlined = await page.screenshot();
   await meme(page).locator('figcaption').evaluate((node) => node.style.setProperty('-webkit-text-stroke-width', '0px'));

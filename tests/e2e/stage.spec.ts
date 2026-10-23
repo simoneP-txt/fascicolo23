@@ -77,8 +77,12 @@ test.describe('on the 16:10 party screen', () => {
       expect(colorDistance(outside, inside), `board at the ${edge} edge of the stage`).toBeLessThanOrEqual(48);
     }
 
+    // The host paints the study's striped wall above and its desk below, so the bands carry on both.
     await enterRoom(page, 'studio');
     await bandsMatchTokens(page, 'study');
+    for (const edge of BANDS) {
+      expect(Math.max(...(await edgeJumps(page, edge))), `study at the ${edge} edge of the stage`).toBeLessThanOrEqual(12);
+    }
 
     // The chessboard's night and hedges run on into the bands, with no seam along either edge.
     await page.getByRole('button', { name: content.ui.back }).click();

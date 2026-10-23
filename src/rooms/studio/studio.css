@@ -1,0 +1,254 @@
+/* Study (mockup 06, decision 9): the host paints the sage wall with its stripes and the desk (tokens.css);
+   the room draws the desk's edge and boards and the lamp with its cone. The plate hangs on the desk at the
+   left and swings on its pin when pressed. In the middle the column of reports keeps between 128 and 984:
+   the open one carries an ink outline, its testimony and four options with a dot, which fills under the
+   pointer; a wrong option tried stays crossed out. A solved report shortens to its testimony on one line,
+   the check and the stamp, and a locked one shows a single grey line and the lock. The stake card waits on
+   the right under the witness and steps aside while the hint card takes its place. Everything moves by
+   transform and opacity. */
+.studio {
+  position: absolute;
+  inset: 0;
+}
+.studio__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* The plate: a bare button around a pinned card tilted by -4 degrees; the button swings from the pin. */
+.studio__plate {
+  appearance: none;
+  position: absolute;
+  left: 128px;
+  top: 664px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transform-origin: 50% 0;
+}
+.studio__plate:focus-visible {
+  outline: var(--border) solid var(--red);
+  outline-offset: var(--border);
+}
+.studio__plate[data-swing] {
+  animation: studio-swing var(--duration-swing) var(--ease);
+}
+.studio__plate-card {
+  width: 304px;
+  height: 336px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-plate);
+}
+.studio__plate-card > .label {
+  align-self: flex-start;
+}
+
+/* The column of reports. */
+.studio__reports {
+  position: absolute;
+  left: 512px;
+  top: 128px;
+  width: 896px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.studio__report {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+}
+.studio__report[data-unlock] > * {
+  animation: studio-unlock var(--duration-unlock) var(--ease) both;
+}
+.studio__quote {
+  margin: 0;
+  font-family: var(--font-report);
+  font-size: var(--text-small);
+  line-height: 1.3;
+}
+
+/* The open report. */
+.studio__report[data-state='open'] {
+  box-shadow:
+    0 0 0 var(--border) var(--ink),
+    var(--shadow-report);
+}
+.studio__question {
+  margin: 0;
+  font-family: var(--font-witness);
+  font-size: var(--text-heading);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.studio__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+.studio__option {
+  justify-content: flex-start;
+  height: var(--space-7);
+  min-height: 0;
+  border-color: var(--ink-line);
+  color: var(--ink);
+  font-family: var(--font-witness);
+  font-size: var(--text-game);
+  font-weight: 600;
+  text-align: left;
+}
+.studio__option:is(:hover, :focus-visible):not([aria-disabled='true']) {
+  border-color: var(--ink);
+  background: var(--answer-picked);
+  filter: none;
+}
+.studio__option[aria-disabled='true'] {
+  color: var(--ink-spent);
+  text-decoration: line-through;
+}
+.studio__dot {
+  flex: none;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: var(--space-3);
+  height: var(--space-3);
+  border: var(--dot-ring) solid currentColor;
+  border-radius: 50%;
+}
+.studio__dot::after {
+  content: '';
+  width: var(--space-1);
+  height: var(--space-1);
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+}
+.studio__option:is(:hover, :focus-visible):not([aria-disabled='true']) .studio__dot::after {
+  opacity: 1;
+}
+
+/* A solved report: shorter padding, the testimony cut to one line clear of the stamp, the check. */
+.studio__report[data-state='solved'] {
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  rotate: -0.5deg;
+  box-shadow: var(--shadow-sheet);
+}
+.studio__report[data-state='solved'] .studio__quote {
+  max-width: 640px;
+  overflow: hidden;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.studio__verdict {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-witness);
+  font-size: var(--text-game);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.studio__check {
+  flex: none;
+}
+.studio__stamp {
+  position: absolute;
+  right: var(--space-5);
+  top: var(--space-6);
+  animation: studio-stamp var(--duration-stamp) var(--ease) both;
+}
+
+/* A locked report: faded paper with no grain, one grey line and the lock. */
+.studio__report[data-state='locked'] {
+  background: var(--paper-locked);
+  rotate: 0.4deg;
+  box-shadow: var(--shadow-locked);
+}
+.studio__ghost {
+  width: 640px;
+  height: var(--space-3);
+  border-radius: var(--radius-chip);
+  background: var(--ink-ghost);
+}
+.studio__lock {
+  position: absolute;
+  right: var(--space-4);
+  top: 50%;
+  width: var(--space-5);
+  height: var(--space-5);
+  color: var(--ink-soft);
+  translate: 0 -50%;
+}
+
+/* The stake card, under the witness; it leaves while the hint card is on screen, where it would sit. */
+.studio__stake {
+  position: absolute;
+  left: 1472px;
+  top: 608px;
+  width: 360px;
+  height: 176px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-sheet);
+  font-family: var(--font-report);
+  font-size: var(--text-small);
+}
+.room:has([data-hint]:not([hidden])) .studio__stake {
+  visibility: hidden;
+}
+.studio__prize {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.studio__chip {
+  flex: none;
+  width: var(--space-6);
+  height: var(--space-4);
+  background: var(--ink);
+}
+
+/* The plate swings from its pin and settles. */
+@keyframes studio-swing {
+  25% {
+    transform: rotate(3deg);
+  }
+  55% {
+    transform: rotate(-2deg);
+  }
+  80% {
+    transform: rotate(1deg);
+  }
+}
+
+/* The report that opens: its lines come down into place. */
+@keyframes studio-unlock {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--space-1)));
+  }
+}
+
+@keyframes studio-stamp {
+  from {
+    opacity: 0;
+    transform: scale(var(--stamp-scale));
+  }
+}

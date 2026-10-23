@@ -6,7 +6,7 @@
 // under the same dip, with one wish.
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { parseDuration } from '../../src/ui/dom';
-import { board, content, door, duration, enterRoom, fragment, roomScreen, seed, settled, wish } from './helpers';
+import { board, content, door, duration, enterRoom, fragment, MOCKUP_01, roomScreen, seed, settled, wish } from './helpers';
 
 /** The case open and nothing solved: the study and the chessboard offer "Entra?". */
 const OPEN = { opened: true, solved: [], clues: [], tokens: content.tokens };
@@ -165,7 +165,7 @@ test('a double click on "Un indizio?" reaches nothing under it', async ({ page }
 
 test('every overlay holds clicks back as it comes and as it goes', async ({ page }) => {
   await page.clock.install();
-  await seed(page, OPEN);
+  await seed(page, MOCKUP_01);
   await page.goto('/');
   const dip = await duration(page, '--duration-dip');
   const hush = await duration(page, '--duration-hush');
@@ -186,16 +186,17 @@ test('every overlay holds clicks back as it comes and as it goes', async ({ page
   await guarded('the debug menu comes', () => page.keyboard.press('Control+Shift+KeyD'));
   await guarded('the debug menu goes', press(content.ui.debug.close));
 
-  await enter(page, 'studio').click();
+  await enter(page, 'biblioteca').click();
   await page.clock.runFor(2 * dip + hush);
   await guarded('the audience countdown comes', press(content.ui.audience.button));
   await guarded('the audience countdown goes', press(content.ui.audience.done));
-  await guarded('a meme comes', press(content.rooms.studio.placeholder.error));
+  await page.locator('[data-square="a8"]').click(); // a wrong book: pulled, it shows the shelf meme
+  await guarded('a meme comes', press(content.rooms.biblioteca.shelf.pull));
   await guarded('the meme goes', () => page.clock.runFor(meme - hush));
 
   // The wish comes inside the board's screen change, whose guard lasts until --duration-hush after it.
   await guarded('the wish comes', async () => {
-    await page.getByRole('button', { name: content.rooms.studio.placeholder.solve }).click();
+    await page.keyboard.press('Control+Shift+KeyN');
     await page.clock.runFor(dip);
     await expect(wish(page)).toBeAttached();
   });

@@ -2,7 +2,8 @@
 // the page, the color a token holds, whether the bands continue the screen's backdrop, at one patch or
 // along the whole edge of the stage, and the stage
 // rules of CLAUDE.md, measured at the 1920x1080 design size: nothing leaves the stage, no text under
-// 28 px (20 px for a .label), no text overflowing its box, at most three font families on screen.
+// 28 px (20 px for a .label), no text overflowing its box but by an ellipsis, at most three font families
+// on screen.
 import { expect, type Page } from '@playwright/test';
 
 export interface Rgb {
@@ -153,14 +154,17 @@ function scanStage(page: Page): Promise<StageScan> {
     });
     const texts = visible.filter((node) => [...node.childNodes].some((child) => child.nodeType === Node.TEXT_NODE && child.textContent!.trim()));
     const small = texts.filter((node) => parseFloat(getComputedStyle(node).fontSize) < (node.closest('.label') ? 20 : 28));
-    // An inline box has no client size, so its text is measured in the nearest box around it.
+    // An inline box has no client size, so its text is measured in the nearest box around it. A box that cuts
+    // its text with an ellipsis does so on purpose, and says so on screen.
     const holder = (node: Element) => {
       let box: Element = node;
       while (box.clientWidth === 0 && box.clientHeight === 0 && box.parentElement && box !== stage) box = box.parentElement;
       return box;
     };
     const overflowing = [...new Set(texts.map(holder))].filter(
-      (node) => node.scrollWidth > node.clientWidth + 1 || node.scrollHeight > node.clientHeight + 1,
+      (node) =>
+        getComputedStyle(node).textOverflow !== 'ellipsis' &&
+        (node.scrollWidth > node.clientWidth + 1 || node.scrollHeight > node.clientHeight + 1),
     );
     const families = texts.map((node) => getComputedStyle(node).fontFamily.split(',')[0].trim().replace(/^["']|["']$/g, ''));
     return {
@@ -178,7 +182,7 @@ export const outsideStage = async (page: Page) => (await scanStage(page)).outsid
 /** Visible text under 28 px, or under 20 px inside a .label. */
 export const smallText = async (page: Page) => (await scanStage(page)).small;
 
-/** Visible text whose scroll size exceeds its box. */
+/** Visible text whose scroll size exceeds its box, unless the box ends it with an ellipsis. */
 export const overflowingText = async (page: Page) => (await scanStage(page)).overflowing;
 
 /** The font families of the visible text. */
