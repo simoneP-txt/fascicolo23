@@ -1,18 +1,20 @@
 // E2E play: how a test solves each room, and solveRoom(), which enters a room from the board, solves it and
-// closes the wish. A room is solved by playing it, with the answers taken from content.json, or by the host's
-// Ctrl+Shift+N for the tests that prove the engine. The study picks the right phenomenon of each report, the
-// chessboard plays its line, the library pulls its secret book and accuses the liar of liar.ts until the room
-// takes the answer, Rapture opens its door with the code and plays one run that obeys the questions only; Room
-// 46 pins each clue on a suspect it settles and accuses the culprit, two clicks each. Playing Rapture needs the
-// page clock installed before the page opened (decision 12): a run stands the clock still and runs it one window
-// at a time, and the steps of a run, and those of Room 46, are exported for the tests of the rooms.
+// closes the wish, landing on the board, or on the finale after Room 46. A room is solved by playing it, with the
+// answers taken from content.json, or by the host's Ctrl+Shift+N for the tests that prove the engine. The study
+// picks the right phenomenon of each report, the chessboard plays its line, the library pulls its secret book and
+// accuses the liar of liar.ts until the room takes the answer, Rapture opens its door with the code and plays one
+// run that obeys the questions only; Room 46 pins each clue on a suspect it settles and accuses the culprit, two
+// clicks each. Playing Rapture needs the page clock installed before the page opened (decision 12): a run stands
+// the clock still and runs it one window at a time, and the steps of a run, and those of Room 46, are exported for
+// the tests of the rooms.
 import { expect, type Page } from '@playwright/test';
 import { Chess } from 'chess.js';
+import { FINALE } from '../../src/engine/game';
 import type { RoomId } from '../../src/engine/types';
 import { consistentLiars } from '../../src/rooms/biblioteca/liar';
 import { CONTROL_IDS, isQuestion, type Order } from '../../src/rooms/rapture/orders';
 import { culprits, EVIDENCE, minuteOf, settles, SUSPECT_IDS, type Evidence, type SuspectId } from '../../src/rooms/stanza-46/deduction';
-import { board, content, continueWish, enterRoom, wish } from './helpers';
+import { board, content, continueWish, enterRoom, finale, wish } from './helpers';
 
 const rapture = content.rooms.rapture;
 export const ORDERS: Order[] = rapture.orders;
@@ -148,5 +150,5 @@ export async function solveRoom(page: Page, id: RoomId, how: 'play' | 'host' = '
   if (how === 'play') await play[id](page);
   else await page.keyboard.press('Control+Shift+KeyN');
   await continueWish(page);
-  await expect(board(page)).toBeVisible();
+  await expect(id === FINALE ? finale(page) : board(page)).toBeVisible();
 }

@@ -1,18 +1,23 @@
-// Game controller: owns the state and the save, moves between the case opening, the board and the
-// rooms, builds each room's context and runs the audience help and the auto-help ladder. Every way out
-// of a room goes through exit(), so the countdown ends, the session timer stops and every hold on the
+// Game controller: owns the state and the save, moves between the case opening, the board, the rooms and
+// the finale, builds each room's context and runs the audience help and the auto-help ladder. Every way
+// out of a room goes through exit(), so the countdown ends, the session timer stops and every hold on the
 // help clock is released; the room is unmounted once its screen has left. Animations (a room coming on
-// screen, a meme) hold the help clock while they play. It never touches the DOM: the screen is a GameUi.
+// screen, a meme) hold the help clock while they play. Room 46 ends the game: once solved, the finale
+// takes the board's place, now and at every start, and its button hands the whole link to the browser
+// once per finale shown. It never touches the DOM: the screen is a GameUi, the browser is GameDeps.open.
 import { audienceStatus, startCountdown, type AudienceStatus, type Countdown } from './audience';
 import { createLadder, type HelpStatus, type Ladder } from './autohelp';
 import { isOpen } from './clues';
-import { linkParts } from './link';
+import { assembleLink, linkParts } from './link';
 import { clear, load, save, type StorageLike } from './save';
 import * as rules from './state';
 import type { GameState } from './state';
 import type { Content, GameContext, Meme, Room, RoomId } from './types';
 
 const TICK_MS = 250;
+
+/** The room that ends the game: once it is solved the finale takes the board's place. */
+export const FINALE: RoomId = 'stanza-46';
 
 /** The sounds the game can play. */
 export interface Sfx {
@@ -27,6 +32,7 @@ export type Earned = RoomId | 'fascicolo';
 export interface GameUi {
   showIntro(): void;
   showBoard(state: GameState, earned: Earned | null): void; // earned: the fragment the board celebrates
+  showFinale(state: GameState, earned: boolean): void; // earned: the wish of the last fragment plays first
   showRoom(room: Room, shown: () => void): HTMLElement; // the element the room mounts into; shown: it is on screen
   narrate(text: string): void;
   setAudience(status: AudienceStatus): void;
@@ -37,7 +43,7 @@ export interface GameUi {
 
 export interface Game {
   readonly state: GameState;
-  start(): void; // the case opening if the case is not open yet, else the board
+  start(): void; // the case opening if the case is not open yet, the finale once Room 46 is solved, else the board
   openCase(): void;
   enter(id: RoomId): void; // only from the board, through an open and unsolved door
   leave(): void; // "Torna alla lavagna?"
@@ -48,6 +54,7 @@ export interface Game {
   hint(force: boolean): void; // "Un indizio?", or Ctrl+Shift+H with force
   giveBackToken(): void; // Ctrl+Shift+G
   debugEnter(id: RoomId): void; // the debug menu: opens the case, adds the room's clues, enters it
+  watch(): void; // "Guarda la confessione?": saves watched and opens the video, once per finale shown
   reset(): void; // Ctrl+Shift+R, once confirmed
 }
 
@@ -57,6 +64,7 @@ export interface GameDeps {
   audio: Sfx;
   storage?: StorageLike;
   now?: () => number;
+  open(url: string): void; // hands the video link to the browser
   ui(game: Game, screenGone: () => void): GameUi; // the screen calls screenGone once the old screen has left
 }
 
@@ -77,6 +85,7 @@ export function createGame(deps: GameDeps): Game {
   let session: Session | null = null;
   let leaving: Room | null = null; // left, but its screen is still on the way out
   let onBoard = false;
+  let finale: 'shown' | 'watched' | null = null; // the finale on screen, and whether its button was pressed
   // One ladder per room for the whole game: leaving pauses it, coming back resumes it.
   const ladders = new Map<RoomId, Ladder>();
 
@@ -89,6 +98,13 @@ export function createGame(deps: GameDeps): Game {
     onBoard = true;
     ui.showBoard(state, earned);
     ui.narrate(content.witness.board);
+  };
+
+  const showFinale = (earned: boolean) => {
+    onBoard = false;
+    finale = 'shown';
+    ui.showFinale(state, earned);
+    ui.narrate(content.witness.finale);
   };
 
   const showAudience = () => {
@@ -164,6 +180,7 @@ export function createGame(deps: GameDeps): Game {
   const mount = (room: Room) => {
     retire();
     onBoard = false;
+    finale = null;
     const roomContent = content.rooms[room.id];
     let ladder = ladders.get(room.id);
     if (ladder) ladder.resume();
@@ -192,6 +209,7 @@ export function createGame(deps: GameDeps): Game {
         current.ladder.error();
         showHelp();
       },
+      won: () => live() && persist(rules.complete(state, room)),
       complete: () => live() && game.solve(),
     };
     guard(() => room.mount(root, ctx));
@@ -202,7 +220,8 @@ export function createGame(deps: GameDeps): Game {
       return state;
     },
     start() {
-      if (state.opened) showBoard();
+      if (state.solved.includes(FINALE)) showFinale(false);
+      else if (state.opened) showBoard();
       else ui.showIntro();
     },
     openCase() {
@@ -226,7 +245,8 @@ export function createGame(deps: GameDeps): Game {
       persist(rules.complete(state, room));
       exit();
       ladders.delete(room.id);
-      showBoard(room.id);
+      if (room.id === FINALE) showFinale(true);
+      else showBoard(room.id);
     },
     skip() {
       if (!session) return;
@@ -264,6 +284,12 @@ export function createGame(deps: GameDeps): Game {
       persist(rules.addClues(rules.openCase(state), room.requires));
       mount(room);
     },
+    watch() {
+      if (finale !== 'shown') return;
+      finale = 'watched';
+      persist(rules.watch(state));
+      deps.open(assembleLink(content.link.map((part) => part.text))); // always the whole link, whatever was skipped
+    },
     reset() {
       exit();
       retire();
@@ -271,6 +297,7 @@ export function createGame(deps: GameDeps): Game {
       clear(storage);
       state = rules.newState(content.tokens);
       onBoard = false;
+      finale = null;
       ui.showIntro();
     },
   };

@@ -1,9 +1,11 @@
-// Screens: the GameUi the engine talks to. It puts the case opening, the board or a room on the stage;
-// a room gets the frame of mockups 06, 07, 10 and 11 (header, way back to the board, audience button, the
-// witness top right with its silhouette, or bottom left beside it in Room 46, auto-help bottom right),
-// colored by the room's frame theme, and the area it mounts into. When the board comes with a fragment just won, the wish plays over it first and
-// the board reveals the fragment, and what the room brought, once the wish is over. On the board the
-// witness speaks from the top right, its silhouette standing under the bubble. Overlays, the meme and the
+// Screens: the GameUi the engine talks to. It puts the case opening, the board, a room or the finale on the
+// stage; a room gets the frame of mockups 06, 07, 10 and 11 (header, way back to the board, audience button,
+// the witness top right with its silhouette, or bottom left beside it in Room 46, auto-help bottom right),
+// colored by the room's frame theme, and the area it mounts into. When the board comes with a fragment just
+// won, the wish plays over it first and the board reveals the fragment, and what the room brought, once the
+// wish is over; the finale (mockup 03) comes the same way with the last fragment, on Room 46's sea, with no way
+// back, audience or help. On the board the witness speaks from the top right, its silhouette standing under
+// the bubble; on the finale from the bottom left, beside it. Overlays, the meme and the
 // wish included, go on the stage root: they scale with the stage, leave with the screen under them and
 // stay outside the screen's clip, so a veil reaches the bands. A screen change tells the engine when the old
 // screen has gone, so it can unmount the room that left, and when a room is on screen, so its help clock
@@ -12,7 +14,8 @@
 import './room.css';
 import type { AudienceStatus } from '../engine/audience';
 import { renderBoard } from '../engine/board';
-import type { Earned, Game, GameUi, Sfx } from '../engine/game';
+import { FINALE, type Earned, type Game, type GameUi, type Sfx } from '../engine/game';
+import { renderFinale } from '../rooms/stanza-46/finale';
 import type { ClueId, Content, Room } from '../engine/types';
 import { createAudienceButton, createAudienceOverlay, type AudienceView } from './audience';
 import { createHelpPanel, type HelpPanel } from './autohelp';
@@ -56,6 +59,20 @@ export function createScreens(
       if (earned) {
         const card = wishCard(content, earned, gives(earned));
         change.gone.then(() => showWish(stage.root, content, card, audio, () => board.reveal()));
+      }
+    },
+
+    showFinale(state, earned) {
+      const finale = renderFinale(content, state, earned, audio, () => game.watch());
+      witness = createWitness(content, 'right');
+      audience = [];
+      help = null;
+      finale.el.append(witness.el);
+      const change = stage.show(finale.el, FINALE); // the room's sea
+      change.gone.then(screenGone);
+      if (earned) {
+        const card = wishCard(content, FINALE, gives(FINALE));
+        change.gone.then(() => showWish(stage.root, content, card, audio, () => finale.reveal()));
       }
     },
 

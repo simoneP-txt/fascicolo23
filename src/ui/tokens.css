@@ -231,6 +231,7 @@
   --duration-fly: 400ms; /* a clue card, or the thread's end, flying to a slot or back in Room 46 */
   --duration-clip: 4000ms; /* the longest a video meme stays, however long its clip */
   --duration-swell: 7000ms; /* a wave of Room 46 swaying one way */
+  --duration-rise: 400ms; /* "Guarda la confessione?" coming up on the finale, once the stamp has landed */
   --press-shift: 2px; /* how far a pressed control sinks */
   --press-scale: 0.98;
   --meme-zoom: 1.35; /* the size a meme lands from */
@@ -281,7 +282,8 @@
   --bubble-label: var(--teal);
   --help-tray: var(--gold-glow);
 }
-[data-room='stanza-46'] {
+[data-room='stanza-46'],
+[data-screen='finale'] {
   --frame-label: var(--paper);
   --figure: var(--figure-sea);
 }

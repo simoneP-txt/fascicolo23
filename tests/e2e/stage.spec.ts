@@ -1,11 +1,11 @@
 // Stage e2e: the 16:9 stage fits the three test resolutions and paints nothing, so the host's art shows
 // through it; on the 16:10 party screen the bands above and below it take the colors of the screen, the
-// library's walnut wall, Rapture's wall and floor and Room 46's sea and waves among them, and darken with it, in
-// one layer, under a dialog; the four fonts load from the build with the network cut.
+// library's walnut wall, Rapture's wall and floor and Room 46's sea and waves among them, the finale's too, and
+// darken with it, in one layer, under a dialog; the four fonts load from the build with the network cut.
 // Durations are cut to 1 ms.
 import { expect, test, type Page } from '@playwright/test';
 import { bandColor, bandsMatchTokens, colorDistance, edgeColors, edgeJumps, luminance, type Rgb } from './checks';
-import { board, content, continueWish, enterRoom, offline, openCase, quick } from './helpers';
+import { board, content, continueWish, enterRoom, finale, offline, openCase, quick } from './helpers';
 
 const BANDS = ['top', 'bottom'] as const;
 
@@ -128,6 +128,16 @@ test.describe('on the 16:10 party screen', () => {
     for (const edge of BANDS) {
       const jumps = await edgeJumps(page, edge, { still: true });
       expect(Math.max(...jumps), `Room 46 at the ${edge} edge of the stage`).toBeLessThanOrEqual(12);
+    }
+
+    // The finale stands on the same sea, so its bands carry on the sea and the waves as well.
+    await page.keyboard.press('Control+Shift+KeyN');
+    await continueWish(page);
+    await expect(finale(page)).toBeVisible();
+    await bandsMatchTokens(page, 'finale');
+    for (const edge of BANDS) {
+      const jumps = await edgeJumps(page, edge, { still: true });
+      expect(Math.max(...jumps), `finale at the ${edge} edge of the stage`).toBeLessThanOrEqual(12);
     }
   });
 

@@ -14,8 +14,7 @@
 
 .board__title,
 .board__link,
-.board__tokens,
-.board__finale {
+.board__tokens {
   position: absolute;
   display: flex;
   flex-direction: column;
@@ -70,16 +69,13 @@
   height: 100%;
 }
 
-/* Under the window: the tokens left, or at the end of the game the provisional finale. */
-.board__tokens,
-.board__finale {
+/* Under the window: the tokens left. */
+.board__tokens {
   left: 96px;
   top: 744px;
   width: 384px;
   height: 216px;
   rotate: -1deg;
-}
-.board__tokens {
   --token-used: var(--token-spent);
   align-items: flex-start;
   gap: var(--space-3);
@@ -95,21 +91,6 @@
   width: var(--space-8);
   height: var(--space-8);
   font-size: var(--text-heading);
-}
-/* The finale: the big stamp, tilted less than a door's so it clears the button, over a button as wide as
-   the card, whose text takes two lines. */
-.board__finale {
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-3);
-}
-.board__stamp {
-  align-self: center;
-  font-size: var(--text-heading);
-  rotate: -4deg;
-}
-.board__watch {
-  white-space: normal;
 }
 
 .door {

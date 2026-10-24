@@ -8,7 +8,21 @@ import { bandsMatchTokens, edgeJumps, fontFamilies, hasBands, outsideStage, over
 import type { RoomId } from '../../src/engine/types';
 import { consistentLiars } from '../../src/rooms/biblioteca/liar';
 import { isQuestion } from '../../src/rooms/rapture/orders';
-import { BEFORE_46, BEFORE_RAPTURE, board, consolation, content, enterRoom, FINISHED, MOCKUP_01, openCase, quick, seed, wish } from './helpers';
+import {
+  BEFORE_46,
+  BEFORE_RAPTURE,
+  board,
+  consolation,
+  content,
+  enterRoom,
+  FINISHED,
+  MOCKUP_01,
+  openCase,
+  quick,
+  seed,
+  watchButton,
+  wish,
+} from './helpers';
 import { accuseSuspect, CULPRIT, loseRaptureRun, openRaptureDoor, ORDERS, pinClue, play, startRaptureRun, throughOrder } from './play';
 
 const SIZES = [
@@ -69,9 +83,9 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
   'board-start': async (page) => {
     await openCase(page);
   },
-  // 01 at the end: every door stamped, five clues and six strings, the provisional finale in place of the tokens
+  // 01 at its last: every door stamped but Room 46's, open, five clues and six strings, the tokens under the window
   'board-end': async (page) => {
-    await seed(page, FINISHED);
+    await seed(page, BEFORE_46);
     await page.goto('/');
     await expect(board(page)).toBeVisible();
   },
@@ -176,6 +190,12 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
     await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
     await accuseSuspect(page, CULPRIT);
     await expect(page.locator('[data-solved]')).toHaveCount(1);
+  },
+  // 03: the case closed, the whole link with its stamp and the video button, the game reopened on it
+  finale: async (page) => {
+    await seed(page, FINISHED);
+    await page.goto('/');
+    await expect(watchButton(page)).toBeVisible();
   },
   // 15 over Rapture: the way out, offered after skipAfterSec, its dialog in Poiret One
   'skip-rapture': async (page) => {

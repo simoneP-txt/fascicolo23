@@ -1,0 +1,155 @@
+/* Finale (src/rooms/stanza-46/finale.ts), mockup 03: on Room 46's sea, the header top left, the link card at the
+   top with its stamp, the four suspect cards of the closed case in a row (stanza46.css draws them; here they take
+   the mockup's size and a still stamp), the three clues on the right, the red strings behind everything, the
+   witness bottom left beside its bubble and the video button beside it. After the wish the stamp beats once the
+   bar is off, then the button comes up. Motion is transform and opacity only. */
+.finale {
+  color: var(--frame-text);
+}
+
+.finale__strings {
+  position: absolute;
+  inset: 0;
+  width: var(--stage-width);
+  height: var(--stage-height);
+  pointer-events: none;
+}
+
+.finale__title {
+  position: absolute;
+  left: var(--space-12);
+  top: var(--space-6);
+  color: var(--frame-label);
+  font-size: var(--text-tag);
+}
+
+/* The link as evidence, whole: each room's fragment underlined in red and ink in turn. */
+.finale__link {
+  position: absolute;
+  left: 552px;
+  top: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 960px;
+  height: 152px;
+  padding: var(--space-3) var(--space-5);
+  box-shadow: var(--shadow-sheet-dark);
+}
+.finale__link .link {
+  align-items: flex-end;
+  gap: var(--space-1);
+  font-size: var(--text-title);
+}
+.finale__link .link__part {
+  color: var(--ink);
+}
+.finale__link .link__part:not([data-fragment='fascicolo'], [data-hidden]) {
+  border-bottom: var(--border) solid var(--ink);
+}
+.finale__link .link__part:nth-child(even) {
+  border-bottom-color: var(--red);
+}
+.finale__link .link__part + .link__part[data-hidden] {
+  height: var(--space-6);
+  margin-left: 0;
+}
+.finale__stamp {
+  position: absolute;
+  right: calc(-1 * var(--space-5));
+  top: 104px;
+  padding: 0 var(--space-2);
+  font-size: var(--text-witness);
+}
+.finale__stamp[data-new] {
+  opacity: 0;
+}
+.finale[data-reveal] .finale__stamp[data-new] {
+  animation: finale-stamp var(--duration-stamp) var(--ease) var(--duration-peel) both;
+}
+
+/* The suspects of the closed case, at the size of mockup 03; the culprit's stamp has already beaten in the room. */
+.finale__suspects {
+  position: absolute;
+  left: 152px;
+  top: 248px;
+  display: flex;
+  gap: var(--space-6);
+}
+.finale .suspect {
+  width: 304px;
+  height: 504px;
+  padding: var(--space-4) var(--space-3) var(--space-3);
+}
+.finale .suspect__art {
+  height: 208px;
+}
+.finale .suspect__figure {
+  height: 200px;
+}
+.finale .suspect__stamp {
+  animation: none;
+}
+
+/* The clues, each as tall as the longest needs, where the strings start. */
+.finale__clues {
+  position: absolute;
+  left: 1640px;
+  top: 288px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.finale__clues .clue {
+  height: 136px;
+  gap: 0;
+  box-shadow: var(--shadow-sheet-dark);
+}
+.finale__clues .clue__code {
+  font-size: var(--text-game);
+}
+
+.finale .witness {
+  position: absolute;
+  left: var(--space-12);
+  top: 832px;
+  width: 608px;
+}
+
+/* "Guarda la confessione?" in its red halo; pressed once, it fades and takes no more. */
+.finale__watch {
+  position: absolute;
+  left: 720px;
+  top: 904px;
+  width: 576px;
+  height: var(--space-11);
+  font-size: var(--text-witness);
+  box-shadow:
+    0 0 0 var(--space-1) var(--red-glow),
+    var(--shadow-sheet-dark);
+}
+.finale__watch[data-new] {
+  animation: finale-rise var(--duration-rise) var(--ease);
+}
+.finale__watch[aria-disabled='true'] {
+  opacity: 0.6;
+  box-shadow: var(--shadow-sheet-dark);
+}
+
+@keyframes finale-stamp {
+  from {
+    opacity: 0;
+    transform: scale(var(--stamp-scale));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes finale-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-4));
+  }
+}

@@ -1,5 +1,8 @@
 // Electron main process: opens the game fullscreen, toggles fullscreen with F11
-// and hands https links (the finale video) to the system browser.
+// and hands https links (the finale video) to the system browser. For the video the game leaves
+// fullscreen, so the browser comes up in front of it, and goes back to fullscreen when the window
+// is back in front: at the first focus after it has lost it, so a focus with no blur before it,
+// which leaving fullscreen may bring, does not cover the browser again.
 import { app, BrowserWindow, Menu, shell } from 'electron';
 import { join } from 'node:path';
 
@@ -11,7 +14,11 @@ app.whenReady().then(() => {
   win.once('ready-to-show', () => win.show());
 
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('https://')) void shell.openExternal(url);
+    if (url.startsWith('https://')) {
+      win.setFullScreen(false);
+      void shell.openExternal(url);
+      win.once('blur', () => win.once('focus', () => win.setFullScreen(true)));
+    }
     return { action: 'deny' };
   });
 

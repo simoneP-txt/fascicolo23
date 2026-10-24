@@ -1,5 +1,6 @@
-// Game state: what the player has opened, solved and found, and the audience tokens left. Pure
-// functions that return a new state, so the engine and the tests share one set of rules.
+// Game state: what the player has opened, solved and found, the audience tokens left and whether she has
+// opened the video. Pure functions that return a new state, so the engine and the tests share one set of
+// rules.
 import type { ClueId, Room, RoomId } from './types';
 
 export interface GameState {
@@ -7,10 +8,11 @@ export interface GameState {
   solved: RoomId[]; // in the order the player solved them
   clues: ClueId[]; // in the order she found them
   tokens: number; // audience tokens left
+  watched: boolean; // "Guarda la confessione?" was pressed: the app reopens on the epilogue
 }
 
 export function newState(tokens: number): GameState {
-  return { opened: false, solved: [], clues: [], tokens };
+  return { opened: false, solved: [], clues: [], tokens, watched: false };
 }
 
 export function openCase(state: GameState): GameState {
@@ -31,6 +33,10 @@ export function complete(state: GameState, room: Pick<Room, 'id' | 'gives'>): Ga
 
 export function useToken(state: GameState): GameState {
   return { ...state, tokens: Math.max(0, state.tokens - 1) };
+}
+
+export function watch(state: GameState): GameState {
+  return { ...state, watched: true };
 }
 
 export function giveBackToken(state: GameState, max: number): GameState {

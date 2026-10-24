@@ -1,15 +1,20 @@
-// Game state and save: transitions never duplicate an award or leave the token range, and the save
-// falls back to a new game whenever the stored data cannot be trusted.
+// Game state and save: transitions never duplicate an award or leave the token range, the video once opened
+// is remembered, and the save falls back to a new game whenever the stored data cannot be trusted; a save
+// from before the video existed still loads.
 import { expect, test } from 'vitest';
 import { SAVE_KEY, clear, load, save } from '../../src/engine/save';
-import { addClues, complete, giveBackToken, newState, openCase, useToken } from '../../src/engine/state';
+import { addClues, complete, giveBackToken, newState, openCase, useToken, watch } from '../../src/engine/state';
 import type { Room } from '../../src/engine/types';
 import { memoryStorage } from './fakes';
 
 const studio: Pick<Room, 'id' | 'gives'> = { id: 'studio', gives: ['rule', 'profile'] };
 
 test('a new game has every token and nothing solved', () => {
-  expect(newState(3)).toEqual({ opened: false, solved: [], clues: [], tokens: 3 });
+  expect(newState(3)).toEqual({ opened: false, solved: [], clues: [], tokens: 3, watched: false });
+});
+
+test('opening the video is remembered', () => {
+  expect(watch(newState(3)).watched).toBe(true);
 });
 
 test('opening the case is remembered', () => {
@@ -37,7 +42,7 @@ test('tokens stay between 0 and the maximum', () => {
 
 test('save and load give back the same state', () => {
   const storage = memoryStorage();
-  const state = useToken(complete(openCase(newState(3)), studio));
+  const state = watch(useToken(complete(openCase(newState(3)), studio)));
   save(state, storage);
   expect(load(3, storage)).toEqual(state);
 });
@@ -54,6 +59,21 @@ test('missing, corrupt or other-version saves start a new game', () => {
     JSON.stringify({ version: 1, state: { opened: 'yes', solved: [], clues: [], tokens: 1 } }),
   ]) {
     storage.setItem(SAVE_KEY, raw);
+    expect(load(3, storage)).toEqual(newState(3));
+  }
+});
+
+test('an old save without watched loads with watched false', () => {
+  const storage = memoryStorage();
+  const { watched: _, ...old } = useToken(complete(openCase(newState(3)), studio));
+  storage.setItem(SAVE_KEY, JSON.stringify({ version: 1, state: old }));
+  expect(load(3, storage)).toEqual({ ...old, watched: false });
+});
+
+test('a watched that is not a boolean starts a new game', () => {
+  const storage = memoryStorage();
+  for (const watched of ['yes', 1, null]) {
+    storage.setItem(SAVE_KEY, JSON.stringify({ version: 1, state: { ...watch(openCase(newState(1))), watched } }));
     expect(load(3, storage)).toEqual(newState(3));
   }
 });

@@ -1,17 +1,15 @@
 // Full playthrough e2e: one game for each order the clue graph allows, with the network blocked. At every
 // step only the doors whose clues are found offer "Entra?" (Room 46 last), each solved room shows its
-// fragment, nothing leaves the local server before "Guarda la confessione?", and that button opens
-// exactly the video link. Durations are cut to 1 ms, so each wish ends at once; the page clock is installed
-// before the page opens, for the runs of Rapture.
+// fragment, the game ends on the finale with the whole link and its stamp, nothing leaves the local server
+// before "Guarda la confessione?", and that button opens exactly the video link. Durations are cut to 1 ms,
+// so each wish ends at once; the page clock is installed before the page opens, for the runs of Rapture.
 import { expect, test } from '@playwright/test';
 import { isOpen, validOrders } from '../../src/engine/clues';
 import { graphRooms } from '../../src/rooms/graph';
-import { board, content, door, offline, openCase, quick } from './helpers';
+import { content, door, finale, offline, openCase, quick, VIDEO, watchButton } from './helpers';
 import { solveRoom } from './play';
 
 test.beforeEach(({ page }) => quick(page));
-
-const VIDEO = 'https://youtu.be/71Kg4_v7Qjs';
 
 for (const order of validOrders(graphRooms())) {
   test(`plays the case in the order ${order.join(', ')}`, async ({ context, page, baseURL }) => {
@@ -35,12 +33,12 @@ for (const order of validOrders(graphRooms())) {
     }
 
     await expect(page.locator('[data-fragment][data-hidden]')).toHaveCount(0);
-    await expect(board(page)).toContainText(content.ui.link.done);
-    await expect(board(page)).toContainText(content.ui.finale.stamp);
+    await expect(finale(page)).toContainText(content.ui.link.done);
+    await expect(finale(page)).toContainText(content.ui.finale.stamp);
     expect(outside).toEqual([]);
 
     const request = context.waitForEvent('request', (candidate) => !candidate.url().startsWith(baseURL!));
-    await page.getByRole('button', { name: content.ui.finale.watch }).click();
+    await watchButton(page).click();
     expect((await request).url()).toBe(VIDEO);
     await expect.poll(() => outside).toEqual([VIDEO]);
   });

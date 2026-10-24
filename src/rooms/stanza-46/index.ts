@@ -8,9 +8,10 @@
 // gets the next of the witness's lines, every blindTries-th with the video meme; with the three, the fiancé
 // objects and the two others are innocent, each with a meme, an error and the witness's line, and the thread goes
 // back to its pin. The culprit closes the case: every card shows its verdict, the clues come back to the column,
-// the thread's end stays on the culprit, the stamp beats, the area is marked solved and the room completes after
-// --duration-beat. Gestures wait while a card or the thread flies and during the beat, the second click of a
-// double click never reaches a suspect, and every visit starts over.
+// the thread's end stays on the culprit, the stamp beats, the area is marked solved, the solve is saved at once (so
+// an app closed during the beat reopens on the finale) and the room completes after --duration-beat. Gestures wait
+// while a card or the thread flies and during the beat, the second click of a double click never reaches a suspect,
+// and every visit starts over.
 import './stanza46.css';
 import type { Room } from '../../engine/types';
 import { clueCard, paper } from '../../ui/card';
@@ -213,6 +214,7 @@ export const stanza46: Room<Stanza46Content> = {
       closed = true;
       showBusy();
       root.dataset.solved = '';
+      ctx.won();
       const end = middleOf(card.querySelector('[data-slot]')!);
       for (const [id, suspect] of cards) showVerdict(suspect, texts, id === culprit);
       for (const clue of pinned) spots.get(clue)!.append(handles.get(clue)!);

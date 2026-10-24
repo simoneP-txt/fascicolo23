@@ -1,11 +1,11 @@
 // Test doubles shared by the unit tests: an in-memory Storage, rooms that follow the real clue graph,
-// a screen and a sound bank that only record calls, and a game wired to all of them. By default a fake
-// screen change is over at once (the old screen has left, the new room is on screen); with slowScreens
-// the test ends it itself.
+// a screen, a sound bank and a way out to the browser that only record calls, and a game wired to all of
+// them. By default a fake screen change is over at once (the old screen has left, the new room is on
+// screen); with slowScreens the test ends it itself.
 import { vi } from 'vitest';
 import json from '../../content/content.json';
 import { validateContent } from '../../src/engine/content';
-import { createGame, type GameUi, type Sfx } from '../../src/engine/game';
+import { createGame, type GameDeps, type GameUi, type Sfx } from '../../src/engine/game';
 import type { StorageLike } from '../../src/engine/save';
 import { ROOM_IDS, type GameContext, type Room, type RoomId } from '../../src/engine/types';
 import { rooms as realRooms } from '../../src/rooms';
@@ -39,6 +39,7 @@ export function fakeUi() {
   return {
     showIntro: vi.fn<GameUi['showIntro']>(),
     showBoard: vi.fn<GameUi['showBoard']>(),
+    showFinale: vi.fn<GameUi['showFinale']>(),
     showRoom: vi.fn<GameUi['showRoom']>(() => ({}) as HTMLElement),
     narrate: vi.fn<GameUi['narrate']>(),
     setAudience: vi.fn<GameUi['setAudience']>(),
@@ -56,12 +57,14 @@ export function setup(storage = memoryStorage(), options: { slowScreens?: boolea
   const ui = fakeUi();
   const rooms = fakeRooms();
   const audio = fakeAudio();
+  const open = vi.fn<GameDeps['open']>();
   let screenGone = () => {};
   const game = createGame({
     content,
     rooms,
     audio,
     storage,
+    open,
     ui: (_, gone) => {
       screenGone = gone;
       return ui;
@@ -70,6 +73,7 @@ export function setup(storage = memoryStorage(), options: { slowScreens?: boolea
   if (!options.slowScreens) {
     ui.showIntro.mockImplementation(() => screenGone());
     ui.showBoard.mockImplementation(() => screenGone());
+    ui.showFinale.mockImplementation(() => screenGone());
     ui.showRoom.mockImplementation((_, shown) => {
       screenGone();
       shown();
@@ -84,6 +88,7 @@ export function setup(storage = memoryStorage(), options: { slowScreens?: boolea
     room,
     audio,
     storage,
+    open, // the video link handed to the browser
     screenGone: () => screenGone(), // the old screen has left the stage
     shown: () => ui.showRoom.mock.lastCall![1](), // the last room is on screen
   };

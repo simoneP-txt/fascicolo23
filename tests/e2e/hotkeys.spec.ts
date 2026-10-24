@@ -1,8 +1,8 @@
 // Host hotkeys e2e: Ctrl+Shift+N solves the open room, H shows a hint even in Rapture, G gives a token
-// back, D leads to any room (Room 46 included) and R wipes progress only after the confirmation.
-// Durations are cut to 1 ms.
+// back, D leads to any room (Room 46 included) and R wipes progress only after the confirmation, on the
+// finale too, where N and H find no room to act on. Durations are cut to 1 ms.
 import { expect, test } from '@playwright/test';
-import { board, content, continueWish, enterRoom, openCase, quick, roomScreen } from './helpers';
+import { board, content, continueWish, enterRoom, finale, FINISHED, openCase, quick, roomScreen, seed, watchButton } from './helpers';
 
 test.beforeEach(({ page }) => quick(page));
 
@@ -49,6 +49,21 @@ test('Ctrl+Shift+R asks before wiping progress', async ({ page }) => {
   await page.keyboard.press('Control+Shift+KeyR');
   await page.getByRole('button', { name: content.ui.reset.no }).click();
   await expect(board(page)).toBeVisible();
+  await page.keyboard.press('Control+Shift+KeyR');
+  await page.getByRole('button', { name: content.ui.reset.yes }).click();
+  await expect(page.getByRole('heading', { name: content.ui.intro.question })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: content.ui.intro.question })).toBeVisible();
+});
+
+test('on the finale only the host reset acts, and it wipes the case', async ({ page }) => {
+  await seed(page, FINISHED);
+  await page.goto('/');
+  await expect(watchButton(page)).toBeVisible();
+  await page.keyboard.press('Control+Shift+KeyN');
+  await page.keyboard.press('Control+Shift+KeyH');
+  await expect(finale(page)).toBeVisible();
+  await expect(page.locator('[data-wish], [data-hint]')).toHaveCount(0);
   await page.keyboard.press('Control+Shift+KeyR');
   await page.getByRole('button', { name: content.ui.reset.yes }).click();
   await expect(page.getByRole('heading', { name: content.ui.intro.question })).toBeVisible();

@@ -1,6 +1,7 @@
 // Bootstrap: loads the four local fonts, the tokens and the base stylesheet (each component module
 // imports its own), validates content.json and the clue graph, then starts the game on the stage and
 // installs the hidden host hotkeys. Invalid content or a door that can never open stops here, on screen.
+// The video link leaves through window.open, which Electron hands to the system browser (electron/main.ts).
 import '@fontsource/special-elite';
 import '@fontsource/cormorant-garamond/500.css';
 import '@fontsource/cormorant-garamond/600.css';
@@ -39,6 +40,7 @@ try {
     content,
     rooms,
     audio,
+    open: (url) => void window.open(url, '_blank'),
     ui: (g, screenGone) => createScreens(stage, content, rooms, g, audio, screenGone),
   });
   installHotkeys(window, {

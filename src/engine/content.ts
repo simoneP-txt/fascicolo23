@@ -41,7 +41,7 @@ function schemaOf(rooms: readonly Pick<Room, 'id' | 'schema'>[]): Schema {
     audienceSeconds: 'seconds',
     sounds: 'map',
     loops: 'texts',
-    witness: { board: 'text', help: 'text', wish: 'text' },
+    witness: { board: 'text', help: 'text', wish: 'text', finale: 'text' },
     clues: each(CLUE_IDS, { label: 'text', missing: 'text' }),
     rooms: Object.fromEntries(ROOM_IDS.map((id) => [id, room(id)])),
     ui: {

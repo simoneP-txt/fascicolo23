@@ -1,10 +1,12 @@
-// E2E helpers: the content texts, a network cut that records every request outside the local server,
-// the games of mockup 01, before Rapture, before Room 46 and of the end, a save written before the page loads, quick() for the tests that
-// do not watch animations, settled() and throughChange() for those that wait out a screen change, a slow
-// double click, and the steps most tests repeat (opening the case through the wish, entering a room, and the
-// consolation that follows a confirmed "Apri la porta?"). Solving a room lives in play.ts.
+// E2E helpers: the content texts and the video link, a network cut that records every request outside the local
+// server, the games of mockup 01, before Rapture, before Room 46 and of the end, a save written before the page
+// loads, quick() for the tests that do not watch animations, settled() and throughChange() for those that wait
+// out a screen change, a slow double click, and the steps most tests repeat (opening the case through the wish,
+// entering a room, and the consolation that follows a confirmed "Apri la porta?"). Solving a room lives in
+// play.ts.
 import { readFileSync } from 'node:fs';
 import { expect, type BrowserContext, type Locator, type Page } from '@playwright/test';
+import { assembleLink } from '../../src/engine/link';
 import { save, SAVE_KEY } from '../../src/engine/save';
 import type { GameState } from '../../src/engine/state';
 import { CLUE_IDS, ROOM_IDS } from '../../src/engine/types';
@@ -12,14 +14,20 @@ import { parseDuration } from '../../src/ui/dom';
 
 export const content = JSON.parse(readFileSync('content/content.json', 'utf8'));
 
+/** The whole case link, which "Guarda la confessione?" opens. */
+export const VIDEO = assembleLink(content.link.map((part: { text: string }) => part.text));
+
+/** A saved game as the tests write it: watched may be left out, as in a save from before the video button. */
+export type Saved = Omit<GameState, 'watched'> & Partial<Pick<GameState, 'watched'>>;
+
 /** The fragment of the link a room gives, or the case opening ('fascicolo'), as content.json holds it. */
 export const fragment = (source: string): string => content.link.find((part: { room: string }) => part.room === source).text;
 
 /** The game of mockup 01: study and chessboard solved, their three clues found, one token spent. */
-export const MOCKUP_01: GameState = { opened: true, solved: ['studio', 'scacchiera'], clues: ['rule', 'profile', 'g4'], tokens: 2 };
+export const MOCKUP_01: Saved = { opened: true, solved: ['studio', 'scacchiera'], clues: ['rule', 'profile', 'g4'], tokens: 2 };
 
 /** Rapture's door open on the board: study, chessboard and library solved, their four clues found. */
-export const BEFORE_RAPTURE: GameState = {
+export const BEFORE_RAPTURE: Saved = {
   opened: true,
   solved: ['studio', 'scacchiera', 'biblioteca'],
   clues: ['rule', 'profile', 'g4', 'time-0451'],
@@ -27,21 +35,22 @@ export const BEFORE_RAPTURE: GameState = {
 };
 
 /** Room 46's door open on the board: the other four rooms solved, the five clues found. */
-export const BEFORE_46: GameState = {
+export const BEFORE_46: Saved = {
   opened: true,
   solved: ['studio', 'scacchiera', 'biblioteca', 'rapture'],
   clues: [...CLUE_IDS],
   tokens: 3,
 };
 
-/** The game over: every room solved in the order of the list, every clue found, one token spent. */
-export const FINISHED: GameState = { opened: true, solved: [...ROOM_IDS], clues: [...CLUE_IDS], tokens: 2 };
+/** The game over, the video not opened yet: every room solved in the order of the list, every clue found, one
+ *  token spent. */
+export const FINISHED: Saved = { opened: true, solved: [...ROOM_IDS], clues: [...CLUE_IDS], tokens: 2 };
 
 /** Writes this state as the save before the first load of the page in this tab, so the game starts from
  *  it and a reload keeps whatever the test did since. */
-export async function seed(page: Page, state: GameState): Promise<void> {
+export async function seed(page: Page, state: Saved): Promise<void> {
   let saved = '';
-  save(state, { getItem: () => null, setItem: (_key, value) => (saved = value), removeItem: () => {} });
+  save({ watched: false, ...state }, { getItem: () => null, setItem: (_key, value) => (saved = value), removeItem: () => {} });
   await page.addInitScript(
     ([key, value]) => {
       if (sessionStorage.getItem('e2e-seeded')) return;
@@ -157,6 +166,11 @@ export const board = (page: Page) => page.locator('[data-screen="board"]');
 export const roomScreen = (page: Page, id: string) => page.locator(`[data-screen="room"][data-room="${id}"]`);
 
 export const wish = (page: Page) => page.locator('[data-wish]');
+
+export const finale = (page: Page) => page.locator('[data-screen="finale"]');
+
+/** "Guarda la confessione?". Never pressed with the network up: it opens the real video. */
+export const watchButton = (page: Page) => page.getByRole('button', { name: content.ui.finale.watch });
 
 /** Waits for "Continua?" at the end of the wish, presses it and checks that the wish has gone. */
 export async function continueWish(page: Page): Promise<void> {

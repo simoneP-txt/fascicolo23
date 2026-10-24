@@ -2,16 +2,16 @@
 // plays the click sound, "No?" runs away, the doors follow the clue
 // graph, earned fragments survive a reload and rooms lead back to the board. The board of mockup 01 has
 // its clue cards, strings, locks, stamps and tokens; a room won stamps its door and stretches its strings
-// only once the wish is over, moving nothing but transform, opacity and the strings' dash; the finished
-// board offers the confession in place of the tokens. Durations are cut to 1 ms.
+// only once the wish is over, moving nothing but transform, opacity and the strings' dash; the board keeps its
+// tokens to the end, since the game ends on Room 46's finale. Durations are cut to 1 ms.
 import { expect, test } from '@playwright/test';
 import {
+  BEFORE_46,
   board,
   content,
   continueWish,
   door,
   enterRoom,
-  FINISHED,
   MOCKUP_01,
   offline,
   openCase,
@@ -178,12 +178,13 @@ test('the reveal moves only transform, opacity and the dash of the strings', asy
   expect(moved.filter((property) => !allowed.includes(property))).toEqual([]);
 });
 
-test('the finished board offers the confession', async ({ page }) => {
-  await seed(page, FINISHED);
+test('the board keeps the tokens with every room solved but 46', async ({ page }) => {
+  await seed(page, BEFORE_46);
   await page.goto('/');
-  await expect(board(page)).toContainText(content.ui.finale.stamp);
-  // Never pressed here: it opens the real video.
-  await expect(page.getByRole('button', { name: content.ui.finale.watch })).toBeVisible();
-  await expect(page.locator('[data-token]')).toHaveCount(0); // the finale takes the place of the tokens
+  await expect(board(page)).toBeVisible();
+  await expect(page.locator('[data-token]')).toHaveCount(content.tokens);
+  await expect(board(page)).not.toContainText(content.ui.finale.stamp);
+  await expect(page.getByRole('button', { name: content.ui.finale.watch })).toHaveCount(0);
+  await expect(door(page, 'stanza-46').getByRole('button', { name: content.ui.enter })).toBeVisible();
   await expect(page.locator('[data-string]')).toHaveCount(6);
 });

@@ -1,8 +1,9 @@
 // Help e2e: the audience countdown spends one token at a time until the jury has spoken, Rapture shows
 // no audience button, and the auto-help ladder offers a hint and then the way out by itself, with its
-// own texts in Room 46. The page clock is faked, so minutes pass at once, and durations are cut to 1 ms.
+// own texts in Room 46, where it leads to the finale. The page clock is faked, so minutes pass at once,
+// and durations are cut to 1 ms.
 import { expect, test } from '@playwright/test';
-import { board, content, continueWish, enterRoom, openCase, quick } from './helpers';
+import { board, content, continueWish, enterRoom, finale, openCase, quick } from './helpers';
 import { solveRoom } from './play';
 
 test.beforeEach(({ page }) => quick(page));
@@ -70,17 +71,18 @@ test('help appears by itself in the chessboard', async ({ page }) => {
 });
 
 test('Room 46 offers to show the culprit', async ({ page }) => {
-  const finale = content.rooms['stanza-46'];
+  const room = content.rooms['stanza-46'];
   await page.clock.install();
   await openCase(page);
   for (const id of ['studio', 'scacchiera', 'biblioteca', 'rapture'] as const) await solveRoom(page, id);
   await enterRoom(page, 'stanza-46');
-  await page.clock.runFor(finale.help.skipAfterSec * 1000);
-  await page.getByRole('button', { name: finale.skip.button }).click();
-  await page.getByRole('button', { name: finale.skip.no }).click();
+  await page.clock.runFor(room.help.skipAfterSec * 1000);
+  await page.getByRole('button', { name: room.skip.button }).click();
+  await page.getByRole('button', { name: room.skip.no }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await page.getByRole('button', { name: finale.skip.button }).click();
-  await page.getByRole('button', { name: finale.skip.yes }).click();
+  await page.getByRole('button', { name: room.skip.button }).click();
+  await page.getByRole('button', { name: room.skip.yes }).click();
   await continueWish(page);
+  await expect(finale(page)).toBeVisible();
   await expect(page.locator('[data-fragment="stanza-46"]')).toHaveText('s');
 });

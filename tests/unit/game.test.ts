@@ -1,12 +1,15 @@
 // Game lifecycle: intro or board at start, doors that follow the clue graph, rooms mounted once and
 // completed once, and an unmount on every way out of a room, even when the room itself is broken. A
 // broken room can still be solved, and a room's context goes inert once the player leaves it. Every
-// fragment won is celebrated on the board; memes and screen changes hold the help clock, and no hold
-// outlives its room; a room is unmounted once its screen has left, and before it mounts again.
+// fragment won is celebrated on the board, the last one on the finale, which the app reopens on until the
+// video is opened, once per finale; memes and screen changes hold the help clock, and no hold outlives its
+// room; a room is unmounted once its screen has left, and before it mounts again.
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { validOrders } from '../../src/engine/clues';
+import { assembleLink } from '../../src/engine/link';
 import { SAVE_KEY, load, save } from '../../src/engine/save';
 import { newState, openCase } from '../../src/engine/state';
+import { CLUE_IDS } from '../../src/engine/types';
 import { graphRooms } from '../../src/rooms/graph';
 import { content, ctxOf, memoryStorage, setup } from './fakes';
 
@@ -23,7 +26,17 @@ function onBoard(options: { slowScreens?: boolean } = {}) {
   return t;
 }
 
+// A game with the four other rooms solved and Room 46's door open, showing the board.
+function before46() {
+  const storage = memoryStorage();
+  save({ ...openCase(newState(3)), solved: ['studio', 'scacchiera', 'biblioteca', 'rapture'], clues: [...CLUE_IDS] }, storage);
+  const t = setup(storage);
+  t.game.start();
+  return t;
+}
+
 const HINT_ONLY = { hint: true, skip: false };
+const VIDEO = assembleLink(content.link.map((part) => part.text));
 
 test('a new game opens on the intro, a saved one on the board', () => {
   const fresh = setup();
@@ -222,6 +235,98 @@ test('a room that outlives its exit cannot touch the next room', () => {
   game.leave();
   game.enter('studio');
   expect(ui.setHelp).toHaveBeenLastCalledWith({ hint: false, skip: false });
+});
+
+// The finale: Room 46 ends the game with the whole link and the video button.
+
+test('solving Room 46 shows the finale with its wish, not the board', () => {
+  const { game, ui } = before46();
+  game.enter('stanza-46');
+  ui.showBoard.mockClear();
+  game.solve();
+  expect(game.state.solved).toContain('stanza-46');
+  expect(ui.showFinale).toHaveBeenCalledOnce();
+  expect(ui.showFinale).toHaveBeenCalledWith(game.state, true);
+  expect(ui.showBoard).not.toHaveBeenCalled();
+  expect(ui.narrate).toHaveBeenLastCalledWith(content.witness.finale);
+});
+
+test('a room won is saved at once, while its beat still runs', () => {
+  const { game, ui, room, storage } = before46();
+  game.enter('stanza-46');
+  const ctx = ctxOf(room('stanza-46'));
+  ctx.won();
+  expect(load(3, storage).solved).toContain('stanza-46');
+  expect(ui.showFinale).not.toHaveBeenCalled();
+  expect(room('stanza-46').unmount).not.toHaveBeenCalled();
+  ctx.complete();
+  expect(ui.showFinale).toHaveBeenCalledWith(game.state, true);
+  expect(game.state.solved.filter((id) => id === 'stanza-46')).toHaveLength(1);
+});
+
+test('a room won after it was left changes nothing', () => {
+  const { game, room, storage } = before46();
+  game.enter('stanza-46');
+  const ctx = ctxOf(room('stanza-46'));
+  game.leave();
+  ctx.won();
+  expect(load(3, storage).solved).not.toContain('stanza-46');
+});
+
+test('the app reopens on the finale until the video is opened', () => {
+  const storage = memoryStorage();
+  save({ ...openCase(newState(3)), solved: ['studio', 'scacchiera', 'biblioteca', 'rapture', 'stanza-46'], clues: [...CLUE_IDS] }, storage);
+  const { game, ui } = setup(storage);
+  game.start();
+  expect(ui.showFinale).toHaveBeenCalledOnce();
+  expect(ui.showFinale).toHaveBeenCalledWith(game.state, false);
+  expect(ui.showBoard).not.toHaveBeenCalled();
+  expect(ui.narrate).toHaveBeenLastCalledWith(content.witness.finale);
+});
+
+test('watch() saves and opens the video once', () => {
+  const { game, open, storage } = before46();
+  game.enter('stanza-46');
+  game.solve();
+  game.watch();
+  game.watch();
+  expect(open).toHaveBeenCalledOnce();
+  expect(open).toHaveBeenCalledWith(VIDEO);
+  expect(game.state.watched).toBe(true);
+  expect(load(3, storage).watched).toBe(true);
+});
+
+test('watch() does nothing away from the finale', () => {
+  const { game, open, storage } = before46();
+  game.watch(); // on the board
+  game.enter('stanza-46');
+  game.watch(); // in the room
+  game.leave();
+  game.watch(); // back on the board
+  expect(open).not.toHaveBeenCalled();
+  expect(load(3, storage).watched).toBe(false);
+});
+
+test('the debug menu reaches the video with rooms unsolved', () => {
+  const { game, ui, open } = setup();
+  game.start();
+  game.debugEnter('stanza-46');
+  game.solve();
+  expect(game.state.solved).toEqual(['stanza-46']);
+  expect(ui.showFinale).toHaveBeenCalledWith(game.state, true);
+  game.watch();
+  expect(open).toHaveBeenCalledWith(VIDEO);
+});
+
+test('a reset forgets the video', () => {
+  const { game, open } = before46();
+  game.enter('stanza-46');
+  game.solve();
+  game.watch();
+  game.reset();
+  expect(game.state.watched).toBe(false);
+  game.watch(); // on the case opening
+  expect(open).toHaveBeenCalledOnce();
 });
 
 // Host actions behind the hidden hotkeys.

@@ -3,8 +3,7 @@
 // (src/ui/link.ts) with a black bar for every missing fragment, the night window, a card per room (solved
 // with its fragment and stamp, open with a red outline and "Entra?", closed with a lock and what it lacks)
 // and the clues in the order found, each joined by a red string to every door that needs it. The tokens
-// left hang under the window; once every fragment is earned the provisional finale takes their place: the
-// "CASO RISOLTO?" stamp and the button that opens the video (phase 5 moves both into Room 46).
+// left hang under the window. Once Room 46 is solved the game ends on its finale, never on the board.
 // With a fragment just won the board waits under the wish: the fragment stays under its bar, and the stamp,
 // clue cards and strings the room brought (data-new) stay out of sight until reveal(), which board.css plays.
 import '../ui/board.css';
@@ -18,7 +17,7 @@ import { STAGE_HEIGHT, STAGE_WIDTH } from '../ui/stage';
 import { icon, svg } from '../ui/svg';
 import { isOpen, type GraphRoom } from './clues';
 import type { Earned, Sfx } from './game';
-import { assembleLink, linkParts } from './link';
+import { linkParts } from './link';
 import type { GameState } from './state';
 import type { ClueId, Content, Room, RoomId } from './types';
 
@@ -102,9 +101,8 @@ export function renderBoard(
     return card;
   });
 
-  const corner = complete ? finale(content) : tokens(content, state);
   // The strings first, so every card hangs over them.
-  screen.append(strings(state.clues, rooms, fresh), title, link, view, corner, ...doors, ...clues);
+  screen.append(strings(state.clues, rooms, fresh), title, link, view, tokens(content, state), ...doors, ...clues);
 
   let revealed = false;
   return {
@@ -180,18 +178,5 @@ function doorCard(room: Room, content: Content, state: GameState, won: boolean, 
 function tokens(content: Content, state: GameState): HTMLElement {
   const card = paper('board__tokens', { pin: true });
   card.append(el('div', 'board__tokens-title', content.ui.audience.button), tokenRow(state.tokens, content.tokens));
-  return card;
-}
-
-function finale(content: Content): HTMLElement {
-  const solved = stamp(content.ui.finale.stamp);
-  solved.classList.add('board__stamp');
-  // Electron hands https links to the system browser (electron/main.ts).
-  const watch = button(content.ui.finale.watch, 'primary', () =>
-    window.open(assembleLink(content.link.map((part) => part.text)), '_blank'),
-  );
-  watch.classList.add('board__watch');
-  const card = paper('board__finale', { pin: true });
-  card.append(solved, watch);
   return card;
 }

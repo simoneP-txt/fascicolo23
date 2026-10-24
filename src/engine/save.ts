@@ -1,5 +1,6 @@
 // Save: one localStorage key holding { version, state }. Data that is missing, corrupt, from another
-// version or naming unknown rooms or clues starts a new game; tokens are clamped to the maximum.
+// version or naming unknown rooms or clues starts a new game; tokens are clamped to the maximum. A save
+// from before the video button has no watched and loads as not watched, with the same version.
 import { newState, type GameState } from './state';
 import { CLUE_IDS, ROOM_IDS } from './types';
 
@@ -16,11 +17,17 @@ export function load(maxTokens: number, storage: StorageLike = localStorage): Ga
   try {
     const saved = JSON.parse(storage.getItem(SAVE_KEY) ?? 'null');
     if (saved?.version !== VERSION) return newState(maxTokens);
-    const { opened, solved, clues, tokens } = saved.state ?? {};
-    if (typeof opened !== 'boolean' || !isSetOf(solved, ROOM_IDS) || !isSetOf(clues, CLUE_IDS) || !Number.isInteger(tokens)) {
+    const { opened, solved, clues, tokens, watched = false } = saved.state ?? {};
+    if (
+      typeof opened !== 'boolean' ||
+      !isSetOf(solved, ROOM_IDS) ||
+      !isSetOf(clues, CLUE_IDS) ||
+      !Number.isInteger(tokens) ||
+      typeof watched !== 'boolean'
+    ) {
       return newState(maxTokens);
     }
-    return { opened, solved, clues, tokens: Math.min(maxTokens, Math.max(0, tokens)) };
+    return { opened, solved, clues, tokens: Math.min(maxTokens, Math.max(0, tokens)), watched };
   } catch {
     return newState(maxTokens);
   }

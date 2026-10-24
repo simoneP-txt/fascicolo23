@@ -3,14 +3,15 @@
 // settles it stays, with the stamp and the witness's line, and anywhere else it goes back, counting one error on a
 // wrong suspect, a double click included, and none when let go off every suspect or cancelled (Review Focus 3).
 // An accusation before the three clues are pinned is blind, with a new line each time and the video every fourth
-// time; with the three, the fiancé objects, the other two are innocent and the diva closes the case once. Every
-// visit starts over, and every line fits its card at 1366x768. Durations are cut to 1 ms, but for the tests that
+// time; with the three, the fiancé objects, the other two are innocent and the diva closes the case once, saved at
+// the accusation, the wish of s leading to the finale. Every visit starts over, and every line fits its card at
+// 1366x768. Durations are cut to 1 ms, but for the tests that
 // watch the video meme.
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { SAVE_KEY } from '../../src/engine/save';
 import { EVIDENCE, SUSPECT_IDS } from '../../src/rooms/stanza-46/deduction';
 import { overflowingText } from './checks';
-import { BEFORE_46, board, content, continueWish, duration, enterRoom, fragment, played, quick, recordPlays, seed, wish } from './helpers';
+import { BEFORE_46, board, content, continueWish, duration, enterRoom, finale, fragment, played, quick, recordPlays, seed, wish } from './helpers';
 import { accuseSuspect, CULPRIT, evidence, pinClue, suspect } from './play';
 
 const room = content.rooms['stanza-46'];
@@ -202,12 +203,12 @@ test.describe('with durations cut', () => {
     await expect(witnessLine(page)).toHaveText(room.witness.solved);
     expect(await played(page, 'stamp')).toBe(true);
     await expect(page.getByRole('button', { name: content.ui.back })).toBeHidden();
+    expect(await solvedInSave(page)).toContain('stanza-46'); // saved at once, though the beat still runs
 
     await page.clock.resume();
     await expect(wish(page)).toContainText(fragment('stanza-46'));
     await continueWish(page);
-    await expect(board(page)).toBeVisible();
-    expect(await solvedInSave(page)).toContain('stanza-46');
+    await expect(finale(page)).toBeVisible();
   });
 
   test('a double accusation of the diva solves the room once', async ({ page }) => {
@@ -217,7 +218,7 @@ test.describe('with durations cut', () => {
     await suspect(page, CULPRIT).dblclick();
     await expect(wish(page)).toHaveCount(1);
     await continueWish(page);
-    await expect(board(page)).toBeVisible();
+    await expect(finale(page)).toBeVisible();
     expect((await solvedInSave(page)).filter((id) => id === 'stanza-46')).toHaveLength(1);
   });
 

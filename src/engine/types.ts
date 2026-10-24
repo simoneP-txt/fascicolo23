@@ -81,7 +81,7 @@ export interface Content {
   sounds: Record<string, string>;
   loops: string[]; // sounds that play in a loop until stopAll()
   link: { room: RoomId | 'fascicolo'; text: string }[];
-  witness: { board: string; help: string; wish: string };
+  witness: { board: string; help: string; wish: string; finale: string };
   clues: Record<ClueId, { label: string; missing: string }>;
   rooms: Record<RoomId, RoomContent>;
   memes: Record<string, Meme>; // "consolation" follows a confirmed skip; Room 46 names objection, innocent, getHelp
@@ -98,7 +98,8 @@ export interface GameContext<C extends RoomContent = RoomContent> {
   playSfx(name: string): void; // sounds listed in content.json
   meme(id: string): void; // a meme from content.json over the room; the help clock waits for it to go
   reportError(): void; // a wrong attempt: feeds the auto-help ladder
-  complete(): void; // award fragment + clues, save, back to the board
+  won(): void; // solved, its beat begins: saves the award now, so an app closed during the beat reopens past the room
+  complete(): void; // award fragment + clues, save, back to the board (from Room 46, on to the finale)
 }
 
 /** Every room and the finale implement this. A room typed on its own content (Room<ChessContent>) still
