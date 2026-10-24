@@ -77,6 +77,7 @@ export interface Content {
   tokens: number;
   audienceSeconds: number;
   sounds: Record<string, string>;
+  loops: string[]; // sounds that play in a loop until stopAll()
   link: { room: RoomId | 'fascicolo'; text: string }[];
   witness: { board: string; help: string; wish: string };
   clues: Record<ClueId, { label: string; missing: string }>;

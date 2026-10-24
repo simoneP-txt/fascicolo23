@@ -6,8 +6,9 @@ import { expect, test, type Page } from '@playwright/test';
 import { bandsMatchTokens, edgeJumps, fontFamilies, hasBands, outsideStage, overflowingText, smallText } from './checks';
 import type { RoomId } from '../../src/engine/types';
 import { consistentLiars } from '../../src/rooms/biblioteca/liar';
-import { board, consolation, content, enterRoom, FINISHED, MOCKUP_01, openCase, quick, roomScreen, seed, wish } from './helpers';
-import { play } from './play';
+import { isQuestion } from '../../src/rooms/rapture/orders';
+import { BEFORE_RAPTURE, board, consolation, content, enterRoom, FINISHED, MOCKUP_01, openCase, quick, seed, wish } from './helpers';
+import { loseRaptureRun, openRaptureDoor, ORDERS, play, startRaptureRun, throughOrder } from './play';
 
 const SIZES = [
   [1707, 1067, 1.5],
@@ -40,6 +41,14 @@ async function enterLibrary(page: Page): Promise<void> {
   await seed(page, MOCKUP_01);
   await page.goto('/');
   await enterRoom(page, 'biblioteca');
+}
+
+/** Rapture with its door open on the board, with the page clock installed. */
+async function enterRapture(page: Page): Promise<void> {
+  await page.clock.install();
+  await seed(page, BEFORE_RAPTURE);
+  await page.goto('/');
+  await enterRoom(page, 'rapture');
 }
 
 // Each state is named after its screen; the comment gives the mockup it is compared with.
@@ -126,15 +135,31 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
     await enterRoom(page, 'studio');
     await expect(page.getByRole('button', { name: content.ui.audience.spent })).toBeDisabled();
   },
-  // 10, the frame: Rapture with the way out, offered after skipAfterSec
+  // 09: two digits on the keypad, the third slot waiting
   'room-rapture': async (page) => {
-    await page.clock.install();
-    await page.goto('/');
-    await page.keyboard.press('Control+Shift+KeyD');
-    await page.getByRole('button', { name: content.rooms.rapture.name }).click();
-    await expect(roomScreen(page, 'rapture')).toBeVisible();
-    await page.clock.runFor(content.rooms.rapture.help.skipAfterSec * 1000);
+    await enterRapture(page);
+    for (const digit of '04') await page.locator(`[data-digit="${digit}"]`).click();
+    await expect(page.locator('[data-slot]')).toHaveText(['0', '4', '', '']);
+  },
+  // 10: three runs lost, so "Apri la porta?" is on screen, and the fourth at order 5 with one error, a press on
+  // its red button; the clock stands still
+  'room-rapture-ordini': async (page) => {
+    await enterRapture(page);
+    await openRaptureDoor(page);
+    for (const n of [1, 2, 3]) await loseRaptureRun(page, await startRaptureRun(page, n));
+    const slot = await startRaptureRun(page, 4);
+    for (const order of ORDERS.slice(0, 4)) await throughOrder(page, slot, isQuestion(order) ? order.control : null);
+    await page.clock.runFor(Math.floor(slot / 2));
+    await page.locator(`[data-control="${ORDERS[4].control}"]`).click();
+    await expect(page.locator('[data-errors] [data-error="made"]')).toHaveCount(1);
     await expect(page.getByRole('button', { name: content.ui.skip.button })).toBeVisible();
+  },
+  // 15 over Rapture: the way out, offered after skipAfterSec, its dialog in Poiret One
+  'skip-rapture': async (page) => {
+    await enterRapture(page);
+    await page.clock.runFor(content.rooms.rapture.help.skipAfterSec * 1000);
+    await page.getByRole('button', { name: content.ui.skip.button }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
   },
   // the host's debug menu over the board, in the style of 14 and 15
   debug: async (page) => {

@@ -18,6 +18,14 @@ export const fragment = (source: string): string => content.link.find((part: { r
 /** The game of mockup 01: study and chessboard solved, their three clues found, one token spent. */
 export const MOCKUP_01: GameState = { opened: true, solved: ['studio', 'scacchiera'], clues: ['rule', 'profile', 'g4'], tokens: 2 };
 
+/** Rapture's door open on the board: study, chessboard and library solved, their four clues found. */
+export const BEFORE_RAPTURE: GameState = {
+  opened: true,
+  solved: ['studio', 'scacchiera', 'biblioteca'],
+  clues: ['rule', 'profile', 'g4', 'time-0451'],
+  tokens: 3,
+};
+
 /** The game over: every room solved in the order of the list, every clue found, one token spent. */
 export const FINISHED: GameState = { opened: true, solved: [...ROOM_IDS], clues: [...CLUE_IDS], tokens: 2 };
 
@@ -61,17 +69,22 @@ export async function duration(page: Page, token: `--duration-${string}`): Promi
   return parseDuration(await page.evaluate((name) => getComputedStyle(document.documentElement).getPropertyValue(name), token));
 }
 
-/** Records the source of every <audio> that starts playing, from before the page loads, for played(). The
- *  game loads every sound right after its first screen, so a request on the network no longer says one
- *  has played. */
+/** Records the source of every <audio> that starts playing, and of every one paused, from before the page
+ *  loads, for played() and paused(). The game loads every sound right after its first screen, so a request on
+ *  the network no longer says one has played. */
 export async function recordPlays(page: Page): Promise<void> {
   await page.addInitScript(() => {
-    const sources: string[] = [];
-    (window as unknown as { e2ePlayed: string[] }).e2ePlayed = sources;
-    const play = HTMLMediaElement.prototype.play;
+    const record = window as unknown as { e2ePlayed: string[]; e2ePaused: string[] };
+    record.e2ePlayed = [];
+    record.e2ePaused = [];
+    const { play, pause } = HTMLMediaElement.prototype;
     HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
-      sources.push(this.currentSrc || this.src);
+      record.e2ePlayed.push(this.currentSrc || this.src);
       return play.call(this);
+    };
+    HTMLMediaElement.prototype.pause = function (this: HTMLMediaElement) {
+      record.e2ePaused.push(this.currentSrc || this.src);
+      return pause.call(this);
     };
   });
 }
@@ -80,6 +93,14 @@ export async function recordPlays(page: Page): Promise<void> {
 export function played(page: Page, sound: string): Promise<boolean> {
   return page.evaluate(
     (path) => (window as unknown as { e2ePlayed: string[] }).e2ePlayed.some((src) => src.endsWith(path)),
+    content.sounds[sound] as string,
+  );
+}
+
+/** Whether the sound of this name in content.json has been paused, as recordPlays() saw it. */
+export function paused(page: Page, sound: string): Promise<boolean> {
+  return page.evaluate(
+    (path) => (window as unknown as { e2ePaused: string[] }).e2ePaused.some((src) => src.endsWith(path)),
     content.sounds[sound] as string,
   );
 }

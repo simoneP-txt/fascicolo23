@@ -1,0 +1,522 @@
+/* Rapture (mockups 09 and 10): the host paints the teal wall with its stripes and the floor (tokens.css); the
+   room draws the two gold lines over the floor and the rest in the deco of the mockups, sea panels edged in
+   gold. The keypad view has the rays behind the arched door, the reminder and the porthole on the left; the
+   door holds its crown of arcs, the prompt, four slots and twelve keys. The orders view has the reminder, the
+   errors and the attempt on the left, the order card, the time and its bar in the middle, the four arched
+   controls under them. Bubbles rise, the rays sway, the fish swim, a control moves under a press, the door
+   swings open and the slots shake a wrong code, all by transform and opacity. */
+.rapture,
+.rapture__view {
+  position: absolute;
+  inset: 0;
+}
+.rapture__art,
+.rapture__rays {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.rapture .label {
+  color: var(--gold);
+}
+
+/* Ambient motion, out of step: each bubble rises from below its place to above it, fading in and out; the
+   rays sway about the middle of the door; each fish swims ahead, turns and swims back. */
+.rapture__bubbles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.rapture__bubble {
+  position: absolute;
+  box-sizing: border-box;
+  border: var(--bubble-ring) solid var(--bubble);
+  border-radius: 50%;
+  animation: rapture-rise var(--duration-bubble) var(--ease) infinite;
+  animation-delay: calc(var(--duration-bubble) * var(--lag) * -1);
+}
+.rapture__rays {
+  transform-origin: 960px 440px;
+  animation: rapture-sway var(--duration-shimmer) var(--ease) infinite alternate;
+}
+.rapture__fish {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: rapture-swim var(--duration-swim) var(--ease) infinite;
+  animation-delay: calc(var(--duration-swim) * var(--lag, 0) * -1);
+}
+
+/* The reminder: the rule of the study under a red pin, larger in front of the door. */
+.rapture__reminder {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border: var(--border) solid var(--gold);
+  background: var(--deco-panel);
+}
+[data-view='keypad'] .rapture__reminder {
+  left: 128px;
+  top: 192px;
+  width: 384px;
+  height: 224px;
+  padding: var(--space-4);
+  box-shadow:
+    inset 0 0 0 var(--space-1) var(--gold-wash),
+    var(--shadow-deco);
+}
+[data-view='keypad'] .rapture__reminder > .label {
+  font-size: var(--text-tag);
+}
+[data-view='orders'] .rapture__reminder {
+  left: 96px;
+  top: 136px;
+  width: 296px;
+  height: 184px;
+  padding: var(--space-3);
+}
+.rapture__rule {
+  margin: 0;
+  color: var(--paper);
+  font-family: var(--font-witness);
+  font-size: var(--text-witness);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.2;
+}
+[data-view='keypad'] .rapture__rule {
+  font-size: var(--text-heading);
+}
+
+.rapture__porthole {
+  position: absolute;
+  left: 152px;
+  top: 520px;
+}
+
+/* The door: an arch of sea glass with a gold edge, a teal ring and a gold line inside it. */
+.rapture__door {
+  position: absolute;
+  left: 640px;
+  top: 120px;
+  width: 640px;
+  height: 864px;
+  box-sizing: border-box;
+  border: var(--border-thick) solid var(--gold);
+  border-radius: 320px 320px var(--radius-dialog) var(--radius-dialog);
+  background: var(--deco-panel);
+  box-shadow:
+    inset 0 0 0 var(--space-2) var(--teal),
+    inset 0 0 0 calc(var(--space-2) + var(--border)) var(--gold),
+    var(--shadow-arch);
+  transform-origin: left center;
+}
+.rapture__crown {
+  position: absolute;
+  left: 112px;
+  top: var(--space-5);
+}
+.rapture__prompt {
+  position: absolute;
+  left: 0;
+  top: 216px;
+  width: 624px;
+  margin: 0;
+  color: var(--paper);
+  font-size: var(--text-witness);
+  line-height: 1.2;
+  text-align: center;
+}
+
+.rapture__slots {
+  position: absolute;
+  left: 112px;
+  top: 288px;
+  display: flex;
+  gap: var(--space-2);
+}
+.rapture__slots[data-nope] {
+  animation: btn-nope var(--duration-nope) var(--ease);
+}
+.rapture__slot {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-11);
+  height: 112px;
+  border: var(--border) solid var(--gold);
+  border-radius: var(--radius);
+  background: var(--sea);
+  color: var(--paper);
+  font-size: var(--text-digit);
+  line-height: 1;
+}
+.rapture__slot:empty {
+  border-color: var(--gold-dim);
+}
+.rapture__slot[data-current] {
+  border-color: var(--paper);
+}
+.rapture__caret {
+  width: var(--border);
+  height: var(--space-7);
+  background: var(--paper);
+}
+.rapture__slots[data-state='wrong'] .rapture__slot {
+  border-color: var(--red);
+}
+.rapture__slots[data-state='right'] .rapture__slot {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.rapture__keys {
+  position: absolute;
+  left: var(--space-12);
+  top: 432px;
+  width: 432px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-3);
+}
+.rapture__key {
+  height: var(--space-10);
+  min-height: 0;
+  padding: 0;
+  border-color: var(--gold);
+  background: var(--teal);
+  color: var(--paper);
+  font-size: var(--text-keypad);
+  line-height: 1;
+}
+.rapture__key:active:not([aria-disabled='true']) {
+  background: var(--gold);
+  color: var(--ink);
+}
+.rapture__open {
+  background: var(--gold);
+  color: var(--ink);
+  font-size: var(--text-witness);
+  box-shadow: none;
+}
+.rapture__open[aria-disabled='true'] {
+  border-color: var(--gold-dim);
+  background: none;
+  color: var(--paper-faint);
+}
+
+/* The door swings open on its left edge once the gold has shown, and the rest of the view fades with it. */
+.rapture__door[data-open] {
+  animation: rapture-open var(--duration-door) var(--ease) both;
+}
+[data-view='keypad'][data-leaving] > :not(.rapture__door) {
+  animation: rapture-fade var(--duration-door) var(--ease) both;
+}
+[data-view='orders'] {
+  animation: rapture-in var(--duration-unlock) var(--ease) both;
+}
+
+/* The panels of the orders game. */
+.rapture__panel {
+  position: absolute;
+  left: var(--space-12);
+  width: 296px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: var(--border) solid var(--gold);
+  background: var(--deco-panel);
+  color: var(--paper);
+}
+.rapture__panel > .label {
+  font-size: var(--text-tag);
+}
+.rapture__errors {
+  top: 352px;
+  height: 168px;
+}
+.rapture__error-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.rapture__error {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: var(--space-7);
+  height: var(--space-7);
+  border: var(--border) dashed var(--gold);
+  border-radius: 50%;
+}
+.rapture__error[data-error='made'] {
+  border-style: solid;
+  border-color: var(--red);
+  background: var(--red);
+  animation: rapture-pop var(--duration-pop) var(--ease);
+}
+.rapture__count {
+  font-size: var(--text-small);
+  line-height: 1.2;
+}
+.rapture__attempt {
+  top: 552px;
+  height: 152px;
+  gap: var(--space-1);
+}
+.rapture__number {
+  font-size: var(--text-title);
+  line-height: 1.2;
+}
+
+/* The order card: the speaker, whose waves light up at each order, its number and its text. It is 32 taller
+   than in mockup 10, since the three longest orders take two lines, and what lies under it moves down. */
+.rapture__order {
+  position: absolute;
+  left: 448px;
+  top: 136px;
+  width: 960px;
+  height: 256px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-4) var(--space-6);
+  border: var(--border-thick) solid var(--gold);
+  border-radius: var(--radius-dialog);
+  background: var(--deco-panel);
+  box-shadow:
+    inset 0 0 0 var(--space-1) var(--gold-wash),
+    var(--shadow-order);
+  color: var(--paper);
+}
+.rapture__speaker {
+  flex: none;
+}
+.rapture__order[data-chime] .rapture__waves {
+  animation: rapture-waves var(--duration-pop) var(--ease);
+}
+.rapture__order[data-chime] .rapture__words {
+  animation: rapture-line var(--duration-pop) var(--ease);
+}
+.rapture__words {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.rapture__words > .label {
+  font-size: var(--text-tag);
+}
+.rapture__line {
+  margin: 0;
+  font-size: var(--text-title);
+  line-height: 1.15; /* Poiret One's glyph box overflows a tighter line */
+}
+.rapture__go {
+  min-width: 288px;
+  min-height: var(--space-9);
+  font-size: var(--text-heading);
+}
+
+/* The time left of the run, its seconds and its bar, which shrinks by a transform. */
+.rapture__time {
+  position: absolute;
+  left: 448px;
+  top: 424px;
+  width: 960px;
+  height: var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--paper);
+}
+.rapture__time > .label {
+  color: var(--paper);
+  font-size: var(--text-tag);
+}
+.rapture__left {
+  font-size: var(--text-small);
+  line-height: 1.1;
+}
+.rapture__bar {
+  position: absolute;
+  left: 448px;
+  top: 464px;
+  width: 960px;
+  height: var(--space-4);
+  box-sizing: border-box;
+  padding: var(--border);
+  border: var(--border) solid var(--gold);
+  border-radius: var(--space-2);
+  background: var(--deco-panel);
+}
+.rapture__fill {
+  height: 100%;
+  border-radius: var(--radius);
+  background: var(--gold);
+  transform-origin: left center;
+}
+
+/* The four controls: arched buttons with the drawing over the label, lit by the mark of their order. They are
+   32 shorter than in mockup 10, under the taller order card, and end where the mockup ends them. */
+.rapture__controls {
+  position: absolute;
+  left: 448px;
+  top: 544px;
+  display: flex;
+  gap: var(--space-4);
+}
+.rapture__control {
+  --width: 216px;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  width: var(--width);
+  height: 312px;
+  padding: var(--space-3) var(--space-2);
+  border-color: var(--gold);
+  border-radius: calc(var(--width) / 2) calc(var(--width) / 2) var(--radius-dialog) var(--radius-dialog);
+  background: var(--deco-glass);
+  color: var(--paper);
+}
+.rapture__control[data-mark='right'] {
+  box-shadow: 0 0 0 var(--space-1) var(--gold-glow);
+}
+.rapture__control[data-mark='wrong'] {
+  box-shadow: 0 0 0 var(--space-1) var(--red-glow);
+}
+.rapture__drawing {
+  flex: none;
+}
+.rapture__control[data-press] .rapture__arm {
+  animation: rapture-lever var(--duration-control) var(--ease);
+}
+.rapture__control[data-press] .rapture__cap {
+  animation: rapture-push var(--duration-control) var(--ease);
+}
+.rapture__control[data-press] .rapture__wheel {
+  animation: rapture-turn var(--duration-control) var(--ease);
+}
+.rapture__control[data-press] .rapture__knob {
+  animation: rapture-snap var(--duration-control) var(--ease);
+}
+
+@keyframes rapture-rise {
+  from {
+    transform: translateY(var(--space-6));
+    opacity: 0;
+  }
+  20%,
+  75% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(calc(-1 * var(--space-6)));
+    opacity: 0;
+  }
+}
+
+@keyframes rapture-sway {
+  from {
+    transform: rotate(-1deg);
+    opacity: 0.7;
+  }
+  to {
+    transform: rotate(1deg);
+    opacity: 1;
+  }
+}
+
+@keyframes rapture-swim {
+  45% {
+    transform: translateX(var(--swim));
+  }
+  50% {
+    transform: translateX(var(--swim)) scaleX(-1);
+  }
+  95% {
+    transform: translateX(0) scaleX(-1);
+  }
+}
+
+@keyframes rapture-open {
+  0%,
+  30% {
+    transform: none;
+    opacity: 1;
+  }
+  to {
+    transform: perspective(2400px) rotateY(75deg);
+    opacity: 0;
+  }
+}
+
+@keyframes rapture-fade {
+  0%,
+  30% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes rapture-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rapture-pop {
+  from {
+    transform: scale(var(--stamp-scale));
+    opacity: 0;
+  }
+}
+
+@keyframes rapture-waves {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rapture-line {
+  from {
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--space-2)));
+  }
+}
+
+/* The lever goes down and springs back, the cap sinks, the wheel makes a quarter turn, which looks the same
+   once over, and the knob snaps down and back up. */
+@keyframes rapture-lever {
+  40% {
+    transform: rotate(56deg);
+  }
+}
+
+@keyframes rapture-push {
+  40% {
+    transform: scale(0.86);
+  }
+}
+
+@keyframes rapture-turn {
+  to {
+    transform: rotate(90deg);
+  }
+}
+
+@keyframes rapture-snap {
+  30%,
+  60% {
+    transform: translateY(var(--space-6));
+  }
+}

@@ -4,7 +4,7 @@
    SVG drawings that fade a palette color keep the token and an opacity. Then the frame theme of each
    room, and at the bottom every screen names the tones of its top and bottom edges, which the bands
    around the stage continue; last, the board's cork, frame and vignette, the library's walnut and the
-   study's wall and desk, painted on the host. */
+   study's wall and desk and Rapture's wall and floor, painted on the host. */
 :root {
   /* Palette of 04-sistema, with one gold for its brass and its deco gold */
   --red: #e94535;
@@ -79,8 +79,9 @@
   --hedge-near: color-mix(in srgb, var(--sage) 60%, var(--hedge-far));
   --deco-floor: color-mix(in srgb, var(--sea) 55%, var(--teal));
   --deco-stripe: color-mix(in srgb, var(--sea) 16%, transparent); /* Rapture's wall stripes */
-  --deco-glass: color-mix(in srgb, var(--sea) 60%, transparent); /* order cards */
-  --deco-panel: color-mix(in srgb, var(--sea) 75%, transparent); /* panels, the door and its keypad */
+  --deco-glass: color-mix(in srgb, var(--sea) 60%, transparent); /* Rapture's controls */
+  --deco-panel: color-mix(in srgb, var(--sea) 75%, transparent); /* panels, the order card, the door and its keypad */
+  --bubble: color-mix(in srgb, var(--paper) 50%, transparent); /* the ring of a bubble in Rapture */
 
   /* Library: shelf, window with curtains, book spines */
   --wood-grain: rgba(255, 240, 220, 0.025); /* stripes of the walnut wall */
@@ -119,7 +120,8 @@
   --font-witness: 'Cormorant Garamond', serif;
   --font-meme: 'Anton', sans-serif;
   --font-deco: 'Poiret One', sans-serif;
-  --font-ui: var(--font-report); /* Rapture switches it to --font-deco, in its frame theme below */
+  --font-ui: var(--font-report); /* Rapture's host switches it to --font-deco, below */
+  --font-dialog: var(--font-witness); /* dialog titles; Poiret One over Rapture too */
 
   /* Text sizes at the 1920x1080 design size: game text at least 28 px, labels at least 20 px */
   --text-label: 20px;
@@ -167,6 +169,7 @@
   --border-frame: 16px; /* window frames */
   --square-ring: 6px; /* the gold ring of the selected square on the chessboard */
   --dot-ring: 3px; /* the ring of an option's dot in the study */
+  --bubble-ring: 2px; /* the ring of a bubble in Rapture */
   --meme-outline: 10px; /* ink around a meme caption: 2 px at the 32 px of the sample */
   --pin: 24px;
 
@@ -184,6 +187,9 @@
   --shadow-report: 0 16px 28px rgba(31, 27, 23, 0.3); /* the open report in the study */
   --shadow-locked: 0 8px 14px rgba(31, 27, 23, 0.15); /* a report still locked */
   --shadow-plate: 0 12px 20px rgba(31, 27, 23, 0.3); /* the plate in the study */
+  --shadow-arch: 0 24px 40px rgba(0, 0, 0, 0.4); /* Rapture's door */
+  --shadow-deco: 0 14px 24px rgba(0, 0, 0, 0.35); /* the reminder in front of Rapture's door */
+  --shadow-order: 0 18px 30px rgba(0, 0, 0, 0.35); /* the order card in Rapture */
   --shadow-dialog: 0 32px 48px rgba(0, 0, 0, 0.5);
 
   /* Motion: one curve; the countdown alone runs linear */
@@ -191,7 +197,7 @@
   --duration-press: 80ms;
   --duration-jump: 160ms;
   --duration-meme: 1600ms; /* a meme on screen; its zoom takes the first eighth */
-  --duration-pop: 240ms; /* the witness bubble, at each new line */
+  --duration-pop: 240ms; /* the witness bubble, at each new line; in Rapture each new order and each error */
   --duration-nope: 320ms; /* the shake of a switched-off button */
   --duration-dialog: 240ms; /* a dialog coming in */
   --duration-tick: 1000ms; /* one step of the countdown ring, which runs linear */
@@ -209,8 +215,13 @@
   --duration-turn: 800ms; /* the shelf turning on itself, then the mystery turning in */
   --duration-sway: 4000ms; /* a curtain swaying one way in the library window */
   --duration-drift: 6000ms; /* a leaf crossing the window, a loose page fluttering */
-  --duration-unlock: 480ms; /* the next report in the study opening, once the one above is solved */
+  --duration-unlock: 480ms; /* the next report in the study opening, once the one above is solved; Rapture's orders coming in */
   --duration-swing: 800ms; /* the plate in the study swinging on its pin */
+  --duration-door: 1600ms; /* Rapture's door: the slots light up gold, then it swings open */
+  --duration-control: 400ms; /* a control in Rapture moving under a press, and taking no other click meanwhile */
+  --duration-bubble: 5000ms; /* a bubble in Rapture rising and fading */
+  --duration-shimmer: 6000ms; /* the rays behind Rapture's door swaying one way */
+  --duration-swim: 9000ms; /* a fish in the porthole swimming there and back */
   --press-shift: 2px; /* how far a pressed control sinks */
   --press-scale: 0.98;
   --meme-zoom: 1.35; /* the size a meme lands from */
@@ -222,7 +233,7 @@
 /* Frame themes: the colors of the room frame (header, way back, audience button, witness, auto-help)
    over each room's drawing. The light defaults fit the study and every paper screen. A dark room sets its
    own on its room screen ([data-room]), so a dialog over it keeps the light ones. Rapture's interface
-   speaks Poiret One (decision 10). */
+   speaks Poiret One (decision 10) from its host, so its dialogs do too. */
 :root {
   --frame-label: var(--ink); /* the header */
   --frame-text: var(--ink); /* the way back, the audience button, the text of the hint button */
@@ -260,7 +271,6 @@
   --bubble-border: var(--gold);
   --bubble-label: var(--teal);
   --help-tray: var(--gold-glow);
-  --font-ui: var(--font-deco);
 }
 [data-room='stanza-46'] {
   --frame-label: var(--paper);
@@ -268,7 +278,8 @@
 }
 
 /* Backdrops: the tones of each screen's top and bottom edge. A room phase 4 has not drawn yet keeps one
-   tone; the study's wall stands on its desk, the chessboard's night ends in its near hedge. */
+   tone; the study's wall stands on its desk, the chessboard's night ends in its near hedge, Rapture's wall
+   stands on its floor. */
 [data-backdrop='intro'] {
   --backdrop-top: var(--night);
   --backdrop-bottom: var(--hill-near);
@@ -291,7 +302,7 @@
 }
 [data-backdrop='rapture'] {
   --backdrop-top: var(--teal);
-  --backdrop-bottom: var(--teal);
+  --backdrop-bottom: var(--deco-floor);
 }
 [data-backdrop='stanza-46'] {
   --backdrop-top: var(--sea);
@@ -349,4 +360,19 @@
     linear-gradient(90deg, var(--grain) calc(2 * var(--stage-px)), transparent 0) calc(50% + 48 * var(--stage-px)) 0 /
       calc(96 * var(--stage-px)) var(--desk-line) repeat-x,
     linear-gradient(var(--backdrop-top) var(--desk-line), var(--backdrop-bottom) 0);
+}
+
+/* Rapture's host paints the teal wall of mockups 09 and 10 with a stripe every 64 stage pixels, lined up with
+   the stage's middle, down to stage line 912, where the floor begins and runs on to the bottom of the window.
+   So the top band carries on the wall and its stripes, and the bottom band the floor. Everything over Rapture,
+   its dialogs included, speaks Poiret One (decision 10). */
+#app[data-backdrop='rapture'] {
+  --stage-px: calc(1px * var(--stage-scale));
+  --floor-line: calc(50% + 372 * var(--stage-px)); /* stage line 912, 372 below the middle of the window */
+  --font-ui: var(--font-deco);
+  --font-dialog: var(--font-deco);
+  background:
+    linear-gradient(90deg, var(--deco-stripe) calc(4 * var(--stage-px)), transparent 0) calc(50% + 32 * var(--stage-px)) 0 /
+      calc(64 * var(--stage-px)) var(--floor-line) repeat-x,
+    linear-gradient(var(--backdrop-top) var(--floor-line), var(--backdrop-bottom) 0);
 }

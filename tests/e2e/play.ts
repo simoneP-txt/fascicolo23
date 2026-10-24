@@ -2,15 +2,64 @@
 // closes the wish. A room is solved by playing it, with the answers taken from content.json, or by the host's
 // Ctrl+Shift+N for the tests that prove the engine. The study picks the right phenomenon of each report, the
 // chessboard plays its line, the library pulls its secret book and accuses the liar of liar.ts until the room
-// takes the answer; the rooms still waiting for phase 4 press their placeholder's solve button, until each
-// one replaces its entry with the real game.
+// takes the answer, Rapture opens its door with the code and plays one run that obeys the questions only; Room
+// 46, still waiting for phase 5, presses its placeholder's solve button. Playing Rapture needs the page clock
+// installed before the page opened (decision 12): a run stands the clock still and runs it one window at a
+// time, and the steps of a run are exported for the tests of the room.
 import { expect, type Page } from '@playwright/test';
 import { Chess } from 'chess.js';
 import type { RoomId } from '../../src/engine/types';
 import { consistentLiars } from '../../src/rooms/biblioteca/liar';
+import { CONTROL_IDS, isQuestion, type Order } from '../../src/rooms/rapture/orders';
 import { board, content, continueWish, enterRoom, wish } from './helpers';
 
 const pressSolve = (id: RoomId) => (page: Page) => page.getByRole('button', { name: content.rooms[id].placeholder.solve }).click();
+
+const rapture = content.rooms.rapture;
+export const ORDERS: Order[] = rapture.orders;
+
+/** Rapture's code typed on the keypad and "Apri?" pressed, until the first run waits for "Pronta?". */
+export async function openRaptureDoor(page: Page): Promise<void> {
+  for (const digit of rapture.code as string) await page.locator(`[data-digit="${digit}"]`).click();
+  await page.getByRole('button', { name: rapture.keypad.open }).click();
+  await expect(page.getByRole('button', { name: rapture.panel.start })).toBeVisible();
+}
+
+/** Stands the page clock still and starts the n-th run of the visit with "Pronta?" or "Riprova?". Returns the
+ *  window of each order in ms, longer by the run's slowdown. */
+export async function startRaptureRun(page: Page, n: number): Promise<number> {
+  await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
+  await page.getByRole('button', { name: n === 1 ? rapture.panel.start : rapture.panel.again }).click();
+  return ((rapture.run.seconds + rapture.run.slower * (n - 1)) * 1000) / ORDERS.length;
+}
+
+/** The control that breaks this order: its own for an imperative, another one for a question. */
+export const wrongControl = (order: Order) => (isQuestion(order) ? CONTROL_IDS.find((id) => id !== order.control)! : order.control);
+
+/** Runs the stopped clock through one order's window, pressing at its middle the control this order gets, if
+ *  any. */
+export async function throughOrder(page: Page, slot: number, control: string | null): Promise<void> {
+  const half = Math.floor(slot / 2);
+  await page.clock.runFor(half);
+  if (control) await page.locator(`[data-control="${control}"]`).click();
+  await page.clock.runFor(slot - half);
+}
+
+/** A run lost on the spot: the first three orders broken, then the clock run past the run meme. */
+export async function loseRaptureRun(page: Page, slot: number): Promise<void> {
+  for (const order of ORDERS.slice(0, 3)) await throughOrder(page, slot, wrongControl(order));
+  await page.clock.runFor(1000);
+  await expect(page.getByRole('button', { name: rapture.panel.again })).toBeVisible();
+}
+
+/** The door, then one run that presses the control of each question in its window and leaves every imperative
+ *  alone; the clock goes on by itself for the beat and the wish. */
+async function playRapture(page: Page): Promise<void> {
+  await openRaptureDoor(page);
+  const slot = await startRaptureRun(page, 1);
+  for (const order of ORDERS) await throughOrder(page, slot, isQuestion(order) ? order.control : null);
+  await page.clock.resume();
+}
 
 /** The right phenomenon of each report of content.json, each report opening once the one above is solved. */
 async function playStudy(page: Page): Promise<void> {
@@ -57,7 +106,7 @@ export const play: Record<RoomId, (page: Page) => Promise<void>> = {
   studio: playStudy,
   scacchiera: playChess,
   biblioteca: playLibrary,
-  rapture: pressSolve('rapture'),
+  rapture: playRapture,
   'stanza-46': pressSolve('stanza-46'),
 };
 

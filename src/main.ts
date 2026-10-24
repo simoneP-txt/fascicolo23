@@ -28,7 +28,7 @@ try {
   const content = validateContent(json, rooms);
   const problems = checkGraph(rooms);
   if (problems.length) throw new Error(`Clue graph: ${problems.join('; ')}`);
-  const audio = createAudio(content.sounds);
+  const audio = createAudio(content.sounds, undefined, content.loops);
   const stage = createStage(host);
   // Every button answers with a sound. The listener runs after the button's own handler, so the
   // stopAll() of a screen change cannot cut the click short.

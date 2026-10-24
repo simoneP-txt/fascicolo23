@@ -41,6 +41,7 @@ function schemaOf(rooms: readonly Pick<Room, 'id' | 'schema'>[]): Schema {
     tokens: 'count',
     audienceSeconds: 'seconds',
     sounds: 'map',
+    loops: 'texts',
     witness: { board: 'text', help: 'text', wish: 'text' },
     clues: each(CLUE_IDS, { label: 'text', missing: 'text' }),
     rooms: Object.fromEntries(ROOM_IDS.map((id) => [id, room(id)])),
@@ -67,9 +68,10 @@ function schemaOf(rooms: readonly Pick<Room, 'id' | 'schema'>[]): Schema {
 
 const MEME: Schema = { 'text?': 'text', 'image?': 'text', 'sound?': 'text' };
 const NEEDED_MEMES = ['consolation']; // shown by the engine itself, after a confirmed skip
-// Played by name: click on every press, wish, stamp on a solved door, boom under the memes. audio.ts stays
-// silent on a name it does not know, so a renamed key would mute its sound without an error.
-const NEEDED_SOUNDS = ['click', 'wish', 'boom', 'stamp'];
+// Played by name: click on every press, wish, stamp on a solved door, boom under the memes, and in Rapture
+// chime at each order, buzz on each error and the deep loop. audio.ts stays silent on a name it does not know,
+// so a renamed key would mute its sound without an error.
+const NEEDED_SOUNDS = ['click', 'wish', 'boom', 'stamp', 'chime', 'buzz', 'deep'];
 const MEME_IMAGE = /^assets\/memes\/[^/\\]+$/; // a file shipped in public/assets/memes: a URL would reach the network
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -143,8 +145,9 @@ function checkMemes(memes: unknown, sounds: Record<string, string>): void {
  *  own fields (Room.schema). */
 export function validateContent(raw: unknown, rooms: readonly Pick<Room, 'id' | 'schema'>[]): Content {
   check(raw, schemaOf(rooms), '');
-  const { sounds } = raw as Content;
+  const { sounds, loops } = raw as Content;
   for (const id of NEEDED_SOUNDS) if (!Object.hasOwn(sounds, id)) fail(`sounds.${id}`, 'is missing');
+  loops.forEach((id, i) => Object.hasOwn(sounds, id) || fail(`loops[${i}]`, 'must name one of the sounds'));
   checkLink((raw as { link?: unknown }).link);
   checkMemes((raw as { memes?: unknown }).memes, sounds);
   return raw as Content;

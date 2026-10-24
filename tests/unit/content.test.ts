@@ -89,8 +89,19 @@ test('the consolation meme of the confirmed skip exists', () => {
   expect(() => validateContent(broken, rooms)).toThrow(/memes\.consolation/);
 });
 
+test('a loop is one of the sounds', () => {
+  const broken = copy();
+  broken.loops = ['nope'];
+  expect(() => validateContent(broken, rooms)).toThrow(/loops/);
+});
+
+test('only Room 46 keeps its placeholder', () => {
+  const content = validateContent(json, rooms);
+  expect(ROOM_IDS.filter((id) => content.rooms[id].placeholder !== undefined)).toEqual(['stanza-46']);
+});
+
 test('the sounds the game plays by name are listed', () => {
-  for (const id of ['click', 'wish', 'boom', 'stamp']) {
+  for (const id of ['click', 'wish', 'boom', 'stamp', 'chime', 'buzz', 'deep']) {
     const broken = copy();
     delete broken.sounds[id];
     expect(() => validateContent(broken, rooms), id).toThrow(new RegExp(`sounds\\.${id}`));

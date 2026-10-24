@@ -5,8 +5,12 @@
     "click": "assets/sounds/click.wav",
     "wish": "assets/sounds/wish.wav",
     "boom": "assets/sounds/boom.wav",
-    "stamp": "assets/sounds/stamp.wav"
+    "stamp": "assets/sounds/stamp.wav",
+    "chime": "assets/sounds/chime.wav",
+    "buzz": "assets/sounds/buzz.wav",
+    "deep": "assets/sounds/deep.wav"
   },
+  "loops": ["deep"],
   "link": [
     { "room": "fascicolo", "text": "youtu.be/" },
     { "room": "studio", "text": "71" },
@@ -23,7 +27,8 @@
   "memes": {
     "error": { "text": "Sicura?", "sound": "boom" },
     "consolation": { "text": "Capita anche a Poirot?", "sound": "boom" },
-    "shelf": { "text": "Ritenta, Sherlock?", "sound": "boom" }
+    "shelf": { "text": "Ritenta, Sherlock?", "sound": "boom" },
+    "run": { "text": "Would you kindly riprovare?", "sound": "boom" }
   },
   "clues": {
     "rule": { "label": "Obbedisce solo alle domande", "missing": "Serve una regola?" },
@@ -180,13 +185,48 @@
       "name": "Rapture?",
       "header": "FASCICOLO N. 23 · RAPTURE",
       "from": "da Rapture",
-      "witness": { "intro": "Quanto si può scendere prima di perdersi?" },
+      "witness": {
+        "intro": "Quanto si può scendere prima di perdersi?",
+        "code": [
+          "Ti ricordi a che ora è caduta la siepe?",
+          "Le cifre dell'orario trovato in biblioteca, senza i due punti?",
+          "Prova 0451, come in ogni gioco che si rispetti?"
+        ],
+        "open": "Quaggiù tutti danno ordini: a chi obbedirai?",
+        "lost": "Troppo obbediente, o troppo distratta?",
+        "solved": "Un uomo sceglie, uno schiavo obbedisce: e tu hai scelto?"
+      },
       "hints": [
         "Il codice è l'orario trovato in biblioteca.",
         "Esegui solo gli ordini che finiscono con il punto interrogativo."
       ],
       "help": { "hintAfterSec": null, "secondHintAfterSec": null, "hintAfterErrors": null, "skipAfterSec": 300, "skipAfterErrors": 3 },
-      "placeholder": { "solve": "Risolvi la stanza?", "error": "Sbaglia apposta?" }
+      "code": "0451",
+      "keypad": { "prompt": "Inserisci il codice?", "open": "Apri?", "erase": "Cancella?" },
+      "reminder": "PROMEMORIA",
+      "controls": { "lever": "Leva?", "button": "Bottone rosso?", "valve": "Valvola?", "switch": "Interruttore?" },
+      "orders": [
+        { "text": "Would you kindly tirare la leva?", "control": "lever" },
+        { "text": "Tira la leva!", "control": "lever" },
+        { "text": "Gireresti la valvola?", "control": "valve" },
+        { "text": "Would you kindly abbassare l'interruttore!", "control": "switch" },
+        { "text": "Premi il bottone rosso!", "control": "button" },
+        { "text": "Premeresti il bottone rosso?", "control": "button" },
+        { "text": "Would you kindly girare la valvola!", "control": "valve" },
+        { "text": "Would you kindly abbassare l'interruttore?", "control": "switch" }
+      ],
+      "run": { "seconds": 45, "slower": 10, "errors": 2 },
+      "panel": {
+        "order": "ORDINE {n} DI {total}",
+        "time": "TEMPO",
+        "seconds": "{s} s",
+        "errors": "ERRORI",
+        "count": "{n} su {total}",
+        "attempt": "TENTATIVO",
+        "number": "N. {n}",
+        "start": "Pronta?",
+        "again": "Riprova?"
+      }
     },
     "stanza-46": {
       "name": "Stanza 46?",

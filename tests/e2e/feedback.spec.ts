@@ -1,7 +1,7 @@
 // Feedback e2e: every press answers with the click sound; a switched-off button keeps taking clicks, so it
-// sounds and shakes and does nothing else; a double click selects no text; Rapture's frame speaks Poiret
-// One. An init script counts the calls to HTMLMediaElement.prototype.play that play the click sound
-// (howler also calls play() once on an empty element, to probe the autoplay lock). Durations are cut to 1 ms.
+// sounds and shakes and does nothing else; a double click selects no text; Rapture's frame and keypad speak
+// Poiret One, and its reminder the witness's Cormorant Garamond. An init script counts the calls to
+// HTMLMediaElement.prototype.play that play the click sound. Durations are cut to 1 ms.
 import { expect, test, type Page } from '@playwright/test';
 import { content, door, enterRoom, MOCKUP_01, quick, roomScreen, seed } from './helpers';
 
@@ -59,5 +59,8 @@ test('Rapture speaks Poiret One', async ({ page }) => {
   await expect(room).toBeVisible();
   await expect(room.getByText(content.rooms.rapture.header)).toHaveCSS('font-family', /^"?Poiret One/);
   await expect(room.getByRole('button', { name: content.ui.back })).toHaveCSS('font-family', /^"?Poiret One/);
+  await expect(room.getByText(content.rooms.rapture.keypad.prompt)).toHaveCSS('font-family', /^"?Poiret One/);
+  await expect(room.locator('[data-digit="4"]')).toHaveCSS('font-family', /^"?Poiret One/);
+  await expect(room.locator('[data-reminder]:visible').getByText(content.clues.rule.label)).toHaveCSS('font-family', /^"?Cormorant Garamond/);
   await expect(page.locator('[data-audience]')).toHaveCount(0);
 });
