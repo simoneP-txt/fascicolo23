@@ -6,6 +6,7 @@
 import { audienceStatus, startCountdown, type AudienceStatus, type Countdown } from './audience';
 import { createLadder, type HelpStatus, type Ladder } from './autohelp';
 import { isOpen } from './clues';
+import { linkParts } from './link';
 import { clear, load, save, type StorageLike } from './save';
 import * as rules from './state';
 import type { GameState } from './state';
@@ -182,6 +183,7 @@ export function createGame(deps: GameDeps): Game {
       content: roomContent,
       common: { clues: content.clues, ui: content.ui },
       hasClue: (id) => state.clues.includes(id),
+      link: () => linkParts(content.link, state),
       narrate: (text) => live() && ui.narrate(text),
       playSfx: (name) => live() && audio.play(name),
       meme: (id) => live() && Object.hasOwn(content.memes, id) && ui.showMeme(content.memes[id], hold(current)),

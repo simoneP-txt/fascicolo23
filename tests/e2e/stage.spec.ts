@@ -1,7 +1,7 @@
 // Stage e2e: the 16:9 stage fits the three test resolutions and paints nothing, so the host's art shows
 // through it; on the 16:10 party screen the bands above and below it take the colors of the screen, the
-// library's walnut wall and Rapture's wall and floor among them, and darken with it, in one layer, under a
-// dialog; the four fonts load from the build with the network cut.
+// library's walnut wall, Rapture's wall and floor and Room 46's sea and waves among them, and darken with it, in
+// one layer, under a dialog; the four fonts load from the build with the network cut.
 // Durations are cut to 1 ms.
 import { expect, test, type Page } from '@playwright/test';
 import { bandColor, bandsMatchTokens, colorDistance, edgeColors, edgeJumps, luminance, type Rgb } from './checks';
@@ -117,6 +117,17 @@ test.describe('on the 16:10 party screen', () => {
     for (const edge of BANDS) {
       const jumps = await edgeJumps(page, edge, { still: true });
       expect(Math.max(...jumps), `Rapture at the ${edge} edge of the stage`).toBeLessThanOrEqual(12);
+    }
+
+    // Room 46 opens once the other four are solved. Its host paints the sea above and the front wave below, so
+    // the sea runs on into the top band and the waves, measured at rest, into the bottom one.
+    await page.keyboard.press('Control+Shift+KeyN');
+    await continueWish(page);
+    await enterRoom(page, 'stanza-46');
+    await bandsMatchTokens(page, 'Room 46');
+    for (const edge of BANDS) {
+      const jumps = await edgeJumps(page, edge, { still: true });
+      expect(Math.max(...jumps), `Room 46 at the ${edge} edge of the stage`).toBeLessThanOrEqual(12);
     }
   });
 

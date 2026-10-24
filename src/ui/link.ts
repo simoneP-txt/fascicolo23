@@ -4,9 +4,7 @@
 // lifts the bar off (link.css), and a timer takes the bar away once --duration-peel is over.
 import './link.css';
 import type { Earned } from '../engine/game';
-import { linkParts } from '../engine/link';
-import type { GameState } from '../engine/state';
-import type { Content } from '../engine/types';
+import type { LinkPart } from '../engine/link';
 import { durationOf, el } from './dom';
 
 export interface LinkView {
@@ -14,10 +12,11 @@ export interface LinkView {
   peel(): void; // the bar over the fragment just won comes off; nothing happens after the first call
 }
 
-export function renderLink(content: Content, state: GameState, earned: Earned | null): LinkView {
+/** The link from its parts, as the engine's linkParts() or a room's ctx.link() gives them. */
+export function renderLink(parts: readonly LinkPart[], earned: Earned | null): LinkView {
   const line = el('div', 'link');
   let covered: { node: HTMLElement; text: string } | null = null;
-  for (const part of linkParts(content.link, state)) {
+  for (const part of parts) {
     const fragment = el('span', 'link__part');
     fragment.dataset.fragment = part.room;
     if (part.shown && part.room !== earned) {

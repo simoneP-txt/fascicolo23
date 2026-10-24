@@ -157,6 +157,17 @@ test('a room reads the shared texts', () => {
   expect(common.ui.clueLabel).toBe('INDIZIO');
 });
 
+test('a room reads the case link as the board shows it', () => {
+  const { game, room } = onBoard();
+  game.enter('studio');
+  ctxOf(room('studio')).complete();
+  game.enter('scacchiera');
+  const shown = ctxOf(room('scacchiera'))
+    .link()
+    .map((part) => (part.shown ? part.text : '_'));
+  expect(shown).toEqual(['youtu.be/', '71', '_', '_', '_', '_']);
+});
+
 test('a room that throws on mount does not block the game', () => {
   const error = vi.spyOn(console, 'error').mockImplementation(() => {});
   const { game, ui, room } = onBoard();

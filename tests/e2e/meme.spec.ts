@@ -2,9 +2,11 @@
 // itself after --duration-meme; the confirmed "Apri la porta?" consoles before the wish and the board. While
 // a meme shows it takes every click on the stage, a second meme replaces it, and a screen change takes it
 // away with the old screen. The memes of a wrong answer come from wrong books of the library, in the game of
-// mockup 01. Where the page clock stands still, the test runs it through each screen change.
+// mockup 01; a video meme comes from Room 46's blind accusations, and leaves by itself even when its clip cannot
+// play. Where the page clock stands still, the test runs it through each screen change.
 import { expect, test, type Page } from '@playwright/test';
-import { board, consolation, content, continueWish, duration, enterRoom, MOCKUP_01, roomScreen, seed, throughChange } from './helpers';
+import { BEFORE_46, board, consolation, content, continueWish, duration, enterRoom, MOCKUP_01, roomScreen, seed, throughChange } from './helpers';
+import { accuseSuspect } from './play';
 
 const meme = (page: Page) => page.locator('[data-meme]');
 const skipButton = (page: Page) => page.getByRole('button', { name: content.ui.skip.button });
@@ -125,4 +127,27 @@ test(`the caption's outline lies under its letters`, async ({ page }) => {
   );
   expect(letters).toBeGreaterThan(0);
   expect(darkened).toBe(0);
+});
+
+test('a video meme whose clip cannot play still leaves by itself', async ({ page }) => {
+  await page.route(`**/${content.memes.getHelp.video}`, (route) => route.fulfill({ status: 404 }));
+  await page.clock.install();
+  await seed(page, BEFORE_46);
+  await page.goto('/');
+  await enterRoom(page, 'stanza-46');
+  const room = content.rooms['stanza-46'];
+  const [fly, shown] = [await duration(page, '--duration-fly'), await duration(page, '--duration-meme')];
+  for (let n = 1; n <= room.blindTries; n++) {
+    await accuseSuspect(page, 'diva');
+    if (n === room.blindTries) await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
+    else await expect(page.locator('[data-thread][data-flying]')).toHaveCount(0);
+  }
+  await expect(meme(page).locator('video')).toHaveCount(1);
+  await page.clock.runFor(fly); // the thread is back on its pin
+  await expect(meme(page)).toHaveCount(1);
+  await page.clock.runFor(shown);
+  await expect(meme(page)).toHaveCount(0);
+  // The help clock runs again: the way out comes after skipAfterSec, the time spent so far included.
+  await page.clock.runFor(room.help.skipAfterSec * 1000);
+  await expect(page.getByRole('button', { name: room.skip.button })).toBeVisible();
 });

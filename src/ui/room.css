@@ -1,7 +1,7 @@
 /* Room frame (mockups 06, 07 and 10): the room draws on the whole stage and the frame sits on top, in the
    colors and font of the room's frame theme (tokens.css): the header with the way back and the audience
-   button, the witness top right with the silhouette under it, and the auto-help bottom right, where the
-   hint button and the way out keep their own slots. */
+   button, the witness top right with the silhouette under it (bottom left beside it in Room 46), and the
+   auto-help bottom right, where the hint button and the way out keep their own slots. */
 .room {
   color: var(--frame-text);
   font-family: var(--font-ui);
@@ -69,6 +69,20 @@
 .room[data-room='stanza-46'] .help {
   width: 408px; /* "Mostrami il colpevole?" is the longest way out (mockup 11) */
 }
+/* Room 46 keeps its right column for the clues and the thread (mockup 11): the witness stands bottom left on the
+   waves, beside its bubble, and the hint card opens to the left of the help buttons, over the sea. */
+.room[data-room='stanza-46'] .witness {
+  left: var(--space-12);
+  top: 816px;
+  width: 608px;
+}
+.room[data-room='stanza-46'] .help__card {
+  position: absolute;
+  right: calc(100% + var(--space-3));
+  bottom: calc(-1 * var(--space-6)); /* low on the waves, clear of the suspects above */
+  width: 560px;
+  margin: 0;
+}
 .help__card {
   grid-row: 1;
   display: flex;
@@ -98,15 +112,4 @@
   box-shadow:
     0 0 0 var(--space-1) var(--help-tray),
     var(--sheet-shadow);
-}
-
-/* Placeholder rooms, until phase 4 draws each room: their two buttons, left under the header. */
-.placeholder-room {
-  position: absolute;
-  left: var(--space-12);
-  top: 200px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-3);
 }

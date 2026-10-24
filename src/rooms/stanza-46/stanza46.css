@@ -1,0 +1,349 @@
+/* Room 46 (src/rooms/stanza-46/index.ts), from mockup 11, with the closed case's cards of mockup 03: the waves
+   swaying along the bottom of the sea the host paints, the link card at the top, the four suspect cards in a
+   row, the column of clues on the right over the thread of the accusation. A dragged card or thread end rides
+   above everything and the suspect under it lights its slot in gold, or rings in red under the thread; a picked
+   one wears a gold outline. Cards and the thread's end fly by transform alone, and while anything flies, or once
+   the case is closed, they take no pointer. Motion is transform and opacity only. */
+.stanza46 {
+  position: absolute;
+  inset: 0;
+}
+
+/* The sea: each wave sways half its wavelength either way, out of step with the others. */
+.stanza46__sea {
+  position: absolute;
+  left: 0;
+  width: var(--stage-width);
+  height: 296px;
+}
+.stanza46__wave {
+  position: absolute;
+  top: 0;
+  will-change: transform;
+  animation: stanza46-sway var(--duration-swell) var(--ease) infinite alternate;
+}
+.stanza46__wave[data-wave='back'] {
+  animation-delay: calc(-0.6 * var(--duration-swell));
+}
+.stanza46__wave[data-wave='front'] {
+  animation-delay: calc(-0.3 * var(--duration-swell));
+}
+
+/* The link as evidence: the fragments in ink, each room's underlined in red and ink in turn, the missing one a
+   black bar. */
+.stanza46__link {
+  position: absolute;
+  left: 480px;
+  top: 112px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 864px;
+  padding: var(--space-3) var(--space-5);
+  box-shadow: var(--shadow-sheet-dark);
+}
+.stanza46__link .link {
+  align-items: flex-end;
+  gap: var(--space-1);
+  font-size: var(--text-clue);
+}
+.stanza46__link .link__part {
+  color: var(--ink);
+}
+.stanza46__link .link__part:not([data-fragment='fascicolo'], [data-hidden]) {
+  border-bottom: var(--border) solid var(--ink);
+}
+.stanza46__link .link__part:nth-child(even) {
+  border-bottom-color: var(--red);
+}
+.stanza46__link .link__part + .link__part[data-hidden] {
+  height: var(--space-5);
+  margin-left: 0;
+}
+
+/* The suspects. */
+.stanza46__suspects {
+  position: absolute;
+  left: var(--space-12);
+  top: 264px;
+  display: flex;
+  gap: var(--space-3);
+}
+.suspect {
+  --suspect-lens: var(--paper);
+  --suspect-book: var(--night);
+  --suspect-laptop: var(--ink-soft);
+  --suspect-desk: var(--ink-soft);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 296px;
+  height: 536px;
+  padding: var(--space-3);
+  box-shadow: var(--shadow-sheet-dark);
+}
+.suspect__art {
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  justify-content: center;
+  height: 144px;
+  overflow: hidden;
+  background: var(--ink-halo);
+}
+.suspect__figure {
+  width: auto;
+  height: 100%;
+}
+.suspect__name {
+  flex: none;
+  margin: 0;
+  font-family: var(--font-witness);
+  font-size: var(--text-witness);
+  font-weight: 600;
+  line-height: 1.2;
+}
+/* A line that does not fit is cut, so the overflow check of the e2e catches it. */
+.suspect__quote,
+.suspect__verdict {
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  font-family: var(--font-report);
+  font-size: var(--text-small);
+  line-height: 1.2;
+}
+
+.suspect__slot {
+  box-sizing: border-box;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--space-8);
+  margin-top: auto;
+  border: var(--border) dashed var(--ink-faint);
+  border-radius: var(--radius);
+  color: var(--ink-prompt);
+  font-family: var(--font-report);
+  font-size: var(--text-small);
+}
+.suspect[data-over] .suspect__slot:not([data-filled]) {
+  border-style: solid;
+  border-color: var(--gold);
+  background: var(--gold-glow);
+  color: var(--ink);
+}
+.stanza46:has([data-thread][data-dragging]) .suspect[data-over] {
+  box-shadow:
+    0 0 0 var(--border) var(--red),
+    var(--shadow-sheet-dark);
+}
+.suspect__slot[data-filled] {
+  border: 0;
+}
+/* A card flying into a slot passes over the suspects on its way. */
+.suspect:has([data-flying]) {
+  z-index: 1;
+}
+
+/* A pinned clue fills the slot with its text alone, and stays where it is. */
+.suspect__slot .stanza46__evidence {
+  pointer-events: none;
+}
+.suspect__slot .stanza46__evidence .clue {
+  min-height: var(--space-8);
+  padding: var(--space-1) var(--space-2);
+  rotate: -2deg;
+}
+.suspect__slot .clue :is(.label, .paper__pin) {
+  display: none;
+}
+.suspect__slot .clue__text {
+  line-height: 1.1;
+}
+.suspect__slot .clue__code {
+  line-height: 1.2;
+}
+
+/* The closed case (mockup 03): a cleared suspect dims and fades, the culprit is ringed in red. */
+.suspect[data-outcome='out'] {
+  --suspect-lens: var(--paper-art-dark);
+  --suspect-book: var(--book-3);
+  --suspect-desk: var(--book-10);
+  background-color: var(--paper-dim);
+  background-image: none;
+}
+.suspect[data-outcome='out'] .suspect__art {
+  background: var(--paper-art-dark);
+}
+.suspect[data-outcome='out'] .suspect__figure {
+  opacity: 0.5;
+}
+.suspect[data-outcome='guilty'] {
+  box-shadow:
+    0 0 0 var(--border) var(--red),
+    var(--shadow-sheet-dark);
+}
+.suspect[data-outcome='guilty'] .suspect__art {
+  background: var(--paper-art-dim);
+}
+.suspect__out {
+  margin-top: auto;
+  font-size: var(--text-tag);
+}
+.suspect__stamp {
+  position: absolute;
+  left: var(--space-4);
+  top: 112px;
+  font-size: var(--text-witness);
+  rotate: -12deg;
+  animation: stanza46-stamp var(--duration-stamp) var(--ease) both;
+}
+
+/* The column of clues: a card in each place, a dashed outline where one has gone. */
+.stanza46__column {
+  position: absolute;
+  left: 1472px;
+  top: 296px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 360px;
+}
+.stanza46__spot {
+  min-height: 96px;
+}
+.stanza46__spot:empty {
+  box-sizing: border-box;
+  border: var(--border) dashed var(--paper-faint);
+  border-radius: var(--radius-chip);
+}
+
+/* A clue card, and the thread's end: buttons with no look of their own. */
+.stanza46__evidence,
+.stanza46__knob {
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: grab;
+  touch-action: none;
+}
+.stanza46__evidence {
+  width: 100%;
+}
+.stanza46__evidence .clue {
+  width: 100%;
+  min-height: 96px;
+  padding: var(--space-2) var(--space-3);
+  gap: 0;
+  box-shadow: var(--shadow-sheet-dark);
+}
+.stanza46__evidence .clue__code {
+  font-size: var(--text-heading);
+}
+.stanza46__evidence:focus-visible,
+.stanza46__knob:focus-visible {
+  outline: var(--border) solid var(--red);
+  outline-offset: var(--border);
+}
+
+.stanza46__evidence[data-picked] .clue {
+  outline: var(--border) solid var(--gold);
+  outline-offset: var(--border);
+}
+.stanza46__evidence[data-dragging],
+.stanza46__knob[data-dragging] {
+  z-index: 2;
+  cursor: grabbing;
+}
+.stanza46__evidence[data-dragging] .clue {
+  rotate: -4deg;
+  box-shadow: var(--shadow-folder);
+}
+.stanza46__evidence[data-flying],
+.stanza46__knob[data-flying] {
+  z-index: 2;
+  transition: transform var(--duration-fly) var(--ease);
+}
+.stanza46__evidence[data-nope] {
+  animation: stanza46-nope var(--duration-nope) var(--ease);
+}
+.stanza46[data-busy] :is(.stanza46__evidence, .stanza46__knob) {
+  pointer-events: none;
+}
+
+/* The thread of the accusation: its label, its curve and pin over the whole stage, its end, its prompt. */
+.stanza46__thread {
+  position: absolute;
+  left: 1472px;
+  top: 640px;
+  color: var(--paper);
+}
+.stanza46__string {
+  position: absolute;
+  inset: 0;
+  width: var(--stage-width);
+  height: var(--stage-height);
+  pointer-events: none;
+}
+.stanza46__knob {
+  position: absolute;
+  width: var(--space-8);
+  height: var(--space-8);
+  margin: calc(-1 * var(--space-4)) 0 0 calc(-1 * var(--space-4));
+  border-radius: 50%;
+}
+.stanza46__knob[data-picked] svg {
+  outline: var(--border) solid var(--gold);
+  outline-offset: calc(-1 * var(--space-1));
+  border-radius: 50%;
+}
+.room__area[data-solved] .stanza46__prompt {
+  visibility: hidden;
+}
+.stanza46__prompt {
+  position: absolute;
+  left: 1472px;
+  top: 760px;
+  margin: 0;
+  color: var(--paper);
+  font-size: var(--text-small);
+}
+
+@keyframes stanza46-sway {
+  from {
+    transform: translateX(calc(-1 * var(--sway)));
+  }
+  to {
+    transform: translateX(var(--sway));
+  }
+}
+
+@keyframes stanza46-stamp {
+  from {
+    opacity: 0;
+    transform: scale(var(--stamp-scale));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes stanza46-nope {
+  20%,
+  60% {
+    transform: translateX(calc(-1 * var(--space-1)));
+  }
+  40%,
+  80% {
+    transform: translateX(var(--space-1));
+  }
+}

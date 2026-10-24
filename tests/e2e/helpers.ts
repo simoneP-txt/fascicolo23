@@ -1,5 +1,5 @@
 // E2E helpers: the content texts, a network cut that records every request outside the local server,
-// the games of mockup 01 and of the end, a save written before the page loads, quick() for the tests that
+// the games of mockup 01, before Rapture, before Room 46 and of the end, a save written before the page loads, quick() for the tests that
 // do not watch animations, settled() and throughChange() for those that wait out a screen change, a slow
 // double click, and the steps most tests repeat (opening the case through the wish, entering a room, and the
 // consolation that follows a confirmed "Apri la porta?"). Solving a room lives in play.ts.
@@ -23,6 +23,14 @@ export const BEFORE_RAPTURE: GameState = {
   opened: true,
   solved: ['studio', 'scacchiera', 'biblioteca'],
   clues: ['rule', 'profile', 'g4', 'time-0451'],
+  tokens: 3,
+};
+
+/** Room 46's door open on the board: the other four rooms solved, the five clues found. */
+export const BEFORE_46: GameState = {
+  opened: true,
+  solved: ['studio', 'scacchiera', 'biblioteca', 'rapture'],
+  clues: [...CLUE_IDS],
   tokens: 3,
 };
 

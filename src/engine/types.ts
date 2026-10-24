@@ -1,6 +1,7 @@
 // Engine contract: room and clue ids, the shape of content.json, and the interface every room
 // implements (docs/PLAN.md, "Il contratto di ogni stanza").
 import type { Schema } from './content';
+import type { LinkPart } from './link';
 
 export const ROOM_IDS = ['studio', 'scacchiera', 'biblioteca', 'rapture', 'stanza-46'] as const;
 export const CLUE_IDS = ['rule', 'profile', 'g4', 'time-0451', 'confession'] as const;
@@ -33,10 +34,12 @@ export interface SkipText {
   no: string;
 }
 
-/** A meme over the room: a caption in Anton and/or an image from public/assets/memes/, maybe a sound. */
+/** A meme over the room: a caption in Anton and/or an image from public/assets/memes/, or a clip from there,
+ *  maybe a sound. */
 export interface Meme {
   text?: string;
   image?: string;
+  video?: string; // a clip in public/assets/memes/, with its own sound
   sound?: string; // a key of Content.sounds
 }
 
@@ -51,7 +54,6 @@ export interface RoomContent {
   help: HelpThresholds;
   locked?: string;
   skip?: SkipText;
-  placeholder?: { solve: string; error: string };
 }
 
 export interface Ui {
@@ -82,7 +84,7 @@ export interface Content {
   witness: { board: string; help: string; wish: string };
   clues: Record<ClueId, { label: string; missing: string }>;
   rooms: Record<RoomId, RoomContent>;
-  memes: Record<string, Meme>; // "consolation" follows a confirmed skip
+  memes: Record<string, Meme>; // "consolation" follows a confirmed skip; Room 46 names objection, innocent, getHelp
   ui: Ui;
 }
 
@@ -91,6 +93,7 @@ export interface GameContext<C extends RoomContent = RoomContent> {
   content: C; // this room's slice of content.json (hints, thresholds included), typed by the room
   common: Pick<Content, 'clues' | 'ui'>; // texts every screen shares: clue labels, "INDIZIO"
   hasClue(id: ClueId): boolean; // clues found in other rooms
+  link(): LinkPart[]; // the case link as the board shows it
   narrate(text: string): void; // witness bubble, appends "?" if missing
   playSfx(name: string): void; // sounds listed in content.json
   meme(id: string): void; // a meme from content.json over the room; the help clock waits for it to go

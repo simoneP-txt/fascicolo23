@@ -28,7 +28,10 @@
     "error": { "text": "Sicura?", "sound": "boom" },
     "consolation": { "text": "Capita anche a Poirot?", "sound": "boom" },
     "shelf": { "text": "Ritenta, Sherlock?", "sound": "boom" },
-    "run": { "text": "Would you kindly riprovare?", "sound": "boom" }
+    "run": { "text": "Would you kindly riprovare?", "sound": "boom" },
+    "objection": { "text": "Obiezione?", "sound": "boom" },
+    "innocent": { "text": "Innocente?", "sound": "boom" },
+    "getHelp": { "video": "assets/memes/stop-it-get-some-help.mp4" }
   },
   "clues": {
     "rule": { "label": "Obbedisce solo alle domande", "missing": "Serve una regola?" },
@@ -232,10 +235,29 @@
       "name": "Stanza 46?",
       "header": "FASCICOLO N. 23 · STANZA 46",
       "from": "dalla Stanza 46",
-      "witness": { "intro": "Chi di loro ha l'acqua alla gola?" },
+      "witness": {
+        "intro": "Chi di loro ha l'acqua alla gola?",
+        "pinned": {
+          "profile": "Chi chiude con il punto non parla solo per domande, giusto?",
+          "time-0451": "Un commit alle 04:51 resta scritto nel registro, no?",
+          "confession": "E se quella diretta fosse stata registrata?"
+        },
+        "bounce": {
+          "profile": "Qui ogni frase è una domanda: chi esclude il profilo?",
+          "time-0451": "L'orario scagiona solo un alibi che resta agli atti, no?",
+          "confession": "Che cosa smentirebbe un filmato, in questa frase?"
+        },
+        "blind": ["Accusi senza prove?", "Un'accusa senza indizi vale qualcosa?", "Il giudice riderebbe, no?", "Di nuovo a occhio?"],
+        "accused": {
+          "giardiniere": "Chiude con il punto: non l'aveva già escluso il profilo?",
+          "professore": "Si risponde da solo, col punto fermo: parla forse per domande?",
+          "fidanzato": "Alle 04:51 faceva un commit: il registro non mente, no?"
+        },
+        "solved": "Una diretta registrata non è una diretta, vero?"
+      },
       "hints": [
-        "Appunta ogni indizio sul sospettato che riguarda.",
-        "Resta chi parla per domande e non ha un alibi."
+        "Appunta ogni indizio sul sospettato che decide.",
+        "Due parlano solo per domande e hanno un alibi alla stessa ora: quale si può registrare?"
       ],
       "help": { "hintAfterSec": 180, "secondHintAfterSec": 300, "hintAfterErrors": 3, "skipAfterSec": 360, "skipAfterErrors": null },
       "locked": "Servono tutti gli indizi?",
@@ -245,7 +267,37 @@
         "yes": "Sì, mostramelo?",
         "no": "No, ci riprovo?"
       },
-      "placeholder": { "solve": "Risolvi la stanza?", "error": "Sbaglia apposta?" }
+      "link": { "oneLeft": "PROVA N. 1 · MANCA UN PEZZO" },
+      "suspects": [
+        {
+          "id": "giardiniere",
+          "name": "Il Giardiniere",
+          "quote": "«Le cesoie erano mie? Certo. Ma quella notte dormivo.»",
+          "verdict": "Chiude con il punto"
+        },
+        {
+          "id": "professore",
+          "name": "Il Professore di Lettere",
+          "quote": "«Chi corregge compiti di notte? Io. Fino all'alba.»",
+          "verdict": "Si risponde da solo, col punto fermo"
+        },
+        {
+          "id": "fidanzato",
+          "name": "Il Fidanzato",
+          "quote": "«Alle cinque meno nove facevo un commit? Non lo dice il registro?»",
+          "verdict": "Alle 04:51 faceva un commit"
+        },
+        {
+          "id": "diva",
+          "name": "La Diva della TV",
+          "quote": "«Alle cinque meno nove ero in diretta? Non mi hanno vista tutti?»",
+          "verdict": "La sua diretta era registrata?"
+        }
+      ],
+      "slot": "Trascina qui?",
+      "thread": { "label": "IL FILO DELL'ACCUSA", "prompt": "Trascina sul colpevole?" },
+      "stamps": { "out": "ESCLUSO", "guilty": "COLPEVOLE?" },
+      "blindTries": 4
     }
   },
   "ui": {

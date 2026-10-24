@@ -3,17 +3,16 @@
 // Ctrl+Shift+N for the tests that prove the engine. The study picks the right phenomenon of each report, the
 // chessboard plays its line, the library pulls its secret book and accuses the liar of liar.ts until the room
 // takes the answer, Rapture opens its door with the code and plays one run that obeys the questions only; Room
-// 46, still waiting for phase 5, presses its placeholder's solve button. Playing Rapture needs the page clock
-// installed before the page opened (decision 12): a run stands the clock still and runs it one window at a
-// time, and the steps of a run are exported for the tests of the room.
+// 46 pins each clue on a suspect it settles and accuses the culprit, two clicks each. Playing Rapture needs the
+// page clock installed before the page opened (decision 12): a run stands the clock still and runs it one window
+// at a time, and the steps of a run, and those of Room 46, are exported for the tests of the rooms.
 import { expect, type Page } from '@playwright/test';
 import { Chess } from 'chess.js';
 import type { RoomId } from '../../src/engine/types';
 import { consistentLiars } from '../../src/rooms/biblioteca/liar';
 import { CONTROL_IDS, isQuestion, type Order } from '../../src/rooms/rapture/orders';
+import { culprits, EVIDENCE, minuteOf, settles, SUSPECT_IDS, type Evidence, type SuspectId } from '../../src/rooms/stanza-46/deduction';
 import { board, content, continueWish, enterRoom, wish } from './helpers';
-
-const pressSolve = (id: RoomId) => (page: Page) => page.getByRole('button', { name: content.rooms[id].placeholder.solve }).click();
 
 const rapture = content.rooms.rapture;
 export const ORDERS: Order[] = rapture.orders;
@@ -102,12 +101,46 @@ async function playLibrary(page: Page): Promise<void> {
   }).toPass();
 }
 
+const quotes = Object.fromEntries(
+  content.rooms['stanza-46'].suspects.map(({ id, quote }: { id: SuspectId; quote: string }) => [id, quote]),
+) as Record<SuspectId, string>;
+const crime = minuteOf(content.clues['time-0451'].label);
+
+/** The first suspect, in board order, on whom this clue may be pinned. */
+export const settledBy = (clue: Evidence): SuspectId => SUSPECT_IDS.find((id) => settles(clue, id, quotes, crime))!;
+
+/** The suspect the three clues leave. */
+export const CULPRIT: SuspectId = culprits(quotes, crime, new Set(EVIDENCE))[0];
+
+export const evidence = (page: Page, clue: string) => page.locator(`[data-evidence="${clue}"]`);
+export const suspect = (page: Page, id: string) => page.locator(`[data-suspect="${id}"]`);
+
+/** A clue card pressed, then a suspect: the two clicks of decision 4. Returns once the card has landed in the
+ *  suspect's slot when the suspect takes it. */
+export async function pinClue(page: Page, clue: Evidence, on: SuspectId = settledBy(clue)): Promise<void> {
+  await evidence(page, clue).click();
+  await suspect(page, on).click();
+  if (settles(clue, on, quotes, crime)) await expect(suspect(page, on).locator(`[data-evidence="${clue}"]`)).toBeVisible();
+}
+
+/** The end of the accusation thread pressed, then a suspect. */
+export async function accuseSuspect(page: Page, on: SuspectId): Promise<void> {
+  await page.locator('[data-thread]').click();
+  await suspect(page, on).click();
+}
+
+/** Room 46: each clue pinned where it settles, then the culprit accused. */
+async function playDeduction(page: Page): Promise<void> {
+  for (const clue of EVIDENCE) await pinClue(page, clue);
+  await accuseSuspect(page, CULPRIT);
+}
+
 export const play: Record<RoomId, (page: Page) => Promise<void>> = {
   studio: playStudy,
   scacchiera: playChess,
   biblioteca: playLibrary,
   rapture: playRapture,
-  'stanza-46': pressSolve('stanza-46'),
+  'stanza-46': playDeduction,
 };
 
 export async function solveRoom(page: Page, id: RoomId, how: 'play' | 'host' = 'play'): Promise<void> {

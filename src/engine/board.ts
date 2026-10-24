@@ -86,8 +86,9 @@ export function renderBoard(
   const title = paper('board__title', { pin: true });
   title.append(el('div', 'label', content.ui.file), el('h1', 'board__case', content.ui.case));
 
-  const complete = linkParts(content.link, state).every((part) => part.shown);
-  const line = renderLink(content, state, earned);
+  const parts = linkParts(content.link, state);
+  const complete = parts.every((part) => part.shown);
+  const line = renderLink(parts, earned);
   const link = paper('board__link', { pin: true });
   link.append(el('div', 'label', complete ? content.ui.link.done : content.ui.link.label), line.el);
 

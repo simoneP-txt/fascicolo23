@@ -8,8 +8,8 @@ import { bandsMatchTokens, edgeJumps, fontFamilies, hasBands, outsideStage, over
 import type { RoomId } from '../../src/engine/types';
 import { consistentLiars } from '../../src/rooms/biblioteca/liar';
 import { isQuestion } from '../../src/rooms/rapture/orders';
-import { BEFORE_RAPTURE, board, consolation, content, enterRoom, FINISHED, MOCKUP_01, openCase, quick, seed, wish } from './helpers';
-import { loseRaptureRun, openRaptureDoor, ORDERS, play, startRaptureRun, throughOrder } from './play';
+import { BEFORE_46, BEFORE_RAPTURE, board, consolation, content, enterRoom, FINISHED, MOCKUP_01, openCase, quick, seed, wish } from './helpers';
+import { accuseSuspect, CULPRIT, loseRaptureRun, openRaptureDoor, ORDERS, pinClue, play, startRaptureRun, throughOrder } from './play';
 
 const SIZES = [
   [1707, 1067, 1.5],
@@ -154,6 +154,28 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
     await page.locator(`[data-control="${ORDERS[4].control}"]`).click();
     await expect(page.locator('[data-errors] [data-error="made"]')).toHaveCount(1);
     await expect(page.getByRole('button', { name: content.ui.skip.button })).toBeVisible();
+  },
+  // 11: two tokens, the 04:51 pinned on the fiancé, the clock run to skipAfterSec, so "Un indizio?" and
+  // "Mostrami il colpevole?" are on screen
+  'room-46': async (page) => {
+    await page.clock.install();
+    await seed(page, { ...BEFORE_46, tokens: content.tokens - 1 });
+    await page.goto('/');
+    await enterRoom(page, 'stanza-46');
+    await pinClue(page, 'time-0451');
+    await page.clock.runFor(content.rooms['stanza-46'].help.skipAfterSec * 1000);
+    await expect(page.getByRole('button', { name: content.rooms['stanza-46'].skip.button })).toBeVisible();
+  },
+  // 03 for the cards: the case closed on the culprit, the clock standing still during the beat
+  'room-46-solved': async (page) => {
+    await page.clock.install();
+    await seed(page, BEFORE_46);
+    await page.goto('/');
+    await enterRoom(page, 'stanza-46');
+    for (const clue of ['profile', 'time-0451', 'confession'] as const) await pinClue(page, clue);
+    await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
+    await accuseSuspect(page, CULPRIT);
+    await expect(page.locator('[data-solved]')).toHaveCount(1);
   },
   // 15 over Rapture: the way out, offered after skipAfterSec, its dialog in Poiret One
   'skip-rapture': async (page) => {

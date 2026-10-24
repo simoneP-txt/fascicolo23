@@ -31,7 +31,6 @@ const ROOM: Record<string, Schema> = {
   },
   'locked?': 'text',
   'skip?': SKIP,
-  'placeholder?': { solve: 'text', error: 'text' },
 };
 
 // The whole file, each room with the common fields and its own.
@@ -66,13 +65,15 @@ function schemaOf(rooms: readonly Pick<Room, 'id' | 'schema'>[]): Schema {
   };
 }
 
-const MEME: Schema = { 'text?': 'text', 'image?': 'text', 'sound?': 'text' };
-const NEEDED_MEMES = ['consolation']; // shown by the engine itself, after a confirmed skip
+const MEME: Schema = { 'text?': 'text', 'image?': 'text', 'video?': 'text', 'sound?': 'text' };
+// Shown by name: the consolation by the engine itself, after a confirmed skip, and the rest by Room 46, after a
+// wrong accusation (objection, innocent) and every few blind ones (getHelp).
+const NEEDED_MEMES = ['consolation', 'objection', 'innocent', 'getHelp'];
 // Played by name: click on every press, wish, stamp on a solved door, boom under the memes, and in Rapture
 // chime at each order, buzz on each error and the deep loop. audio.ts stays silent on a name it does not know,
 // so a renamed key would mute its sound without an error.
 const NEEDED_SOUNDS = ['click', 'wish', 'boom', 'stamp', 'chime', 'buzz', 'deep'];
-const MEME_IMAGE = /^assets\/memes\/[^/\\]+$/; // a file shipped in public/assets/memes: a URL would reach the network
+const MEME_FILE = /^assets\/memes\/[^/\\]+$/; // a file shipped in public/assets/memes: a URL would reach the network
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -127,16 +128,18 @@ function checkLink(link: unknown): void {
   }
 }
 
-// Every meme shows a caption or an image, its image is a file in assets/memes, and its sound is one of the
-// listed sounds.
+// Every meme shows a caption, an image or a clip, its image and its clip are files in assets/memes, and its sound
+// is one of the listed sounds.
 function checkMemes(memes: unknown, sounds: Record<string, string>): void {
   if (!isObject(memes)) fail('memes', 'must be an object');
   for (const id of NEEDED_MEMES) if (memes[id] === undefined) fail(`memes.${id}`, 'is missing');
   for (const [id, meme] of Object.entries(memes)) {
     check(meme, MEME, `memes.${id}`);
-    const { text, image, sound } = meme as Record<string, unknown>;
-    if (text === undefined && image === undefined) fail(`memes.${id}`, 'needs a text or an image');
-    if (typeof image === 'string' && !MEME_IMAGE.test(image)) fail(`memes.${id}.image`, 'must be a file in assets/memes/');
+    const { text, image, video, sound } = meme as Record<string, unknown>;
+    if (text === undefined && image === undefined && video === undefined) fail(`memes.${id}`, 'needs a text, an image or a video');
+    for (const [key, file] of Object.entries({ image, video })) {
+      if (typeof file === 'string' && !MEME_FILE.test(file)) fail(`memes.${id}.${key}`, 'must be a file in assets/memes/');
+    }
     if (typeof sound === 'string' && !Object.hasOwn(sounds, sound)) fail(`memes.${id}.sound`, 'must name one of the sounds');
   }
 }

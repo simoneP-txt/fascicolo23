@@ -1,7 +1,8 @@
 // Content schema: content.json must validate, a broken copy must name the faulty field (a room's own fields
 // and the item of a list included), the help thresholds and audience numbers must match the decisions,
-// every witness sentence must end with "?", every sound the game plays by name must be listed, and every
-// meme must have something to show, a sound that exists and, if any, an image shipped in assets/memes.
+// every witness sentence must end with "?", every sound the game plays by name must be listed, no room keeps a
+// placeholder, and every meme must have something to show, a sound that exists and, if any, an image or a video
+// shipped in assets/memes; the memes the engine and Room 46 name must exist.
 import { expect, test } from 'vitest';
 import json from '../../content/content.json';
 import { validateContent, type Schema } from '../../src/engine/content';
@@ -95,9 +96,8 @@ test('a loop is one of the sounds', () => {
   expect(() => validateContent(broken, rooms)).toThrow(/loops/);
 });
 
-test('only Room 46 keeps its placeholder', () => {
-  const content = validateContent(json, rooms);
-  expect(ROOM_IDS.filter((id) => content.rooms[id].placeholder !== undefined)).toEqual(['stanza-46']);
+test('no room keeps a placeholder', () => {
+  expect(ROOM_IDS.filter((id) => Object.hasOwn(json.rooms[id], 'placeholder'))).toEqual([]);
 });
 
 test('the sounds the game plays by name are listed', () => {
@@ -118,6 +118,23 @@ test('a meme image is a file shipped in assets/memes', () => {
   const local = copy();
   local.memes.error.image = 'assets/memes/meme.png';
   expect(() => validateContent(local, rooms)).not.toThrow();
+});
+
+test('a meme video is a file shipped in assets/memes', () => {
+  const broken = copy();
+  broken.memes.getHelp.video = 'https://x/y.mp4';
+  expect(() => validateContent(broken, rooms)).toThrow(/memes\.getHelp\.video/);
+  const local = copy();
+  local.memes.error = { video: 'assets/memes/clip.mp4' }; // a video alone is enough to show
+  expect(() => validateContent(local, rooms)).not.toThrow();
+});
+
+test('the memes of Room 46 exist', () => {
+  for (const id of ['objection', 'innocent', 'getHelp']) {
+    const broken = copy();
+    delete broken.memes[id];
+    expect(() => validateContent(broken, rooms), id).toThrow(new RegExp(`memes\\.${id}`));
+  }
 });
 
 test('thresholds follow decision 9', () => {

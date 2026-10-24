@@ -1,6 +1,6 @@
-/* Meme: over the veil every .overlay spreads, the image and the caption land together with a sudden zoom,
-   from --meme-zoom down to their size in the first eighth of --duration-meme, then hold still until
-   meme.ts takes the overlay away. The caption is the Anton sample of 04-sistema at meme size: white, upper
+/* Meme: over the veil every .overlay spreads, the image or the clip and the caption land together with a
+   sudden zoom, from --meme-zoom down to their size in the first eighth of --duration-meme, then hold still
+   until meme.ts takes the overlay away. The caption is the Anton sample of 04-sistema at meme size: white, upper
    case, its ink outline in the sample's proportion, drawn under the letters. Over an image it sits on the
    bottom edge, as in a meme. */
 
@@ -26,7 +26,8 @@
   grid-area: 1 / 1;
 }
 
-.meme__image {
+.meme__image,
+.meme__video {
   max-width: 100%;
   height: 768px;
   object-fit: contain;

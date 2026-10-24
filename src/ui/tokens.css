@@ -3,8 +3,8 @@
    color at some opacity is mixed from the palette here, so retouching a base color carries it along;
    SVG drawings that fade a palette color keep the token and an opacity. Then the frame theme of each
    room, and at the bottom every screen names the tones of its top and bottom edges, which the bands
-   around the stage continue; last, the board's cork, frame and vignette, the library's walnut and the
-   study's wall and desk and Rapture's wall and floor, painted on the host. */
+   around the stage continue; last, the board's cork, frame and vignette, the library's walnut, the
+   study's wall and desk, Rapture's wall and floor and Room 46's sea, painted on the host. */
 :root {
   /* Palette of 04-sistema, with one gold for its brass and its deco gold */
   --red: #e94535;
@@ -114,6 +114,12 @@
   --wave-3: #2c6b85; /* front wave, also the wave on the room's card */
   --foam: #dce8ec; /* wave crest, the header over the sea */
   --figure-sea: #0b0907; /* the witness by the sea */
+  /* The waves of the deduction (mockup 11), back to front: the night, then teal at 40% and 70% laid over the
+     wave behind, mixed here so each wave is one flat tone. The suspects' silhouettes take the palette's ink,
+     night, soft ink and gold. */
+  --swell-back: var(--night);
+  --swell-mid: color-mix(in srgb, var(--teal) 40%, var(--swell-back));
+  --swell-front: color-mix(in srgb, var(--teal) 70%, var(--swell-mid));
 
   /* Fonts, at most three on a screen */
   --font-report: 'Special Elite', monospace;
@@ -222,6 +228,9 @@
   --duration-bubble: 5000ms; /* a bubble in Rapture rising and fading */
   --duration-shimmer: 6000ms; /* the rays behind Rapture's door swaying one way */
   --duration-swim: 9000ms; /* a fish in the porthole swimming there and back */
+  --duration-fly: 400ms; /* a clue card, or the thread's end, flying to a slot or back in Room 46 */
+  --duration-clip: 4000ms; /* the longest a video meme stays, however long its clip */
+  --duration-swell: 7000ms; /* a wave of Room 46 swaying one way */
   --press-shift: 2px; /* how far a pressed control sinks */
   --press-scale: 0.98;
   --meme-zoom: 1.35; /* the size a meme lands from */
@@ -306,7 +315,7 @@
 }
 [data-backdrop='stanza-46'] {
   --backdrop-top: var(--sea);
-  --backdrop-bottom: var(--sea);
+  --backdrop-bottom: var(--swell-front);
 }
 /* The wish plays over the board, so the bands continue its night sky and its hill instead. */
 #app:has([data-wish]) {
@@ -375,4 +384,13 @@
     linear-gradient(90deg, var(--deco-stripe) calc(4 * var(--stage-px)), transparent 0) calc(50% + 32 * var(--stage-px)) 0 /
       calc(64 * var(--stage-px)) var(--floor-line) repeat-x,
     linear-gradient(var(--backdrop-top) var(--floor-line), var(--backdrop-bottom) 0);
+}
+
+/* Room 46's host paints the sea of mockup 11 across the whole window down to stage line 1040, under every
+   trough of the front wave, and that wave's tone from there to the bottom of the window. So the top band carries
+   on the sea, and the bottom band the waves the room draws over it. */
+#app[data-backdrop='stanza-46'] {
+  --stage-px: calc(1px * var(--stage-scale));
+  --swell-line: calc(50% + 500 * var(--stage-px)); /* stage line 1040, 500 below the middle of the window */
+  background: linear-gradient(var(--backdrop-top) var(--swell-line), var(--backdrop-bottom) 0);
 }
