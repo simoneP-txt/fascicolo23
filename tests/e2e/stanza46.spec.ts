@@ -343,7 +343,12 @@ test.describe('with durations cut', () => {
     await expect(witnessLine(page)).toHaveText(room.witness.ready);
     await expect.poll(() => pulsing(page)).toBe(true);
 
+    await pinClue(page, 'profile', 'fidanzato'); // moved where it fits too: the three stay pinned
+    await expect(witnessLine(page)).toHaveText(room.witness.ready);
+    await expect.poll(() => pulsing(page)).toBe(true);
+
     await takeBack(page, 'time-0451');
+    await expect(witnessLine(page)).toHaveText(room.witness.unready); // the invitation no longer holds
     await expect.poll(() => pulsing(page)).toBe(false);
   });
 

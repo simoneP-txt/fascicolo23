@@ -21,6 +21,7 @@ export interface Stanza46Content extends RoomContent {
     pinned: Record<Evidence, string>; // a clue pinned on a suspect it fits: why it fits
     bounce: Record<Evidence, string>; // a clue on a suspect it does not fit: why not there
     ready: string; // the third clue pinned: an invitation to accuse
+    unready: string; // a take-back that breaks the three: the accusation waits for them again
     blind: string[]; // an accusation before the three clues are pinned, one line each time, in turn
     accused: Record<Exclude<SuspectId, 'diva'>, string>; // with the three clues pinned, why not them
     solved: string;
@@ -43,6 +44,7 @@ export const STANZA46_SCHEMA: Record<string, Schema> = {
     pinned: texts(EVIDENCE),
     bounce: texts(EVIDENCE),
     ready: 'text',
+    unready: 'text',
     blind: 'texts',
     accused: texts(['giardiniere', 'professore', 'fidanzato']),
     solved: 'text',

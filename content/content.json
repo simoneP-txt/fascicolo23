@@ -250,6 +250,7 @@
           "confession": "Una confessione filmata: dove sarebbe la telecamera, qui?"
         },
         "ready": "Tre indizi appuntati: su chi tendi il filo dell'accusa?",
+        "unready": "Manca un indizio: un'accusa, adesso, conterebbe qualcosa?",
         "blind": ["Accusi senza prove?", "Un'accusa senza indizi vale qualcosa?", "Il giudice riderebbe, no?", "Di nuovo a occhio?"],
         "accused": {
           "giardiniere": "Chiude con il punto: non l'aveva già escluso il profilo?",

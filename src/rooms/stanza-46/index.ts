@@ -7,7 +7,8 @@
 // counts an error and gets the witness's reason; let go anywhere else it goes back where it was and counts nothing.
 // A pinned clue dragged onto the column, or picked and then dropped there with a click, comes back with no error;
 // moved onto another suspect, it is judged again. "Ricomincia?" brings every pinned clue back and counts nothing.
-// With the three clues pinned the thread's end pulses and the witness invites the accusation, until one comes back.
+// With the three clues pinned the thread's end pulses and the witness invites the accusation, until one comes back
+// to the column and the witness says the accusation must wait.
 // The thread on a suspect accuses: before the three clues are pinned the accusation is blind, counts an error and
 // gets the next of the witness's lines, every blindTries-th with the video meme; with the three, the fiancé
 // objects and the two others are innocent, each with a meme, an error and the witness's line, and the thread goes
@@ -248,9 +249,13 @@ export const stanza46: Room<Stanza46Content> = {
       ctx.narrate(pinned.size === EVIDENCE.length ? texts.witness.ready : texts.witness.pinned[clue]);
     };
 
-    // A pinned clue dropped on the column comes back to its place, with no error.
+    // A pinned clue dropped on the column comes back to its place, with no error. If it breaks the three, the
+    // witness says the accusation must wait for them: now it would be blind.
     const takeBack = (clue: Evidence) => {
-      if (!closed && pinned.has(clue)) unpin(clue);
+      if (closed || !pinned.has(clue)) return;
+      const ready = pinned.size === EVIDENCE.length;
+      unpin(clue);
+      if (ready) ctx.narrate(texts.witness.unready);
     };
 
     // "Ricomincia?": every pinned clue back in the column, and the witness's first question; nothing is counted.
