@@ -1,8 +1,9 @@
 // Library: the hedge mystery behind the shelf has one consistent liar, the custode, and then a single cut
 // time, the clue the room gives. Each witness matters: the vicina's first walk rules her out, the lattaio's
 // time closes the minute. The texts of content.json name the witnesses of the model and say the minutes of
-// its claims, the witness answers each wrong accusation, the schema checks the time and the questions of a
-// quick guess, the secret book sits on the chessboard's square and the shelf is drawn the same on every visit.
+// its claims, the witness answers each wrong accusation, both hints help in the mystery, the schema checks
+// the time and the questions of a quick guess, the secret book sits on the chessboard's square and the shelf
+// is drawn the same on every visit.
 import { expect, test } from 'vitest';
 import json from '../../content/content.json';
 import { validateContent } from '../../src/engine/content';
@@ -54,6 +55,16 @@ test('the texts and the model name the same witnesses', () =>
 
 test('the witness answers every wrong accusation', () =>
   expect(Object.keys(room.witness.wrong).sort()).toEqual(WITNESS_IDS.filter((id) => id !== 'custode').sort()));
+
+// The errors of the shelf and of the mystery add up, so either hint may come while the player is in the mystery.
+test('both hints of the library speak to the mystery', () => {
+  const witnesses = room.mystery.statements.map(({ name }) => name.split(' ').at(-1)!.toLowerCase()); // "La vicina"
+  const lies = /^ment(?:e|i|o|ono|iva|isse|ire|irebbe)$/; // the liar's rule, "uno mente sempre"; not "mentre"
+  for (const hint of room.hints) {
+    const words = hint.toLowerCase().match(/\p{L}+/gu) ?? [];
+    expect(words.some((word) => witnesses.includes(word) || lies.test(word)), hint).toBe(true);
+  }
+});
 
 test('the secret book sits where the chessboard sends you', () => expect(room.secret).toBe(content.clues.g4.label));
 
