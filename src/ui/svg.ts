@@ -1,7 +1,7 @@
 // SVG: the hand-written drawings of the game, parsed from markup, in one style: clean lines and a few flat
 // colors, each a token (var(--…)) or currentColor, so the screen around a drawing can recolor it. Icons
 // sit in a 24 px box that CSS may scale; the witness is the silhouette of mockup 01, filled with --figure.
-export type Icon = 'back' | 'dot' | 'door' | 'lock' | 'magnifier';
+export type Icon = 'back' | 'dot' | 'door' | 'lock' | 'magnifier' | 'restart';
 
 /** The <svg> element of this markup, which holds exactly one. */
 export function svg(markup: string): SVGSVGElement {
@@ -15,7 +15,8 @@ export function svg(markup: string): SVGSVGElement {
 }
 
 // Drawn on a 24 unit grid. The door is the open door of mockup 15 (lit doorway, dark leaf, frame and
-// floor), the others come from mockups 06, 07 and 11.
+// floor), the restart arrow turning back on itself is Room 46's "Ricomincia?", the others come from mockups 06, 07
+// and 11.
 const ICONS: Record<Icon, string> = {
   back: '<path d="M15 5 L8 12 L15 19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>',
   dot: '<circle cx="12" cy="12" r="8" fill="var(--help-accent)"/>',
@@ -31,6 +32,9 @@ const ICONS: Record<Icon, string> = {
   magnifier:
     '<circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2.5"/>' +
     '<path d="M15 15 L21 21" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>',
+  restart:
+    '<path d="M3 4 V9.5 H8.5 M4.2 14.9 A8.5 8.5 0 1 0 6.2 6 L3 9.5" fill="none" stroke="currentColor" stroke-width="2.5" ' +
+    'stroke-linecap="round" stroke-linejoin="round"/>',
 };
 
 export function icon(name: Icon): SVGSVGElement {

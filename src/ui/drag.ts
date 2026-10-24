@@ -1,12 +1,13 @@
 // Drag, or two clicks (the plan's decision 4): a handle follows the pointer by transform: translate(), divided by
 // the scale of the stage, under pointer capture, and lands on the target under the point of release, or is
 // cancelled when it is released off every target, the window included, or when the browser takes the pointer away
-// (pointercancel, lostpointercapture). A gesture that moves less than SLOP stage pixels is a click instead: the
-// handle is picked, and the next click lands it on the target it hits, or cancels it anywhere else, so on a
-// touchpad a card goes where it must in two presses. While dragged the handle carries data-dragging, and the
-// target under the pointer data-over; while picked it carries data-picked. drop() and cancel() leave the handle
-// as it is, transform included: the caller settles it or sends it back. The second click of a double click
-// neither picks nor lands nor cancels.
+// (pointercancel, lostpointercapture). The handle itself never counts as what lies under the pointer, even when a
+// target holds it. A gesture that moves less than SLOP stage pixels is a click instead: the handle is picked, and
+// the next click lands it on the target it hits, or cancels it anywhere else, so on a touchpad a card goes where it
+// must in two presses. A click that lands a handle, or puts it down, picks up no handle it falls on. While dragged
+// the handle carries data-dragging, and the target under the pointer data-over; while picked it carries
+// data-picked. drop() and cancel() leave the handle as it is, transform included: the caller settles it or sends it
+// back. The second click of a double click neither picks nor lands nor cancels.
 
 const SLOP = 8; // stage pixels a press may wander and still be a click
 
@@ -15,6 +16,9 @@ export interface DragOptions {
   drop(target: HTMLElement): void; // released over a target, or the target clicked after the handle
   cancel(): void; // released anywhere else, cancelled, or a click elsewhere
 }
+
+// The last click that landed or put down a pick, so the handles it falls on let it pass.
+let spent: Event | null = null;
 
 /** Window pixels per stage pixel: the stage's drawn width over its laid-out width. */
 function scaleOf(node: HTMLElement): number {
@@ -26,14 +30,14 @@ function scaleOf(node: HTMLElement): number {
 export function draggable(handle: HTMLElement, options: DragOptions): () => void {
   let gesture: { pointer: number; x: number; y: number; scale: number; moved: boolean } | null = null;
   let dragged = false; // the last gesture was a drag: the click that ends it is no pick
-  let consumed: Event | null = null; // the click that took the pick off this handle
   let over: HTMLElement | null = null;
 
   // The target under a point of the window: the topmost element there that a target holds, the dragged handle
-  // aside, which never takes the pointer from what lies under it.
+  // aside, which never takes the pointer from what lies under it, not even from the target it sits in.
   const targetAt = (x: number, y: number): HTMLElement | null => {
     const targets = options.targets();
     for (const node of document.elementsFromPoint(x, y)) {
+      if (handle.contains(node)) continue;
       const target = targets.find((candidate) => candidate.contains(node));
       if (target) return target;
     }
@@ -54,12 +58,13 @@ export function draggable(handle: HTMLElement, options: DragOptions): () => void
     if (event.detail > 1) return;
     unpick();
     if (handle.contains(event.target as Node)) {
-      consumed = event; // a second press on the handle puts it down
+      spent = event; // a second press on the handle puts it down
       return options.cancel();
     }
     const target = targetOf(event);
-    if (target) options.drop(target);
-    else options.cancel();
+    if (!target) return options.cancel();
+    spent = event; // a handle inside the target stays where it is
+    options.drop(target);
   };
   const pick = () => {
     handle.dataset.picked = '';
@@ -75,7 +80,7 @@ export function draggable(handle: HTMLElement, options: DragOptions): () => void
       dragged = false;
       return;
     }
-    if (event.detail > 1 || event === consumed) return;
+    if (event.detail > 1 || event === spent) return;
     pick();
   };
 

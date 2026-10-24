@@ -232,6 +232,7 @@
   --duration-clip: 4000ms; /* the longest a video meme stays, however long its clip */
   --duration-swell: 7000ms; /* a wave of Room 46 swaying one way */
   --duration-rise: 400ms; /* "Guarda la confessione?" coming up on the finale, once the stamp has landed */
+  --duration-pulse: 1400ms; /* a ring leaving the thread's end in Room 46, again and again, once the three clues are pinned */
   --press-shift: 2px; /* how far a pressed control sinks */
   --press-scale: 0.98;
   --meme-zoom: 1.35; /* the size a meme lands from */

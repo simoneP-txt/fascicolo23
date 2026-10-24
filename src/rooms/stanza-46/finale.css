@@ -91,7 +91,7 @@
   animation: none;
 }
 
-/* The clues, each as tall as the longest needs, where the strings start. */
+/* The clues with their short labels, at mockup 03's size, where the strings start. */
 .finale__clues {
   position: absolute;
   left: 1640px;
@@ -101,12 +101,14 @@
   gap: var(--space-3);
 }
 .finale__clues .clue {
-  height: 136px;
+  height: 96px;
+  min-height: 0;
   gap: 0;
   box-shadow: var(--shadow-sheet-dark);
 }
-.finale__clues .clue__code {
+.finale__clues :is(.clue__text, .clue__code) {
   font-size: var(--text-game);
+  line-height: 1.2;
 }
 
 .finale .witness {

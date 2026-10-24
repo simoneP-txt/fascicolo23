@@ -1,9 +1,12 @@
 /* Room 46 (src/rooms/stanza-46/index.ts), from mockup 11, with the closed case's cards of mockup 03: the waves
    swaying along the bottom of the sea the host paints, the link card at the top, the four suspect cards in a
-   row, the column of clues on the right over the thread of the accusation. A dragged card or thread end rides
-   above everything and the suspect under it lights its slot in gold, or rings in red under the thread; a picked
-   one wears a gold outline. Cards and the thread's end fly by transform alone, and while anything flies, or once
-   the case is closed, they take no pointer. Motion is transform and opacity only. */
+   row, the column of clues on the right, level with them, over the thread of the accusation and "Ricomincia?".
+   A clue pinned on a suspect shows its short label on a small card in the slot, up to three, two to a row. A
+   dragged card or thread end rides above everything and the suspect under it lights its slot in gold, or rings in
+   red under the thread; a pinned clue dragged over the column lights the empty places there. A picked one wears
+   a gold outline. Cards and the thread's end fly by transform alone, and while anything flies, or once the case
+   is closed, they take no pointer. With the three clues pinned a ring leaves the thread's end again and again.
+   Motion is transform and opacity only. */
 .stanza46 {
   position: absolute;
   inset: 0;
@@ -118,8 +121,11 @@
   box-sizing: border-box;
   display: flex;
   flex: none;
+  flex-wrap: wrap;
+  align-content: center;
   align-items: center;
   justify-content: center;
+  gap: 0 var(--space-1); /* two rows of labels touch, as slips pinned one over the other */
   min-height: var(--space-8);
   margin-top: auto;
   border: var(--border) dashed var(--ink-faint);
@@ -134,6 +140,11 @@
   background: var(--gold-glow);
   color: var(--ink);
 }
+/* A slot that holds clues has no outline of its own: the gold one goes round it. */
+.suspect[data-over] .suspect__slot[data-filled] {
+  outline: var(--border) solid var(--gold);
+  background: var(--gold-glow);
+}
 .stanza46:has([data-thread][data-dragging]) .suspect[data-over] {
   box-shadow:
     0 0 0 var(--border) var(--red),
@@ -142,28 +153,48 @@
 .suspect__slot[data-filled] {
   border: 0;
 }
-/* A card flying into a slot passes over the suspects on its way. */
-.suspect:has([data-flying]) {
+.suspect__slot[data-filled] .suspect__ask {
+  display: none;
+}
+/* A card flying into a slot, or dragged out of one, passes over the suspects on its way. */
+.suspect:has([data-dragging], [data-flying]) {
   z-index: 1;
 }
 
-/* A pinned clue fills the slot with its text alone, and stays where it is. */
-.suspect__slot .stanza46__evidence {
-  pointer-events: none;
+/* A clue holds its whole card for the column and its short label for a slot: each place shows its own. In a
+   slot the label sits on a small clue card, without "INDIZIO" or a pin, tilted one way or the other. */
+.stanza46__evidence > .clue[data-short] {
+  display: none;
 }
-.suspect__slot .stanza46__evidence .clue {
-  min-height: var(--space-8);
-  padding: var(--space-1) var(--space-2);
+.suspect__slot .stanza46__evidence {
+  width: auto;
+}
+.suspect__slot .stanza46__evidence > .clue:not([data-short]) {
+  display: none;
+}
+.suspect__slot .stanza46__evidence > .clue[data-short] {
+  display: flex;
+  justify-content: center;
+  height: var(--space-6);
+  min-height: 0;
+  padding: 0 var(--space-1); /* "Profilo" and "04:51" share a row, "Confessione" takes the next */
+  box-shadow: var(--shadow-clue);
   rotate: -2deg;
+}
+.suspect__slot .stanza46__evidence:nth-of-type(even) > .clue[data-short] {
+  rotate: 1.5deg;
+}
+.suspect__slot .stanza46__evidence[data-dragging] > .clue[data-short] {
+  rotate: -4deg;
+  box-shadow: var(--shadow-folder);
 }
 .suspect__slot .clue :is(.label, .paper__pin) {
   display: none;
 }
-.suspect__slot .clue__text {
-  line-height: 1.1;
-}
-.suspect__slot .clue__code {
+.suspect__slot :is(.clue__text, .clue__code) {
+  font-size: var(--text-small);
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 /* The closed case (mockup 03): a cleared suspect dims and fades, the culprit is ringed in red. */
@@ -201,11 +232,12 @@
   animation: stanza46-stamp var(--duration-stamp) var(--ease) both;
 }
 
-/* The column of clues: a card in each place, a dashed outline where one has gone. */
+/* The column of clues, level with the suspects: a card in each place, a dashed outline where one has gone, lit in
+   gold while a pinned clue is dragged back over it. */
 .stanza46__column {
   position: absolute;
   left: 1472px;
-  top: 296px;
+  top: 264px;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -218,6 +250,11 @@
   box-sizing: border-box;
   border: var(--border) dashed var(--paper-faint);
   border-radius: var(--radius-chip);
+}
+.stanza46__column[data-over] .stanza46__spot:empty {
+  border-style: solid;
+  border-color: var(--gold);
+  background: var(--gold-glow);
 }
 
 /* A clue card, and the thread's end: buttons with no look of their own. */
@@ -279,11 +316,12 @@
   pointer-events: none;
 }
 
-/* The thread of the accusation: its label, its curve and pin over the whole stage, its end, its prompt. */
+/* The thread of the accusation: its label, its curve and pin over the whole stage, its end, its prompt, and
+   "Ricomincia?" under them. */
 .stanza46__thread {
   position: absolute;
   left: 1472px;
-  top: 640px;
+  top: 600px;
   color: var(--paper);
 }
 .stanza46__string {
@@ -305,16 +343,36 @@
   outline-offset: calc(-1 * var(--space-1));
   border-radius: 50%;
 }
+/* The invitation to accuse (decision 19): a red ring leaves the end and widens as it fades, again and again. At
+   rest, as a still shows it, the ring hugs the end. */
+.stanza46__knob[data-ready]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: var(--border) solid var(--red);
+  border-radius: 50%;
+  opacity: 0.9;
+  transform: scale(0.75);
+  pointer-events: none;
+  animation: stanza46-pulse var(--duration-pulse) var(--ease) infinite;
+}
 .room__area[data-solved] .stanza46__prompt {
   visibility: hidden;
 }
 .stanza46__prompt {
   position: absolute;
   left: 1472px;
-  top: 760px;
+  top: 712px;
   margin: 0;
   color: var(--paper);
   font-size: var(--text-small);
+}
+.stanza46__restart {
+  position: absolute;
+  left: 1472px;
+  top: 760px;
+  min-height: var(--space-6);
 }
 
 @keyframes stanza46-sway {
@@ -323,6 +381,13 @@
   }
   to {
     transform: translateX(var(--sway));
+  }
+}
+
+@keyframes stanza46-pulse {
+  to {
+    opacity: 0;
+    transform: scale(1.5);
   }
 }
 

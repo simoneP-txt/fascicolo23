@@ -3,8 +3,8 @@
 // answers taken from content.json, or by the host's Ctrl+Shift+N for the tests that prove the engine. The study
 // picks the right phenomenon of each report, the chessboard plays its line, the library pulls its secret book and
 // accuses the liar of liar.ts until the room takes the answer, Rapture opens its door with the code and plays one
-// run that obeys the questions only; Room 46 pins each clue on a suspect it settles and accuses the culprit, two
-// clicks each. Playing Rapture needs the page clock installed before the page opened (decision 12): a run stands
+// run that obeys the questions only; Room 46 pins the profile and the confession on the diva and the time on the
+// fiancé, as mockup 03 draws them, and accuses the culprit, two clicks each. Playing Rapture needs the page clock installed before the page opened (decision 12): a run stands
 // the clock still and runs it one window at a time, and the steps of a run, and those of Room 46, are exported for
 // the tests of the rooms.
 import { expect, type Page } from '@playwright/test';
@@ -13,7 +13,7 @@ import { FINALE } from '../../src/engine/game';
 import type { RoomId } from '../../src/engine/types';
 import { consistentLiars } from '../../src/rooms/biblioteca/liar';
 import { CONTROL_IDS, isQuestion, type Order } from '../../src/rooms/rapture/orders';
-import { culprits, EVIDENCE, minuteOf, settles, SUSPECT_IDS, type Evidence, type SuspectId } from '../../src/rooms/stanza-46/deduction';
+import { culprits, EVIDENCE, fits, minuteOf, type Evidence, type SuspectId } from '../../src/rooms/stanza-46/deduction';
 import { board, content, continueWish, enterRoom, finale, wish } from './helpers';
 
 const rapture = content.rooms.rapture;
@@ -108,8 +108,12 @@ const quotes = Object.fromEntries(
 ) as Record<SuspectId, string>;
 const crime = minuteOf(content.clues['time-0451'].label);
 
-/** The first suspect, in board order, on whom this clue may be pinned. */
-export const settledBy = (clue: Evidence): SuspectId => SUSPECT_IDS.find((id) => settles(clue, id, quotes, crime))!;
+/** Whether this clue may be pinned on this suspect. */
+export const fitsOn = (clue: Evidence, on: SuspectId): boolean => fits(clue, on, quotes, crime);
+
+/** Where play pins each clue, as mockup 03's strings run: the profile and the confession to the diva, the time to
+ *  the fiancé. */
+export const PINS: Record<Evidence, SuspectId> = { profile: 'diva', 'time-0451': 'fidanzato', confession: 'diva' };
 
 /** The suspect the three clues leave. */
 export const CULPRIT: SuspectId = culprits(quotes, crime, new Set(EVIDENCE))[0];
@@ -117,12 +121,12 @@ export const CULPRIT: SuspectId = culprits(quotes, crime, new Set(EVIDENCE))[0];
 export const evidence = (page: Page, clue: string) => page.locator(`[data-evidence="${clue}"]`);
 export const suspect = (page: Page, id: string) => page.locator(`[data-suspect="${id}"]`);
 
-/** A clue card pressed, then a suspect: the two clicks of decision 4. Returns once the card has landed in the
- *  suspect's slot when the suspect takes it. */
-export async function pinClue(page: Page, clue: Evidence, on: SuspectId = settledBy(clue)): Promise<void> {
+/** A clue card pressed, in the column or on a suspect, then a suspect: the two clicks of decision 4. Returns once
+ *  the card has landed in the suspect's slot when the suspect takes it. */
+export async function pinClue(page: Page, clue: Evidence, on: SuspectId = PINS[clue]): Promise<void> {
   await evidence(page, clue).click();
   await suspect(page, on).click();
-  if (settles(clue, on, quotes, crime)) await expect(suspect(page, on).locator(`[data-evidence="${clue}"]`)).toBeVisible();
+  if (fitsOn(clue, on)) await expect(suspect(page, on).locator(`[data-evidence="${clue}"]`)).toBeVisible();
 }
 
 /** The end of the accusation thread pressed, then a suspect. */
@@ -131,7 +135,7 @@ export async function accuseSuspect(page: Page, on: SuspectId): Promise<void> {
   await suspect(page, on).click();
 }
 
-/** Room 46: each clue pinned where it settles, then the culprit accused. */
+/** Room 46: each clue pinned where PINS puts it, then the culprit accused. */
 async function playDeduction(page: Page): Promise<void> {
   for (const clue of EVIDENCE) await pinClue(page, clue);
   await accuseSuspect(page, CULPRIT);

@@ -1,8 +1,8 @@
-// Room 46's deduction (decisions 18 and 20 and the plan's decisions 2 and 3): the suspects' lines in content.json
+// Room 46's deduction (decisions 18 and 20 and the plan's decisions 2 and 17): the suspects' lines in content.json
 // make a puzzle that needs all three clues. The profile rules out whoever does not speak only in questions, though
 // everyone asks one; the time rules out an alibi at the minute of the crime that stays on record; the filmed
-// confession takes away the alibi of a live broadcast. Each clue settles the suspects of the table, an accusation
-// counts only with the three clues pinned, and every fourth blind one plays the video.
+// confession takes away the alibi of a live broadcast. Each clue fits the suspects it describes, only the culprit
+// fits all three, an accusation counts only with the three clues pinned, and every third blind one plays the video.
 import { expect, test } from 'vitest';
 import json from '../../content/content.json';
 import { validateContent } from '../../src/engine/content';
@@ -13,9 +13,9 @@ import {
   ALIBIS,
   culprits,
   EVIDENCE,
+  fits,
   getsHelp,
   minuteOf,
-  settles,
   speaksInQuestions,
   SUSPECT_IDS,
   type Evidence,
@@ -64,11 +64,18 @@ test('every clue is needed', () => {
   }
 });
 
-test('each clue settles the suspects of the table', () => {
-  const settled = (clue: Evidence) => SUSPECT_IDS.filter((id) => settles(clue, id, quotes, crime));
-  expect(settled('profile')).toEqual(['giardiniere', 'professore']);
-  expect(settled('time-0451')).toEqual(['fidanzato']);
-  expect(settled('confession')).toEqual(['diva']);
+test('each clue fits the suspects of the table', () => {
+  const fitting = (clue: Evidence, minute = crime) => SUSPECT_IDS.filter((id) => fits(clue, id, quotes, minute));
+  expect(fitting('profile')).toEqual(['fidanzato', 'diva']);
+  expect(fitting('time-0451')).toEqual(['fidanzato', 'diva']);
+  expect(fitting('confession')).toEqual(['diva']);
+  expect(fitting('time-0451', crime + 1)).toEqual([]); // an alibi for another minute
+});
+
+test('only the culprit fits all three clues', () => {
+  const all = SUSPECT_IDS.filter((id) => EVIDENCE.every((clue) => fits(clue, id, quotes, crime)));
+  expect(all).toEqual(['diva']);
+  expect(all).toEqual(culprits(quotes, crime, new Set(EVIDENCE)));
 });
 
 test('an accusation counts only with the three clues pinned', () => {
@@ -81,10 +88,10 @@ test('an accusation counts only with the three clues pinned', () => {
   expect(accuse(all, 'professore', 'diva')).toBe('innocent');
 });
 
-test('the video comes with every fourth blind accusation', () => {
-  expect(room.blindTries).toBe(4);
-  const helped = [1, 2, 3, 4, 5, 6, 7, 8].filter((blind) => getsHelp(blind, room.blindTries));
-  expect(helped).toEqual([4, 8]);
+test('the video comes with every third blind accusation', () => {
+  expect(room.blindTries).toBe(3);
+  const helped = [1, 2, 3, 4, 5, 6].filter((blind) => getsHelp(blind, room.blindTries));
+  expect(helped).toEqual([3, 6]);
 });
 
 test('the suspects are the four, in board order, with distinct blind lines', () => {

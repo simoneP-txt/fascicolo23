@@ -1,8 +1,9 @@
-// Room 46's deduction, without the DOM (the plan's decision 20): the four suspects, the alibi each one claims,
-// and the rules that turn their lines and the clues found into a culprit. The profile rules out whoever does not
-// speak only in questions; the time rules out an alibi at the minute of the crime that holds, and a live
+// Room 46's deduction, without the DOM (the plan's decisions 17 and 20): the four suspects, the alibi each one
+// claims, and the rules that turn their lines and the clues found into a culprit. The profile rules out whoever
+// does not speak only in questions; the time rules out an alibi at the minute of the crime that holds, and a live
 // broadcast holds only until the filmed confession shows it was recorded, while a commit stays on record. A clue
-// settles the suspects it rules on, and an accusation counts only with the three clues pinned.
+// fits the suspects it describes, so it may be pinned on them, only the culprit fits all three, and an accusation
+// counts only with the three clues pinned.
 import type { ClueId } from '../../engine/types';
 
 export const SUSPECT_IDS = ['giardiniere', 'professore', 'fidanzato', 'diva'] as const; // board order
@@ -54,13 +55,12 @@ export function culprits(quotes: Record<SuspectId, string>, crime: number, known
   );
 }
 
-/** Whether this clue rules on this suspect, so it may be pinned there: the profile on whoever it rules out, the
- *  time on an alibi on record at the minute of the crime, the confession on a live one. */
-export function settles(clue: Evidence, suspect: SuspectId, quotes: Record<SuspectId, string>, crime: number): boolean {
-  const alibi = ALIBIS[suspect];
-  if (clue === 'profile') return !speaksInQuestions(quotes[suspect]);
-  if (alibi?.minute !== crime) return false;
-  return alibi.kind === (clue === 'time-0451' ? 'record' : 'live');
+/** Whether this clue describes this suspect, so it may be pinned there: the profile on whoever speaks only in
+ *  questions, the time on whoever claims an alibi at the minute of the crime, the confession on a live one. */
+export function fits(clue: Evidence, suspect: SuspectId, quotes: Record<SuspectId, string>, crime: number): boolean {
+  if (clue === 'profile') return speaksInQuestions(quotes[suspect]);
+  if (clue === 'time-0451') return ALIBIS[suspect]?.minute === crime;
+  return ALIBIS[suspect]?.kind === 'live';
 }
 
 /** blind: the three clues are not all pinned; objection: an alibi that holds; innocent: no alibi, ruled out. */

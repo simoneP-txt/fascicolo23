@@ -8,6 +8,7 @@ import { bandsMatchTokens, edgeJumps, fontFamilies, hasBands, outsideStage, over
 import type { RoomId } from '../../src/engine/types';
 import { consistentLiars } from '../../src/rooms/biblioteca/liar';
 import { isQuestion } from '../../src/rooms/rapture/orders';
+import { EVIDENCE } from '../../src/rooms/stanza-46/deduction';
 import {
   BEFORE_46,
   BEFORE_RAPTURE,
@@ -180,13 +181,22 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
     await page.clock.runFor(content.rooms['stanza-46'].help.skipAfterSec * 1000);
     await expect(page.getByRole('button', { name: content.rooms['stanza-46'].skip.button })).toBeVisible();
   },
+  // 11 at the invitation: the profile and the confession on the diva, the 04:51 on the fiancé, the witness asking
+  // for the accusation and the thread's end pulsing, which the shot stops
+  'room-46-ready': async (page) => {
+    await seed(page, BEFORE_46);
+    await page.goto('/');
+    await enterRoom(page, 'stanza-46');
+    for (const clue of EVIDENCE) await pinClue(page, clue);
+    await expect(page.locator('[data-witness] .witness__line')).toHaveText(content.rooms['stanza-46'].witness.ready);
+  },
   // 03 for the cards: the case closed on the culprit, the clock standing still during the beat
   'room-46-solved': async (page) => {
     await page.clock.install();
     await seed(page, BEFORE_46);
     await page.goto('/');
     await enterRoom(page, 'stanza-46');
-    for (const clue of ['profile', 'time-0451', 'confession'] as const) await pinClue(page, clue);
+    for (const clue of EVIDENCE) await pinClue(page, clue);
     await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
     await accuseSuspect(page, CULPRIT);
     await expect(page.locator('[data-solved]')).toHaveCount(1);

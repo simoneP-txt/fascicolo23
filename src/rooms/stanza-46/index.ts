@@ -1,19 +1,24 @@
-// Room 46 (mockup 11, the plan's decisions 2-6 and 15): the case link at the top with its last bar, the four
-// suspects pinned in a row, and on the right the three clues in a column over the thread of the accusation, on a
-// sea whose waves sway along the bottom. A clue card or the thread's end is dragged onto a suspect, or picked with
-// a click and dropped with a second one (src/ui/drag.ts). A clue on a suspect it settles stays in the slot with
-// the stamp and the witness's line, and leaves a dashed place in the column; on any other suspect it flies back,
-// buzzes, counts an error and gets the witness's reason; let go anywhere else it flies back and counts nothing.
+// Room 46 (mockup 11, the plan's decisions 2, 4-6, 15 and 17-19): the case link at the top with its last bar, the
+// four suspects pinned in a row, and on the right the three clues in a column over the thread of the accusation and
+// "Ricomincia?", on a sea whose waves sway along the bottom. A clue card or the thread's end is dragged onto a
+// suspect, or picked with a click and dropped with a second one (src/ui/drag.ts). A clue on a suspect it fits
+// lands in the slot as its short label, with the stamp and the witness's line, and leaves a dashed place in the
+// column; a suspect holds as many as fit it. On a suspect it does not fit, a clue flies back to the column, buzzes,
+// counts an error and gets the witness's reason; let go anywhere else it goes back where it was and counts nothing.
+// A pinned clue dragged onto the column, or picked and then dropped there with a click, comes back with no error;
+// moved onto another suspect, it is judged again. "Ricomincia?" brings every pinned clue back and counts nothing.
+// With the three clues pinned the thread's end pulses and the witness invites the accusation, until one comes back.
 // The thread on a suspect accuses: before the three clues are pinned the accusation is blind, counts an error and
 // gets the next of the witness's lines, every blindTries-th with the video meme; with the three, the fiancé
 // objects and the two others are innocent, each with a meme, an error and the witness's line, and the thread goes
 // back to its pin. The culprit closes the case: every card shows its verdict, the clues come back to the column,
 // the thread's end stays on the culprit, the stamp beats, the area is marked solved, the solve is saved at once (so
-// an app closed during the beat reopens on the finale) and the room completes after --duration-beat. Gestures wait
-// while a card or the thread flies and during the beat, the second click of a double click never reaches a suspect,
-// and every visit starts over.
+// an app closed during the beat reopens on the finale) and the room completes after --duration-beat. Gestures and
+// "Ricomincia?" wait while a card or the thread flies and during the beat, the second click of a double click never
+// reaches a suspect, and every visit starts over.
 import './stanza46.css';
 import type { Room } from '../../engine/types';
+import { button } from '../../ui/button';
 import { clueCard, paper } from '../../ui/card';
 import { durationOf, el, replay } from '../../ui/dom';
 import { draggable } from '../../ui/drag';
@@ -22,17 +27,17 @@ import { svg } from '../../ui/svg';
 import { GRAPH } from '../graph';
 import { createScope } from '../scope';
 import { SEA_TOP, WAVES } from './art';
-import { showVerdict, suspectCard } from './cards';
+import { shortClue, showVerdict, suspectCard } from './cards';
 import { STANZA46_SCHEMA, type Stanza46Content } from './content';
-import { accuse, culprits, EVIDENCE, getsHelp, minuteOf, settles, SUSPECT_IDS, type Evidence, type SuspectId } from './deduction';
+import { accuse, culprits, EVIDENCE, fits, getsHelp, minuteOf, SUSPECT_IDS, type Evidence, type SuspectId } from './deduction';
 
-const PIN = { x: 1496, y: 696 }; // where the thread is pinned, under the column (mockup 11)
-const KNOB = { x: 1792, y: 712 }; // the middle of its free end, at rest
-const REST = `M${PIN.x} ${PIN.y} C 1552 744, 1608 672, 1656 712 S 1736 736, ${KNOB.x - 16} ${KNOB.y}`; // its slack curve
+const PIN = { x: 1496, y: 656 }; // where the thread is pinned, under the column
+const KNOB = { x: 1792, y: 672 }; // the middle of its free end, at rest
+const REST = `M${PIN.x} ${PIN.y} C 1552 704, 1608 632, 1656 672 S 1736 696, ${KNOB.x - 16} ${KNOB.y}`; // its slack curve
 const SAG = 80; // how far below its lower end a stretched thread sags
 
 const scope = createScope();
-const cleanups = new Set<() => void>(); // the drags still live
+const cleanups = new Set<() => void>(); // the drags
 let view: HTMLElement | null = null;
 let frame = 0; // the animation frame that follows the thread's end in flight
 
@@ -47,7 +52,7 @@ export const stanza46: Room<Stanza46Content> = {
     const quotes = Object.fromEntries(texts.suspects.map(({ id, quote }) => [id, quote])) as Record<SuspectId, string>;
     const crime = minuteOf(ctx.common.clues['time-0451'].label);
     const culprit = culprits(quotes, crime, new Set(EVIDENCE))[0];
-    const pinned = new Set<Evidence>();
+    const pinned = new Map<Evidence, HTMLElement>(); // each clue pinned, and the suspect card that holds it
     let blind = 0; // blind accusations in this visit
     let moving = 0; // cards, or the thread's end, in flight
     let closed = false; // the culprit is accused: the beat runs
@@ -60,7 +65,7 @@ export const stanza46: Room<Stanza46Content> = {
     const row = el('div', 'stanza46__suspects');
     row.append(...cards.values());
     // The second click of a double click may come once the card or the thread has landed: it stops here, before
-    // any suspect hears it.
+    // any suspect, or any clue a suspect holds, hears it.
     row.addEventListener(
       'click',
       (event) => {
@@ -69,6 +74,8 @@ export const stanza46: Room<Stanza46Content> = {
       { capture: true },
     );
 
+    // Each clue is a button holding its card twice: the whole card, which the column shows, and the short label,
+    // which a suspect's slot shows (stanza46.css).
     const handles = new Map<Evidence, HTMLButtonElement>();
     const spots = new Map<Evidence, HTMLElement>();
     const column = el('div', 'stanza46__column');
@@ -77,8 +84,9 @@ export const stanza46: Room<Stanza46Content> = {
       const handle = el('button', 'stanza46__evidence');
       handle.type = 'button';
       handle.dataset.evidence = clue;
-      handle.append(clueCard(ctx.common, clue));
+      handle.append(clueCard(ctx.common, clue), shortClue(ctx.common, texts, clue));
       const spot = el('div', 'stanza46__spot');
+      spot.dataset.spot = clue;
       spot.append(handle);
       handles.set(clue, handle);
       spots.set(clue, spot);
@@ -101,6 +109,10 @@ export const stanza46: Room<Stanza46Content> = {
         <circle cx="32" cy="32" r="16" fill="var(--red)" stroke="var(--paper)" stroke-width="4"/></svg>`),
     );
 
+    const restart = button(texts.restart, 'outline', startOver, 'restart');
+    restart.classList.add('stanza46__restart');
+    restart.hidden = true;
+
     const sea = el('div', 'stanza46__sea');
     sea.dataset.bleed = ''; // each wave runs a wavelength past the stage, which the screen cuts
     sea.style.top = `${SEA_TOP}px`;
@@ -116,6 +128,7 @@ export const stanza46: Room<Stanza46Content> = {
       string,
       knob,
       el('p', 'stanza46__prompt', texts.thread.prompt),
+      restart,
     );
     root.append(view);
     const area = view;
@@ -140,6 +153,13 @@ export const stanza46: Room<Stanza46Content> = {
         showBusy();
         then?.();
       });
+    };
+
+    // The thread's end pulses while the three clues are pinned, and "Ricomincia?" shows while any is, until the
+    // case is closed.
+    const showPins = () => {
+      knob.toggleAttribute('data-ready', pinned.size === EVIDENCE.length && !closed);
+      restart.hidden = pinned.size === 0 || closed;
     };
 
     // From its slack curve at rest to a sagging line to wherever its end is now.
@@ -179,45 +199,76 @@ export const stanza46: Room<Stanza46Content> = {
       follow();
     };
 
-    // A card moved into a slot flies there from where it was drawn.
-    const settle = (handle: HTMLElement, slot: HTMLElement) => {
+    // A clue card moved into a suspect's slot, after the clues of the column above it, or back into its place in
+    // the column, flies there from where it is drawn. A slot shows "Trascina qui?" only while it holds nothing.
+    const settle = (clue: Evidence, into: HTMLElement) => {
+      const handle = handles.get(clue)!;
+      const from = handle.parentElement!;
       const before = middleOf(handle);
-      slot.replaceChildren(handle);
-      slot.dataset.filled = '';
+      const after = [...into.querySelectorAll<HTMLElement>('[data-evidence]')].find(
+        (other) => EVIDENCE.indexOf(other.dataset.evidence as Evidence) > EVIDENCE.indexOf(clue),
+      );
+      into.insertBefore(handle, after ?? null);
+      for (const slot of [from, into]) {
+        if (slot.dataset.slot !== undefined) slot.toggleAttribute('data-filled', !!slot.querySelector('[data-evidence]'));
+      }
       handle.style.transform = '';
-      const after = middleOf(handle);
-      handle.style.transform = `translate(${before.x - after.x}px, ${before.y - after.y}px)`;
-      handle.getBoundingClientRect(); // laid out where it was, so the way to the slot comes as a transition
+      const landed = middleOf(handle);
+      handle.style.transform = `translate(${before.x - landed.x}px, ${before.y - landed.y}px)`;
+      handle.getBoundingClientRect(); // laid out where it was, so the way to its place comes as a transition
       fly(handle, '');
     };
 
+    const unpin = (clue: Evidence) => {
+      pinned.delete(clue);
+      settle(clue, spots.get(clue)!);
+      showPins();
+    };
+
+    // A clue dropped on a suspect, from the column or from another suspect.
     const pin = (clue: Evidence, card: HTMLElement) => {
       const handle = handles.get(clue)!;
-      if (!settles(clue, card.dataset.suspect as SuspectId, quotes, crime)) {
+      const holder = pinned.get(clue);
+      if (holder === card) return flyHome(handle); // back to its own place in the slot
+      if (!fits(clue, card.dataset.suspect as SuspectId, quotes, crime)) {
         ctx.reportError();
         ctx.playSfx('buzz');
         ctx.narrate(texts.witness.bounce[clue]);
+        if (holder) return unpin(clue); // judged again on the way, it goes back to the column
         if (handle.style.transform) return fly(handle, '');
         replay(handle, 'nope');
         return wait(durationOf('--duration-nope'));
       }
-      pinned.add(clue);
-      drags.get(clue)!();
-      settle(handle, card.querySelector<HTMLElement>('[data-slot]')!);
+      pinned.set(clue, card);
+      settle(clue, card.querySelector<HTMLElement>('[data-slot]')!);
+      showPins();
       ctx.playSfx('stamp');
-      ctx.narrate(texts.witness.pinned[clue]);
+      ctx.narrate(pinned.size === EVIDENCE.length ? texts.witness.ready : texts.witness.pinned[clue]);
     };
+
+    // A pinned clue dropped on the column comes back to its place, with no error.
+    const takeBack = (clue: Evidence) => {
+      if (pinned.has(clue)) unpin(clue);
+    };
+
+    // "Ricomincia?": every pinned clue back in the column, and the witness's first question; nothing is counted.
+    function startOver() {
+      if (moving > 0 || closed) return;
+      for (const clue of [...pinned.keys()]) unpin(clue);
+      ctx.narrate(texts.witness.intro);
+    }
 
     // The culprit accused with the three clues pinned: the verdicts, the clues back in the column as the closed
     // case lists them, the thread's end onto the culprit's card where its slot was, then the beat.
     const close = (card: HTMLElement) => {
       closed = true;
       showBusy();
+      showPins();
       root.dataset.solved = '';
       ctx.won();
       const end = middleOf(card.querySelector('[data-slot]')!);
       for (const [id, suspect] of cards) showVerdict(suspect, texts, id === culprit);
-      for (const clue of pinned) spots.get(clue)!.append(handles.get(clue)!);
+      for (const clue of pinned.keys()) spots.get(clue)!.append(handles.get(clue)!);
       fly(knob, `translate(${end.x - KNOB.x}px, ${end.y - KNOB.y}px)`, drawString);
       follow();
       ctx.playSfx('stamp');
@@ -227,7 +278,7 @@ export const stanza46: Room<Stanza46Content> = {
 
     const accuseOn = (card: HTMLElement) => {
       const suspect = card.dataset.suspect as SuspectId;
-      const verdict = accuse(pinned, suspect, culprit);
+      const verdict = accuse(new Set(pinned.keys()), suspect, culprit);
       if (verdict === 'guilty') return close(card);
       ctx.reportError();
       if (verdict === 'blind') {
@@ -243,17 +294,18 @@ export const stanza46: Room<Stanza46Content> = {
       threadHome();
     };
 
-    const targets = () => [...cards.values()];
-    const drags = new Map<Evidence, () => void>();
+    // A clue lands on a suspect, or, once pinned, on the column too; the thread's end lands on a suspect.
+    const suspects = () => [...cards.values()];
     for (const [clue, handle] of handles) {
-      const release = draggable(handle, { targets, drop: (card) => pin(clue, card), cancel: () => flyHome(handle) });
-      drags.set(clue, () => {
-        release();
-        cleanups.delete(release);
-      });
-      cleanups.add(release);
+      cleanups.add(
+        draggable(handle, {
+          targets: () => (pinned.has(clue) ? [...suspects(), column] : suspects()),
+          drop: (target) => (target === column ? takeBack(clue) : pin(clue, target)),
+          cancel: () => flyHome(handle),
+        }),
+      );
     }
-    cleanups.add(draggable(knob, { targets, drop: accuseOn, cancel: threadHome }));
+    cleanups.add(draggable(knob, { targets: suspects, drop: accuseOn, cancel: threadHome }));
   },
   unmount() {
     scope.clear();

@@ -239,15 +239,16 @@
       "witness": {
         "intro": "Chi di loro ha l'acqua alla gola?",
         "pinned": {
-          "profile": "Chi chiude con il punto non parla solo per domande, giusto?",
-          "time-0451": "Un commit alle 04:51 resta scritto nel registro, no?",
-          "confession": "E se quella diretta fosse stata registrata?"
+          "profile": "Solo domande, dalla prima all'ultima frase: il profilo calza, no?",
+          "time-0451": "Dice dov'era alle cinque meno nove: l'orario combacia, no?",
+          "confession": "Una confessione filmata, una diretta in TV: c'è di mezzo una telecamera?"
         },
         "bounce": {
-          "profile": "Qui ogni frase è una domanda: chi esclude il profilo?",
-          "time-0451": "L'orario scagiona solo un alibi che resta agli atti, no?",
-          "confession": "Che cosa smentirebbe un filmato, in questa frase?"
+          "profile": "Qui una frase finisce con il punto: parla davvero solo per domande?",
+          "time-0451": "Qui nessuno parla delle cinque meno nove: che c'entra l'orario?",
+          "confession": "Una confessione filmata: dove sarebbe la telecamera, qui?"
         },
+        "ready": "Tre indizi appuntati: su chi tendi il filo dell'accusa?",
         "blind": ["Accusi senza prove?", "Un'accusa senza indizi vale qualcosa?", "Il giudice riderebbe, no?", "Di nuovo a occhio?"],
         "accused": {
           "giardiniere": "Chiude con il punto: non l'aveva già escluso il profilo?",
@@ -257,7 +258,7 @@
         "solved": "Una diretta registrata non è una diretta, vero?"
       },
       "hints": [
-        "Appunta ogni indizio sul sospettato che decide.",
+        "Appunta ogni indizio sul sospettato a cui si adatta.",
         "Due parlano solo per domande e hanno un alibi alla stessa ora: quale si può registrare?"
       ],
       "help": { "hintAfterSec": 180, "secondHintAfterSec": 300, "hintAfterErrors": 3, "skipAfterSec": 360, "skipAfterErrors": null },
@@ -296,9 +297,11 @@
         }
       ],
       "slot": "Trascina qui?",
+      "short": { "profile": "Profilo", "time-0451": "04:51", "confession": "Confessione" },
       "thread": { "label": "IL FILO DELL'ACCUSA", "prompt": "Trascina sul colpevole?" },
+      "restart": "Ricomincia?",
       "stamps": { "out": "ESCLUSO", "guilty": "COLPEVOLE?" },
-      "blindTries": 4
+      "blindTries": 3
     }
   },
   "ui": {

@@ -1,7 +1,8 @@
 // Finale (mockup 03, the plan's decisions 9, 11, 14 and 17): the case closed, as the screen that takes the board's
 // place once Room 46 is solved. The link card at the top with the whole link, the four suspects with their
-// verdicts, the culprit ringed in red under her stamp, and on the right the three clues, joined by red strings to
-// the suspects as mockup 03 draws them: the profile and the confession to the diva, the time to the fiance. The
+// verdicts, the culprit ringed in red under her stamp, and on the right the three clues with their short labels,
+// joined by red strings to the suspects as mockup 03 draws them: the profile and the confession to the diva, the
+// time to the fiance. The
 // strings run behind the cards, over the sea whose waves sway along the bottom. With the fragment just won the
 // link keeps the bar over it until reveal(), after the wish: the bar comes off, "CASO RISOLTO?" beats onto the
 // link card with its thud and "Guarda la confessione?" comes up. Shown again later, the finale comes already
@@ -14,13 +15,13 @@ import { linkParts } from '../../engine/link';
 import type { GameState } from '../../engine/state';
 import type { Content } from '../../engine/types';
 import { button, setEnabled } from '../../ui/button';
-import { clueCard, paper, stamp } from '../../ui/card';
+import { paper, stamp } from '../../ui/card';
 import { durationOf, el } from '../../ui/dom';
 import { renderLink } from '../../ui/link';
 import { STAGE_HEIGHT, STAGE_WIDTH } from '../../ui/stage';
 import { svg } from '../../ui/svg';
 import { SEA_TOP, WAVES } from './art';
-import { showVerdict, suspectCard } from './cards';
+import { shortClue, showVerdict, suspectCard } from './cards';
 import type { Stanza46Content } from './content';
 import { culprits, EVIDENCE, minuteOf, SUSPECT_IDS, type Evidence, type SuspectId } from './deduction';
 
@@ -29,9 +30,9 @@ export interface FinaleView {
   reveal(): void; // after the wish: the bar comes off, the stamp beats, the button comes up; once
 }
 
-// The middle of each clue card, as finale.css stacks them from stage line 288 (136 tall, 24 apart): a string
-// leaves its clue from behind it.
-const CLUE_MIDDLES: Record<Evidence, number> = { profile: 356, 'time-0451': 516, confession: 676 };
+// The middle of each clue card, as finale.css stacks them from stage line 288 (96 tall, 24 apart, as in mockup
+// 03): a string leaves its clue from behind it.
+const CLUE_MIDDLES: Record<Evidence, number> = { profile: 336, 'time-0451': 456, confession: 576 };
 
 // The curves of mockup 03, from the clue's middle: into the side of the diva's card, next to the column, or down
 // past the row, along under it at stage line 812 and up into the bottom of a card whose middle is at x.
@@ -82,7 +83,7 @@ export function renderFinale(content: Content, state: GameState, earned: boolean
   }
 
   const clues = el('div', 'finale__clues');
-  clues.append(...EVIDENCE.map((clue) => clueCard(content, clue)));
+  clues.append(...EVIDENCE.map((clue) => shortClue(content, texts, clue)));
 
   // Switched off at the first press: a second press of a double click only shakes it.
   const watch = button(content.ui.finale.watch, 'primary', () => {
