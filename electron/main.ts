@@ -1,5 +1,6 @@
-// Electron main process: opens the game fullscreen, toggles fullscreen with F11
-// and hands https links (the finale video) to the system browser. For the video the game leaves
+// Electron main process: opens the game fullscreen, toggles fullscreen with F11, leaves it with Esc
+// (so the window is easy to close; the game uses Esc for nothing else, and out of fullscreen Esc does
+// nothing) and hands https links (the finale video) to the system browser. For the video the game leaves
 // fullscreen, so the browser comes up in front of it, and goes back to fullscreen when the window
 // is back in front: at the first focus after it has lost it, so a focus with no blur before it,
 // which leaving fullscreen may bring, does not cover the browser again.
@@ -23,9 +24,13 @@ app.whenReady().then(() => {
   });
 
   win.webContents.on('before-input-event', (event, input) => {
-    if (input.type === 'keyDown' && input.key === 'F11') {
+    if (input.type !== 'keyDown') return;
+    if (input.key === 'F11') {
       event.preventDefault();
       win.setFullScreen(!win.isFullScreen());
+    } else if (input.key === 'Escape' && win.isFullScreen()) {
+      event.preventDefault();
+      win.setFullScreen(false);
     }
   });
 

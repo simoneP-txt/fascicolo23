@@ -5,7 +5,8 @@
 // won, the wish plays over it first and the board reveals the fragment, and what the room brought, once the
 // wish is over; the finale (mockup 03) comes the same way with the last fragment, on Room 46's sea, with no way
 // back, audience or help. The epilogue (mockup 12) comes on the same sea, through the ink of a screen change, and
-// its scene plays once it is on screen. On the board the witness speaks from the top right, its silhouette
+// its scene plays once it is on screen. The board's "Azzera partita?" opens the confirmation of Ctrl+Shift+R
+// before the engine wipes the case. On the board the witness speaks from the top right, its silhouette
 // standing under the bubble; on the finale and the epilogue from the bottom left, beside it. Overlays, the meme
 // and the wish included, go on the stage root: they scale with the stage, leave with the screen under them and
 // stay outside the screen's clip, so a veil reaches the bands. A screen change tells the engine when the old
@@ -22,6 +23,7 @@ import type { ClueId, Content, Room } from '../engine/types';
 import { createAudienceButton, createAudienceOverlay, type AudienceView } from './audience';
 import { createHelpPanel, type HelpPanel } from './autohelp';
 import { button } from './button';
+import { confirmDialog } from './confirm';
 import { el } from './dom';
 import { renderIntro } from './intro';
 import { showMeme as showMemeOverlay } from './meme';
@@ -51,7 +53,8 @@ export function createScreens(
     },
 
     showBoard(state, earned) {
-      const board = renderBoard(content, rooms, state, earned, audio, (id) => game.enter(id));
+      const reset = () => confirmDialog(stage.root, content.ui.reset, () => game.reset()); // the dialog of Ctrl+Shift+R
+      const board = renderBoard(content, rooms, state, earned, audio, (id) => game.enter(id), reset);
       witness = createWitness(content, 'down');
       audience = [];
       help = null;

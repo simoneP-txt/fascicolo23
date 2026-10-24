@@ -2,7 +2,8 @@
 // 1 ms. Every pair saves screenshots/<state>-<width>x<height>.png for review against docs/mockups and
 // checks the stage rules: nothing leaves the stage, no text is too small or overflows its box, at most
 // three font families. Later tasks add rows to the table. The overflow check passes a text cut by an ellipsis
-// only in a box that opts in with data-ellipsis.
+// only in a box that opts in with data-ellipsis. On the board rows, "Azzera partita?" covers none of the board's
+// pieces.
 import { expect, test, type Page } from '@playwright/test';
 import { bandsMatchTokens, edgeJumps, fontFamilies, hasBands, outsideStage, overflowingText, smallText } from './checks';
 import type { RoomId } from '../../src/engine/types';
@@ -60,6 +61,34 @@ async function enterLibrary(page: Page): Promise<void> {
   await enterRoom(page, 'biblioteca');
 }
 
+// Every piece of the board "Azzera partita?" must leave uncovered.
+const BOARD_PIECES = [
+  '[data-door]',
+  '[data-clue]',
+  '[data-string]',
+  '.board__title',
+  '.board__link',
+  '.board__window',
+  '.board__tokens',
+  '[data-witness] .witness__bubble',
+  '[data-witness] .witness__figure',
+].join(', ');
+
+/** "Azzera partita?" is on the board and its box meets none of the board's pieces. */
+async function resetClear(page: Page): Promise<void> {
+  const reset = page.getByRole('button', { name: content.ui.reset.button });
+  await expect(reset).toBeVisible();
+  const box = (await reset.boundingBox())!;
+  const covered: string[] = [];
+  for (const piece of await page.locator(BOARD_PIECES).all()) {
+    const other = await piece.boundingBox();
+    const meets =
+      other && other.x < box.x + box.width && box.x < other.x + other.width && other.y < box.y + box.height && box.y < other.y + other.height;
+    if (meets) covered.push(await piece.evaluate((node) => node.getAttribute('class') ?? node.tagName));
+  }
+  expect(covered).toEqual([]);
+}
+
 /** Rapture with its door open on the board, with the page clock installed. */
 async function enterRapture(page: Page): Promise<void> {
   await page.clock.install();
@@ -75,21 +104,24 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: content.ui.intro.question })).toBeVisible();
   },
-  // 01
+  // 01, with "Azzera partita?" under the tokens
   board: async (page) => {
     await seed(page, MOCKUP_01);
     await page.goto('/');
     await expect(board(page)).toBeVisible();
+    await resetClear(page);
   },
   // 01 with the case just opened: two doors open, three locked, no clue yet
   'board-start': async (page) => {
     await openCase(page);
+    await resetClear(page);
   },
   // 01 at its last: every door stamped but Room 46's, open, five clues and six strings, the tokens under the window
   'board-end': async (page) => {
     await seed(page, BEFORE_46);
     await page.goto('/');
     await expect(board(page)).toBeVisible();
+    await resetClear(page);
   },
   // 06: one token spent, the first report solved and the second open, the clock run to hintAfterSec, so
   // "Un indizio?" is on screen

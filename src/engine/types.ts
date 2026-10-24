@@ -70,7 +70,7 @@ export interface Ui {
   audience: { button: string; spent: string; label: string; title: string; seconds: string; tokens: string; done: string };
   hint: { button: string; label: string };
   skip: SkipText;
-  reset: ConfirmText;
+  reset: ConfirmText & { button?: string }; // "Azzera partita?" on the board; no button when the line is missing
   debug: { title: string; close: string };
   wish: { label: string; clue: string; clues: string; from: string; continue: string };
 }

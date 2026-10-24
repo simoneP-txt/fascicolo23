@@ -58,7 +58,7 @@ function schemaOf(rooms: readonly Pick<Room, 'id' | 'schema'>[]): Schema {
       audience: { button: 'text', spent: 'text', label: 'text', title: 'text', seconds: 'text', tokens: 'text', done: 'text' },
       hint: { button: 'text', label: 'text' },
       skip: SKIP,
-      reset: { title: 'text', body: 'text', yes: 'text', no: 'text' },
+      reset: { 'button?': 'text', title: 'text', body: 'text', yes: 'text', no: 'text' }, // no button, no reset on the board
       debug: { title: 'text', close: 'text' },
       wish: { label: 'text', clue: 'text', clues: 'text', from: 'text', continue: 'text' },
     },

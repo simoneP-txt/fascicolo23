@@ -3,7 +3,9 @@
 // (src/ui/link.ts) with a black bar for every missing fragment, the night window, a card per room (solved
 // with its fragment and stamp, open with a red outline and "Entra?", closed with a lock and what it lacks)
 // and the clues in the order found, each joined by a red string to every door that needs it. The tokens
-// left hang under the window. Once Room 46 is solved the game ends on its finale, never on the board.
+// left hang under the window; under them, on the bare cork, sits "Azzera partita?", a quiet link that calls
+// onReset (decision 20), only while content.json has its line. Once Room 46 is solved the game ends on its
+// finale, never on the board.
 // With a fragment just won the board waits under the wish: the fragment stays under its bar, and the stamp,
 // clue cards and strings the room brought (data-new) stay out of sight until reveal(), which board.css plays.
 import '../ui/board.css';
@@ -76,6 +78,7 @@ export function renderBoard(
   earned: Earned | null,
   audio: Sfx,
   onEnter: (id: RoomId) => void,
+  onReset: () => void,
 ): BoardView {
   const screen = el('section', 'screen board');
   screen.dataset.screen = 'board';
@@ -103,6 +106,11 @@ export function renderBoard(
 
   // The strings first, so every card hangs over them.
   screen.append(strings(state.clues, rooms, fresh), title, link, view, tokens(content, state), ...doors, ...clues);
+  if (content.ui.reset.button) {
+    const reset = button(content.ui.reset.button, 'link', onReset, 'restart');
+    reset.classList.add('board__reset');
+    screen.append(reset);
+  }
 
   let revealed = false;
   return {

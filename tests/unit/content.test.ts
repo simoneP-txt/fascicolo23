@@ -2,7 +2,7 @@
 // and the item of a list included), the help thresholds and audience numbers must match the decisions,
 // every witness sentence must end with "?", every sound the game plays by name must be listed, no room keeps a
 // placeholder, and every meme must have something to show, a sound that exists and, if any, an image or a video
-// shipped in assets/memes; the memes the engine and Room 46 name must exist.
+// shipped in assets/memes; the memes the engine and Room 46 name must exist. The board's reset button may go.
 import { expect, test } from 'vitest';
 import json from '../../content/content.json';
 import { validateContent, type Schema } from '../../src/engine/content';
@@ -135,6 +135,15 @@ test('the memes of Room 46 exist', () => {
     delete broken.memes[id];
     expect(() => validateContent(broken, rooms), id).toThrow(new RegExp(`memes\\.${id}`));
   }
+});
+
+test('the board reset button is optional', () => {
+  const without = copy(); // the party-day content: no "Azzera partita?" on the board
+  delete without.ui.reset.button;
+  expect(() => validateContent(without, rooms)).not.toThrow();
+  const empty = copy();
+  empty.ui.reset.button = '';
+  expect(() => validateContent(empty, rooms)).toThrow(/ui\.reset\.button/);
 });
 
 test('thresholds follow decision 9', () => {

@@ -3,8 +3,11 @@
 // graph, earned fragments survive a reload and rooms lead back to the board. The board of mockup 01 has
 // its clue cards, strings, locks, stamps and tokens; a room won stamps its door and stretches its strings
 // only once the wish is over, moving nothing but transform, opacity and the strings' dash; the board keeps its
-// tokens to the end, since the game ends on Room 46's finale. Durations are cut to 1 ms.
-import { expect, test } from '@playwright/test';
+// tokens to the end, since the game ends on Room 46's finale. "Azzera partita?" on the board asks first, as
+// Ctrl+Shift+R does: "No, continua?" leaves board and save as they were, "Sì, azzera?" wipes the case. Durations
+// are cut to 1 ms.
+import { expect, test, type Page } from '@playwright/test';
+import { SAVE_KEY } from '../../src/engine/save';
 import {
   BEFORE_46,
   board,
@@ -25,6 +28,11 @@ import {
 import { solveRoom } from './play';
 
 test.beforeEach(({ page }) => quick(page));
+
+/** The save as the page holds it: null once wiped. */
+const saved = (page: Page) => page.evaluate((key) => localStorage.getItem(key), SAVE_KEY);
+
+const resetButton = (page: Page) => page.getByRole('button', { name: content.ui.reset.button });
 
 test('the case opens offline with local fonts', async ({ context, page, baseURL }) => {
   const outside = await offline(context, baseURL!);
@@ -187,4 +195,27 @@ test('the board keeps the tokens with every room solved but 46', async ({ page }
   await expect(page.getByRole('button', { name: content.ui.finale.watch })).toHaveCount(0);
   await expect(door(page, 'stanza-46').getByRole('button', { name: content.ui.enter })).toBeVisible();
   await expect(page.locator('[data-string]')).toHaveCount(6);
+});
+
+test('the board offers "Azzera partita?", which asks first', async ({ page }) => {
+  await seed(page, MOCKUP_01);
+  await page.goto('/');
+  await expect(board(page)).toBeVisible();
+  await board(page).evaluate((node) => (node.dataset.e2eBefore = '')); // a board built again would lose the mark
+  const before = await saved(page);
+  await resetButton(page).click();
+  await expect(page.getByRole('dialog')).toContainText(content.ui.reset.title);
+  await page.getByRole('button', { name: content.ui.reset.no }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.locator('[data-screen="board"][data-e2e-before]')).toBeVisible();
+  expect(await saved(page)).toBe(before);
+});
+
+test('"Sì, azzera?" from the board wipes the case', async ({ page }) => {
+  await seed(page, MOCKUP_01);
+  await page.goto('/');
+  await resetButton(page).click();
+  await page.getByRole('button', { name: content.ui.reset.yes }).click();
+  await expect(page.getByRole('heading', { name: content.ui.intro.question })).toBeVisible();
+  expect(await saved(page)).toBeNull();
 });

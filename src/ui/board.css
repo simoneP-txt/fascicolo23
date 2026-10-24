@@ -1,9 +1,10 @@
 /* Board (src/engine/board.ts), mockup 01: every card hangs at its own place on the 1920x1080 stage, tilted
    by a degree or two, over the cork the host paints (tokens.css); the stage itself paints nothing. The red
-   strings run behind the cards. A door is solved (fragment chip and stamp), open (red outline and
-   "Entra?") or closed (darker paper, faded drawing, lock, what it lacks). After a wish, reveal() sets
-   data-reveal and what the room brought (data-new) arrives in turn: the stamp beats once the bar is off,
-   the clue cards come down, then their strings stretch. Only transform, opacity and the strings' dash move. */
+   strings run behind the cards; "Azzera partita?" sits on the bare cork under the tokens. A door is solved
+   (fragment chip and stamp), open (red outline and "Entra?") or closed (darker paper, faded drawing, lock,
+   what it lacks). After a wish, reveal() sets data-reveal and what the room brought (data-new) arrives in
+   turn: the stamp beats once the bar is off, the clue cards come down, then their strings stretch. Only
+   transform, opacity and the strings' dash move. */
 .board__strings {
   position: absolute;
   inset: 0;
@@ -67,6 +68,14 @@
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/* At the foot of the window's column, under the tokens and clear of every door and string: "Azzera
+   partita?", a bare link on the cork, so nobody takes it for a door. */
+.board__reset {
+  position: absolute;
+  left: 96px;
+  top: 984px;
 }
 
 /* Under the window: the tokens left. */

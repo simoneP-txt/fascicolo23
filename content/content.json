@@ -347,6 +347,7 @@
       "no": "No, ci riprovo?"
     },
     "reset": {
+      "button": "Azzera partita?",
       "title": "Azzerare la partita?",
       "body": "Frammenti, indizi e gettoni tornano come all'inizio.",
       "yes": "Sì, azzera?",
