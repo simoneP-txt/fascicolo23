@@ -1,7 +1,8 @@
 // Screens e2e: the game in the state of each mockup at the three test resolutions, with durations cut to
 // 1 ms. Every pair saves screenshots/<state>-<width>x<height>.png for review against docs/mockups and
 // checks the stage rules: nothing leaves the stage, no text is too small or overflows its box, at most
-// three font families. Later tasks add rows to the table.
+// three font families. Later tasks add rows to the table. The overflow check passes a text cut by an ellipsis
+// only in a box that opts in with data-ellipsis.
 import { expect, test, type Page } from '@playwright/test';
 import { bandsMatchTokens, edgeJumps, fontFamilies, hasBands, outsideStage, overflowingText, smallText } from './checks';
 import type { RoomId } from '../../src/engine/types';
@@ -205,6 +206,24 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
 };
 
 test.beforeEach(({ page }) => quick(page));
+
+test('the overflow check passes a text cut by an ellipsis only where its box opts in', async ({ page }) => {
+  await openCase(page);
+  await page.locator('#stage').evaluate((stage) => {
+    const box = document.createElement('p');
+    box.className = 'e2e-cut';
+    box.textContent = 'x'.repeat(200);
+    Object.assign(box.style, { width: '200px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' });
+    stage.append(box);
+  });
+  const box = page.locator('.e2e-cut');
+  const cut = async () => (await overflowingText(page)).filter((line) => line.startsWith('p.e2e-cut'));
+  expect(await cut()).toHaveLength(1);
+  await box.evaluate((node) => (node.dataset.ellipsis = ''));
+  expect(await cut()).toEqual([]);
+  await box.evaluate((node) => (node.style.textOverflow = 'clip')); // opted in, but cut with no ellipsis
+  expect(await cut()).toHaveLength(1);
+});
 
 for (const [width, height, deviceScaleFactor] of SIZES) {
   test.describe(`${width}x${height}`, () => {

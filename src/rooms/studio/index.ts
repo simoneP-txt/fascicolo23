@@ -71,16 +71,19 @@ export const studio: Room<StudioContent> = {
       sheets[i].replaceChildren(tag(i), el('h2', 'studio__question', texts.reports.question), quote(i), options);
     };
 
-    // The solved form: the testimony, the check with the right phenomenon, and the stamp beating in.
+    // The solved form: the testimony on one line, its end cut by an ellipsis on purpose, the check with the
+    // right phenomenon, and the stamp beating in.
     const close = (i: number) => {
       const { options, answer } = testimonies[i];
+      const line = quote(i);
+      line.dataset.ellipsis = '';
       const verdict = el('div', 'studio__verdict');
       verdict.append(svg(CHECK), el('span', undefined, options[answer]));
       const mark = stamp(ctx.common.ui.solved);
       mark.classList.add('studio__stamp');
       sheets[i].dataset.state = 'solved';
       delete sheets[i].dataset.unlock; // its lines came in when it opened; now only the stamp beats
-      sheets[i].replaceChildren(tag(i), quote(i), verdict, mark);
+      sheets[i].replaceChildren(tag(i), line, verdict, mark);
     };
 
     const pick = (n: number, option: HTMLButtonElement) => {
