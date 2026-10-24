@@ -225,8 +225,10 @@ export const stanza46: Room<Stanza46Content> = {
       showPins();
     };
 
-    // A clue dropped on a suspect, from the column or from another suspect.
+    // A clue dropped on a suspect, from the column or from another suspect. Like the take-back and the accusation,
+    // it does nothing once the case is closed: a key can still pick a card in the beat.
     const pin = (clue: Evidence, card: HTMLElement) => {
+      if (closed) return;
       const handle = handles.get(clue)!;
       const holder = pinned.get(clue);
       if (holder === card) return flyHome(handle); // back to its own place in the slot
@@ -248,7 +250,7 @@ export const stanza46: Room<Stanza46Content> = {
 
     // A pinned clue dropped on the column comes back to its place, with no error.
     const takeBack = (clue: Evidence) => {
-      if (pinned.has(clue)) unpin(clue);
+      if (!closed && pinned.has(clue)) unpin(clue);
     };
 
     // "Ricomincia?": every pinned clue back in the column, and the witness's first question; nothing is counted.
@@ -277,6 +279,7 @@ export const stanza46: Room<Stanza46Content> = {
     };
 
     const accuseOn = (card: HTMLElement) => {
+      if (closed) return;
       const suspect = card.dataset.suspect as SuspectId;
       const verdict = accuse(new Set(pinned.keys()), suspect, culprit);
       if (verdict === 'guilty') return close(card);

@@ -2,7 +2,8 @@
 // clues in a column and the link with its last bar. A clue lands on a suspect by a drag or by two clicks; on a
 // suspect it fits it stays as its short label, with the stamp and the witness's line, up to three on one card, and
 // anywhere else it goes back, counting one error on a wrong suspect, a double click included, and none when let go
-// off every suspect or cancelled (Review Focus 3). A pinned clue comes back to the column by a drag or two clicks
+// off every suspect or cancelled (Review Focus 3); a pick left in hand is put down when another card or the thread
+// moves, and in the beat nothing pins or accuses. A pinned clue comes back to the column by a drag or two clicks
 // with no error, and moved onto another suspect it is judged again; "Ricomincia?" puts every clue back and counts
 // nothing. The third clue pinned makes the thread's end pulse and the witness invite the accusation. An accusation
 // before the three clues are pinned is blind, with a new line each time and the video every third time; with the
@@ -246,6 +247,65 @@ test.describe('with durations cut', () => {
     await expect(hintButton(page)).toBeHidden();
     await pinClue(page, 'time-0451', 'professore');
     await expect(hintButton(page)).toBeVisible();
+  });
+
+  test('a pick on the thread is dropped when a clue is dragged instead', async ({ page }) => {
+    await enter46(page);
+    const thread = page.locator('[data-thread]');
+    const label = pinnedOn(page, 'fidanzato', 'time-0451');
+    // Three times over: three blind accusations would bring the hint, and the video.
+    for (let i = 0; i < 3; i++) {
+      await thread.click();
+      await expect(thread).toHaveAttribute('data-picked');
+      await drag(page, evidence(page, 'time-0451'), await middle(suspect(page, 'fidanzato')));
+      await expect(label).toBeVisible();
+      await label.click(); // to take it back: the thread, put down by the drag, does not land with this click
+      await expect(witnessLine(page)).toHaveText(room.witness.pinned['time-0451']);
+      await expect(label).toHaveAttribute('data-picked');
+      await expect(inHand(page)).toHaveCount(1);
+      await page.locator('[data-spot="time-0451"]').click();
+      await expect(column(page).locator('[data-evidence="time-0451"]')).toBeVisible();
+    }
+    await expect(meme(page)).toHaveCount(0);
+    await expect(hintButton(page)).toBeHidden();
+  });
+
+  test('a pick on a clue is dropped when another clue is dragged', async ({ page }) => {
+    await enter46(page);
+    await evidence(page, 'confession').click();
+    await expect(evidence(page, 'confession')).toHaveAttribute('data-picked');
+    await drag(page, evidence(page, 'profile'), await middle(suspect(page, 'diva')));
+    await expect(pinnedOn(page, 'diva', 'profile')).toBeVisible();
+    await suspect(page, 'fidanzato').click(); // the confession, put down by the drag, does not land with this click
+    await expect(witnessLine(page)).toHaveText(room.witness.pinned.profile);
+    await expect(suspect(page, 'fidanzato').locator('[data-evidence]')).toHaveCount(0);
+    await expect(inHand(page)).toHaveCount(0);
+  });
+
+  test('nothing pins or accuses while the case is closing', async ({ page }) => {
+    await enter46(page, true);
+    // Two errors first: a third would bring the witness's help line into the bubble.
+    await pinClue(page, 'time-0451', 'giardiniere');
+    await pinClue(page, 'time-0451', 'professore');
+    await pinAllThenStop(page);
+    await expect(hintButton(page)).toBeHidden();
+    await pinnedOn(page, CULPRIT, 'confession').click(); // left in hand
+    await expect(pinnedOn(page, CULPRIT, 'confession')).toHaveAttribute('data-picked');
+    await drag(page, page.locator('[data-thread]'), await middle(suspect(page, CULPRIT)));
+    await expect(page.locator('[data-solved]')).toHaveCount(1);
+    await expect(witnessLine(page)).toHaveText(room.witness.solved);
+    await suspect(page, 'fidanzato').click(); // in the beat, on a suspect the confession does not fit
+    await expect(witnessLine(page)).toHaveText(room.witness.solved);
+
+    // In the beat the cards take no pointer, but a key still clicks a focused button: the thread's end, which keeps
+    // the focus after its drag, or a clue reached with Tab. What a key picks lands nowhere.
+    await page.locator('[data-thread]').press('Enter');
+    await suspect(page, 'fidanzato').click();
+    await expect(witnessLine(page)).toHaveText(room.witness.solved);
+    await evidence(page, 'confession').press('Enter');
+    await suspect(page, 'fidanzato').click();
+    await expect(witnessLine(page)).toHaveText(room.witness.solved);
+    await expect(meme(page)).toHaveCount(0);
   });
 
   test('Ricomincia? puts every clue back in the column and counts nothing', async ({ page }) => {

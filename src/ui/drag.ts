@@ -4,8 +4,9 @@
 // (pointercancel, lostpointercapture). The handle itself never counts as what lies under the pointer, even when a
 // target holds it. A gesture that moves less than SLOP stage pixels is a click instead: the handle is picked, and
 // the next click lands it on the target it hits, or cancels it anywhere else, so on a touchpad a card goes where it
-// must in two presses. A click that lands a handle, or puts it down, picks up no handle it falls on. While dragged
-// the handle carries data-dragging, and the target under the pointer data-over; while picked it carries
+// must in two presses. A click that lands a handle, or puts it down, picks up no handle it falls on. One handle is
+// picked at a time: another handle picked, or dragged past SLOP, puts the pick down, with its cancel(). While
+// dragged the handle carries data-dragging, and the target under the pointer data-over; while picked it carries
 // data-picked. drop() and cancel() leave the handle as it is, transform included: the caller settles it or sends it
 // back. The second click of a double click neither picks nor lands nor cancels.
 
@@ -19,6 +20,14 @@ export interface DragOptions {
 
 // The last click that landed or put down a pick, so the handles it falls on let it pass.
 let spent: Event | null = null;
+
+// The one handle picked, and how to put it down.
+let picked: { handle: HTMLElement; putDown(): void } | null = null;
+
+/** Puts down the pick of any handle but this one: it loses data-picked and its cancel() runs. */
+function putDownAllBut(handle: HTMLElement): void {
+  if (picked && picked.handle !== handle) picked.putDown();
+}
 
 /** Window pixels per stage pixel: the stage's drawn width over its laid-out width. */
 function scaleOf(node: HTMLElement): number {
@@ -67,10 +76,19 @@ export function draggable(handle: HTMLElement, options: DragOptions): () => void
     options.drop(target);
   };
   const pick = () => {
+    putDownAllBut(handle);
+    picked = {
+      handle,
+      putDown: () => {
+        unpick();
+        options.cancel();
+      },
+    };
     handle.dataset.picked = '';
     window.addEventListener('click', onClickWhilePicked, true);
   };
   function unpick() {
+    if (picked?.handle === handle) picked = null;
     delete handle.dataset.picked;
     window.removeEventListener('click', onClickWhilePicked, true);
   }
@@ -107,6 +125,7 @@ export function draggable(handle: HTMLElement, options: DragOptions): () => void
     if (!gesture.moved) {
       if (Math.hypot(dx, dy) < SLOP) return;
       gesture.moved = true;
+      putDownAllBut(handle);
       unpick();
       handle.dataset.dragging = '';
     }
