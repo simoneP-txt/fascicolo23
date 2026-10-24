@@ -153,7 +153,7 @@ test.describe('on the 16:10 party screen', () => {
       expect(Math.max(...jumps), `finale at the ${edge} edge of the stage`).toBeLessThanOrEqual(12);
     }
 
-    // Back from the video, the epilogue stands on the same sea, its red block clear of the top edge.
+    // Back from the video, the epilogue stands on the same sea, its red hedge clear of the top edge.
     await watchButton(page).click();
     await awayAndBack(page);
     await expect(epilogue(page)).toHaveAttribute('data-done', '');

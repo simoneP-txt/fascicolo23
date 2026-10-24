@@ -240,7 +240,7 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
     await page.goto('/');
     await expect(watchButton(page)).toBeVisible();
   },
-  // 12: the scene over, the red block with the walker and the witness's last line, the game reopened on it once
+  // 12: the scene over, the red hedge with the walker and the witness's last line, the game reopened on it once
   // the video was opened
   epilogue: async (page) => {
     await seed(page, { ...FINISHED, watched: true });

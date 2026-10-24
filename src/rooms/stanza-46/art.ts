@@ -1,7 +1,7 @@
 // Room 46 drawings (mockups 11, 03 and 12): the four suspects as ink silhouettes on a 160x200 grid, each with the
 // thing that tells it apart (the gardener's hat and shears, the professor's glasses and book, the fiancé at his
 // laptop, the diva's hair, microphone and gold star), the three waves of the sea along the bottom of the
-// stage, and for the epilogue the red block with its ragged top and the walker in two poses. A suspect's few
+// stage, and for the epilogue the red hedge with its leafy outline and the walker in two poses. A suspect's few
 // colors are custom properties of its card (stanza46.css), so a cleared card can fade them as mockup 03 does.
 // Each wave is its own drawing, a whole wavelength wider than the stage on either side, so it can sway by half a
 // wavelength each way and never show its end.
@@ -61,50 +61,122 @@ function wave(period: number, base: number, depth: number, layer: 'back' | 'mid'
 /** The three waves, back to front, as mockup 11 draws them; the middle one carries the crest line. */
 export const WAVES = [wave(480, 88, 40, 'back'), wave(640, 152, 40, 'mid', true), wave(400, 216, 32, 'front')];
 
-// The epilogue's red block: a field of red about as tall as it is wide, its top a ragged row of small tufts, like
-// a hedge seen from far off, under the paper grain. Each tuft is [width, height of its tip, dip after it] in
-// drawing units, from the line the row stands on: tufts with shallow dips gather into clumps, deep dips part them.
-// Picked by hand so no two neighbours match; the row runs again with every round's heights scaled, so no stretch
-// repeats.
-const BLOCK_WIDTH = 720;
-const BLOCK_HEIGHT = 680;
-const HEDGE = 24; // the line the row of tufts stands on, from the top of the drawing
-const TUFTS = [
-  [6, 8, -2], [5, 12, -3], [6, 9, -1], [4, 5, 2], [7, 3, 3], [5, 7, -1], [6, 11, -3], [5, 14, -4],
-  [6, 10, -2], [5, 6, 1], [8, 4, 3], [6, 2, 2], [5, 8, -2], [6, 13, -4], [4, 9, -3], [6, 11, -2],
-  [5, 6, 1], [7, 3, 3], [5, 9, -1], [6, 7, 0], [5, 12, -3], [6, 8, -1], [4, 4, 2], [8, 3, 3],
-  [5, 10, -2], [6, 15, -4], [5, 12, -3], [6, 9, -2], [5, 5, 2], [6, 2, 3], [5, 7, -1], [7, 10, -2],
-];
-const ROUNDS = [1, 0.8, 1.15, 0.9];
+// The epilogue's hedge: a red hedge about as tall as it is wide, its sides and top a run of flat leaves gathered
+// in clumps, a few darker leaves of the same red giving it depth, under the paper grain. Its foot is the bottom
+// of the drawing, which the epilogue sets behind the waves, so the hedge rises out of them. The outline follows a
+// spine (up the left side, round a corner, across the top, round the other corner, down the right side), each
+// leaf a pointed bulge off it, the clumps a slow swell of the spine. Sizes come from a fixed seed, so the hedge
+// is the same on every run.
+const HEDGE_WIDTH = 768;
+const HEDGE_HEIGHT = 800;
+const INSET = 40; // from the drawing's sides and top to the spine, room for the leaves
+const CORNER = 56;
+const SIDE = HEDGE_HEIGHT - INSET - CORNER; // each side's straight run
+const ARC = (Math.PI / 2) * CORNER;
+const TOP = HEDGE_WIDTH - 2 * INSET - 2 * CORNER; // the top's straight run
+const SPINE = 2 * SIDE + 2 * ARC + TOP;
+const CREST = 724; // the back wave's crests (stage line 852) in drawing units: under them no dark leaf shows
+const WALKER_SPOT = { x: 384, y: 664, r: 120 }; // around the walker, in drawing units: no dark leaf there
 
-/** The block's outline: up the left side, along the tufts, each a spike with hollow sides, and down the right. */
-function blockOutline(): string {
-  let top = '';
-  let base = HEDGE; // where the last tuft came down
-  for (let x = 0, i = 0; x < BLOCK_WIDTH; i++) {
-    const [w, h, dip] = TUFTS[i % TUFTS.length];
-    const width = Math.min(w, BLOCK_WIDTH - x);
-    const tip = HEDGE - Math.round(h * ROUNDS[Math.floor(i / TUFTS.length) % ROUNDS.length]);
-    const next = x + width >= BLOCK_WIDTH ? HEDGE : HEDGE + dip;
-    top += ` Q ${x + width * 0.35} ${base + (tip - base) * 0.25} ${x + width / 2} ${tip}`;
-    top += ` Q ${x + width * 0.65} ${next + (tip - next) * 0.25} ${x + width} ${next}`;
-    base = next;
-    x += width;
-  }
-  return `M0 ${BLOCK_HEIGHT} V${HEDGE}${top} V${BLOCK_HEIGHT} Z`;
+/** A generator of numbers in [0, 1) from a seed (mulberry32). */
+function seeded(seed: number): () => number {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
-const OUTLINE = blockOutline();
 
-export const BLOCK = `<svg class="epilogue__block" data-block viewBox="0 0 ${BLOCK_WIDTH} ${BLOCK_HEIGHT}" width="${BLOCK_WIDTH}"
-  height="${BLOCK_HEIGHT}" aria-hidden="true">
+type Spot = { x: number; y: number; nx: number; ny: number };
+
+/** The point at s along the spine, from the foot of the left side, and the outward normal there. */
+function spine(s: number): Spot {
+  const turn = (cx: number, from: number, along: number): Spot => {
+    const angle = from + along / CORNER;
+    const [nx, ny] = [Math.cos(angle), Math.sin(angle)];
+    return { x: cx + CORNER * nx, y: INSET + CORNER + CORNER * ny, nx, ny };
+  };
+  if (s < SIDE) return { x: INSET, y: HEDGE_HEIGHT - s, nx: -1, ny: 0 };
+  if ((s -= SIDE) < ARC) return turn(INSET + CORNER, Math.PI, s);
+  if ((s -= ARC) < TOP) return { x: INSET + CORNER + s, y: INSET, nx: 0, ny: -1 };
+  if ((s -= TOP) < ARC) return turn(HEDGE_WIDTH - INSET - CORNER, 1.5 * Math.PI, s);
+  return { x: HEDGE_WIDTH - INSET, y: INSET + CORNER + s - ARC, nx: 1, ny: 0 };
+}
+
+/** How far the spine swells out at s: two slow waves, the clumps and the bumps on them. */
+const swell = (s: number) => 7 * Math.sin(s / 29 + 1.3) + 4 * Math.sin(s / 11.3 + 0.4);
+
+/** The spot s along the spine pushed out by lift (in when it is negative), then on along the spine by slide. */
+function off(s: number, lift: number, slide = 0): [number, number] {
+  const p = spine(s);
+  return [p.x + p.nx * lift - p.ny * slide, p.y + p.ny * lift + p.nx * slide];
+}
+
+const n = (value: number) => Math.round(value * 10) / 10;
+const pt = ([x, y]: [number, number]) => `${n(x)} ${n(y)}`;
+
+/** The outline: leaf after leaf along the spine, each from its start to its tip and down to the next one's start,
+ *  with sides that rise steeply and meet in a point; then straight across the foot. */
+function hedgeOutline(random: () => number): string {
+  let path = `M${pt(off(0, swell(0)))}`;
+  for (let s = 0; s < SPINE; ) {
+    let width = 16 + 16 * random();
+    if (SPINE - s - width < 12) width = SPINE - s;
+    const height = 7 + 11 * random();
+    const tip = s + width * (0.4 + 0.2 * random());
+    const end = s + width;
+    const [rise, lean] = [height * 0.65, width * 0.08];
+    path += ` Q ${pt(off(s, swell(s) + rise, lean))} ${pt(off(tip, swell(tip) + height))}`;
+    path += ` Q ${pt(off(end, swell(end) + rise, -lean))} ${pt(off(end, swell(end)))}`;
+    s = end;
+  }
+  return `${path} Z`;
+}
+
+/** A leaf as a closed shape: an almond of this length and width centred on x, y, pointing along angle. Each side
+ *  bends round a control point a whole width off the middle, which puts the side half a width off it. */
+function leaf(x: number, y: number, angle: number, length: number, width: number): string {
+  const [ux, uy] = [(Math.cos(angle) * length) / 2, (Math.sin(angle) * length) / 2];
+  const [vx, vy] = [-Math.sin(angle) * width, Math.cos(angle) * width];
+  const [back, front] = [pt([x - ux, y - uy]), pt([x + ux, y + uy])];
+  return `M${back} Q ${pt([x + vx, y + vy])} ${front} Q ${pt([x - vx, y - vy])} ${back}Z`;
+}
+
+/** The darker leaves, the shade under the clumps of the edge: rows inside the outline, each sparser and deeper
+ *  than the last, every leaf pointing out like those of the edge; none round the walker or under the waves. */
+function hedgeShade(random: () => number): string {
+  const leaves: string[] = [];
+  const row = (first: number, gap: number, depth: number) => {
+    for (let s = first; s < SPINE; s += gap * (0.7 + 0.6 * random())) {
+      const p = spine(s);
+      const [x, y] = off(s, swell(s) - depth * (0.6 + 0.8 * random()));
+      const angle = Math.atan2(p.ny, p.nx) + (random() - 0.5) * 1.2;
+      const [length, width] = [20 + 8 * random(), 9 + 3 * random()];
+      if (y < CREST && Math.hypot(x - WALKER_SPOT.x, y - WALKER_SPOT.y) > WALKER_SPOT.r)
+        leaves.push(leaf(x, y, angle, length, width));
+    }
+  };
+  row(8, 34, 22);
+  row(24, 84, 60);
+  row(56, 168, 112);
+  return leaves.join(' ');
+}
+
+const random = seeded(23);
+const OUTLINE = hedgeOutline(random);
+
+export const HEDGE = `<svg class="epilogue__hedge" data-hedge viewBox="0 0 ${HEDGE_WIDTH} ${HEDGE_HEIGHT}"
+  width="${HEDGE_WIDTH}" height="${HEDGE_HEIGHT}" aria-hidden="true">
   <defs><pattern id="epilogue-grain" width="8" height="8" patternUnits="userSpaceOnUse">
     <circle cx="4" cy="4" r="1" fill="var(--grain)"/></pattern></defs>
   <path d="${OUTLINE}" fill="var(--red)"/>
+  <path d="${hedgeShade(random)}" fill="var(--red-leaf)"/>
   <path d="${OUTLINE}" fill="url(#epilogue-grain)"/>
 </svg>`;
 
 // The walker, a small ink figure seen from behind on a 32x96 grid: a little head over a long coat that narrows to
-// the hem, and two legs, apart in the stride and together as they pass. The two poses take turns on the block.
+// the hem, and two legs, apart in the stride and together as they pass. The two poses take turns on the hedge.
 const WALKER_FIGURE = (legs: string, pose: 'stride' | 'pass') =>
   `<svg class="epilogue__pose" data-pose="${pose}" viewBox="0 0 32 96" width="32" height="96" fill="var(--ink)" aria-hidden="true">
     <ellipse cx="17" cy="8" rx="5" ry="6"/>

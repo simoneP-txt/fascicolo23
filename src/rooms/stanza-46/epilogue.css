@@ -1,33 +1,36 @@
 /* Epilogue (src/rooms/stanza-46/epilogue.ts), mockup 12: on Room 46's sea, whose waves sway along the bottom
-   (stanza46.css), the finale's strings where the finale drew them (finale.css), the red block in the middle with
-   the walker at its foot, and the witness bottom left with its last line, larger than elsewhere, with no label.
-   Until data-play the block is a thin band at its foot, still unseen, and the walker and the bubble are away. Each
-   part rests where the scene ends, and with data-play its animation runs from where the scene begins: the strings
-   fade as the block grows (--duration-spread), the walker rises in and its two poses take turns, the passing one a
-   little higher (--duration-walk), and the bubble pops last. Motion is transform and opacity only. */
+   (stanza46.css), the finale's strings where the finale drew them (finale.css), the red hedge in the middle, its
+   foot behind the back wave down past that wave's troughs, the walker in front of it just above the wave's crests,
+   and the witness bottom left with its last line, larger than elsewhere, with no label. Until data-play the hedge
+   is a thin band at its foot, behind the waves and unseen, and the walker and the bubble are away. Each part rests
+   where the scene ends, and with data-play its animation runs from where the scene begins: the strings fade as
+   the hedge grows out of the waves (--duration-spread), the walker rises in and its two poses take turns, the
+   passing one a little higher (--duration-walk), and the bubble pops last. Motion is transform and opacity only. */
 .epilogue[data-play] .finale__strings {
   opacity: 0;
   animation: epilogue-fade var(--duration-spread) var(--ease);
 }
 
-.epilogue__block {
+/* 768 by 800, centered; its foot at stage line 928, under the back wave's troughs (892). */
+.epilogue__hedge {
   position: absolute;
-  left: 600px;
-  top: 80px;
+  left: 576px;
+  top: 128px;
   opacity: 0;
   transform: scaleY(var(--spread-scale));
   transform-origin: 50% 100%;
 }
-.epilogue[data-play] .epilogue__block {
+.epilogue[data-play] .epilogue__hedge {
   opacity: 1;
   transform: none;
   animation: epilogue-spread var(--duration-spread) var(--ease);
 }
 
+/* Its feet at stage line 840, above the back wave's crests (852). */
 .epilogue__walker {
   position: absolute;
   left: 944px;
-  top: 648px;
+  top: 744px;
   width: var(--space-4);
   height: var(--space-12);
   opacity: 0;

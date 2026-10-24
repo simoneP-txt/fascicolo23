@@ -120,6 +120,7 @@
   --swell-back: var(--night);
   --swell-mid: color-mix(in srgb, var(--teal) 40%, var(--swell-back));
   --swell-front: color-mix(in srgb, var(--teal) 70%, var(--swell-mid));
+  --red-leaf: color-mix(in srgb, var(--red) 84%, var(--ink)); /* the darker leaves of the epilogue's red hedge */
 
   /* Fonts, at most three on a screen */
   --font-report: 'Special Elite', monospace;
@@ -233,7 +234,7 @@
   --duration-swell: 7000ms; /* a wave of Room 46 swaying one way */
   --duration-rise: 400ms; /* "Guarda la confessione?" coming up on the finale, once the stamp has landed */
   --duration-pulse: 1400ms; /* a ring leaving the thread's end in Room 46, again and again, once the three clues are pinned */
-  --duration-spread: 2400ms; /* the epilogue's red block growing out of its thin band while the finale's strings fade */
+  --duration-spread: 2400ms; /* the epilogue's red hedge growing out of the waves while the finale's strings fade */
   --duration-walk: 800ms; /* the walker on the epilogue coming in, then each round of its two poses */
   --press-shift: 2px; /* how far a pressed control sinks */
   --press-scale: 0.98;
@@ -241,7 +242,7 @@
   --pop-scale: 0.9; /* the size the witness bubble pops from */
   --dialog-scale: 0.96; /* the size a dialog comes in from */
   --stamp-scale: 1.6; /* the size a stamp beats from */
-  --spread-scale: 0.02; /* the thin band the epilogue's red block grows from, a share of its height */
+  --spread-scale: 0.02; /* the thin band the epilogue's red hedge grows from, a share of its height */
   --walk-lift: 4px; /* how much higher the epilogue's walker stands while its legs pass */
 }
 
