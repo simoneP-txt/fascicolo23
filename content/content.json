@@ -118,8 +118,8 @@
         "intro": "Lo senti anche tu, questo fruscio?",
         "passage": "Chi ha lasciato entrare il vento?",
         "wrong": {
-          "vicina": "Se mentisse su tutto, alle cinque meno sedici la siepe sarebbe già stata a terra?",
-          "lattaio": "Se mente il lattaio, vicina e custode possono dire il vero tutti e due?"
+          "vicina": "Mentirebbe anche sulla prima passeggiata?",
+          "lattaio": "Allora vicina e custode possono dire il vero tutti e due?"
         },
         "solved": "Il custode non sapeva che la vicina porta fuori il cane?",
         "sure": ["Sicura?", "Sicura sicura?"]

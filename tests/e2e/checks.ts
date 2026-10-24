@@ -3,7 +3,7 @@
 // along the whole edge of the stage, and the stage
 // rules of CLAUDE.md, measured at the 1920x1080 design size: nothing leaves the stage, no text under
 // 28 px (20 px for a .label), no text overflowing its box but by an ellipsis, at most three font families
-// on screen.
+// on screen; and how far the witness's silhouette reaches under the hint card.
 import { expect, type Page } from '@playwright/test';
 
 export interface Rgb {
@@ -187,3 +187,14 @@ export const overflowingText = async (page: Page) => (await scanStage(page)).ove
 
 /** The font families of the visible text. */
 export const fontFamilies = async (page: Page) => (await scanStage(page)).families;
+
+/** How far down the witness's silhouette reaches under the hint card, in window pixels: 0 while they are
+ *  apart. A long line in the bubble pushes the silhouette down the column the card stands at the foot of. */
+export async function figureUnderHint(page: Page): Promise<number> {
+  const figure = await page.locator('[data-witness] .witness__figure').boundingBox();
+  const card = await page.locator('[data-hint]').boundingBox();
+  if (!figure || !card) throw new Error('no witness or no hint card on screen');
+  const across = Math.min(figure.x + figure.width, card.x + card.width) - Math.max(figure.x, card.x);
+  const down = Math.min(figure.y + figure.height, card.y + card.height) - Math.max(figure.y, card.y);
+  return across > 0 && down > 0 ? down : 0;
+}

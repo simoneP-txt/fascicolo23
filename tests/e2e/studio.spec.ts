@@ -2,12 +2,13 @@
 // shakes, counts one error and gets the witness's answer, even under a double click; the right one stamps
 // the report and opens the next, and a double click on it answers one report only. The plate only ever gets
 // "Interessante?", with no error. Three right answers win the fragment and both clues, once. The stake card
-// steps aside for the hint card, the column of reports keeps between 128 and 984 at every step with every
-// text in its box at 1366x768 (decision 9), and each visit starts from the first report. Durations are cut
-// to 1 ms.
+// steps aside for the hint card, and whatever the witness answers a wrong pick, every hint fits its card and
+// the card stays clear of the silhouette. The column of reports keeps between 128 and 984 at every step with
+// every text in its box at 1366x768 (decision 9), and each visit starts from the first report. Durations are
+// cut to 1 ms.
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { SAVE_KEY } from '../../src/engine/save';
-import { overflowingText } from './checks';
+import { figureUnderHint, overflowingText } from './checks';
 import { board, content, continueWish, enterRoom, fragment, quick, seed, wish } from './helpers';
 import { play } from './play';
 
@@ -152,6 +153,21 @@ test('the stake steps aside for the hint card', async ({ page }) => {
   await expect(page.locator('[data-hint]')).toBeVisible();
   await expect(stake).toBeHidden();
 });
+
+for (const [i, said] of (room.witness.wrong as string[]).entries()) {
+  test(`every hint fits its card, clear of the witness, after a wrong pick in report ${i + 1}`, async ({ page }) => {
+    await enterStudy(page);
+    for (let n = 1; n <= i; n++) await right(page, n).click();
+    await wrong(page, i + 1, 0).click();
+    await expect(witnessLine(page)).toHaveText(said);
+    for (const hint of room.hints) {
+      await page.keyboard.press('Control+Shift+KeyH');
+      await expect(page.locator('[data-hint]')).toContainText(hint);
+      expect(await figureUnderHint(page), hint).toBe(0);
+      expect(await overflowingText(page), hint).toEqual([]);
+    }
+  });
+}
 
 test('the room starts over after leaving', async ({ page }) => {
   await enterStudy(page);

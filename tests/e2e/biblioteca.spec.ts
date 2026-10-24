@@ -3,15 +3,17 @@
 // the secret square turns the shelf into the hedge mystery. There a truthful witness accused counts an error
 // and gets an answer, while the liar gives up the time, the clue and the room, once. A right guess sooner
 // than quickGuessSec after the mystery comes in is asked "Sicura?" and "Sicura sicura?" first, with no error
-// counted, a double click asking once and another accusation starting the questions over. Curtains, leaves
-// and pages move by transform and opacity only, and each visit starts from the shelf, its quick guess too.
+// counted, a double click asking once and another accusation starting the questions over. Whatever the
+// witness answers a wrong accusation, every hint fits its card and the card stays clear of the silhouette.
+// Curtains, leaves and pages move by transform and opacity only, and each visit starts from the shelf, its
+// quick guess too.
 // The game starts with the chessboard solved; durations are cut to 1 ms, and the tests that watch a meme,
 // the questions or the beat stop the page clock once the room is on screen.
 import { expect, test, type Page } from '@playwright/test';
 import { SAVE_KEY } from '../../src/engine/save';
 import { consistentLiars } from '../../src/rooms/biblioteca/liar';
 import { SQUARES } from '../../src/ui/grid8';
-import { overflowingText } from './checks';
+import { figureUnderHint, overflowingText } from './checks';
 import { board, content, continueWish, enterRoom, fragment, quick, seed, wish } from './helpers';
 
 const room = content.rooms.biblioteca;
@@ -167,6 +169,21 @@ test('a wrong accusation counts an error and the witness answers', async ({ page
   await expect(hintButton(page)).toBeVisible();
   await expect(page.getByText(room.mystery.solution.tag)).toBeHidden();
 });
+
+for (const id of Object.keys(room.witness.wrong)) {
+  test(`every hint fits its card, clear of the witness, once the ${id} is accused`, async ({ page }) => {
+    await enterLibrary(page);
+    await openPassage(page);
+    await accuse(page, id).click();
+    await expect(line(page)).toHaveText(room.witness.wrong[id]);
+    for (const hint of room.hints) {
+      await page.keyboard.press('Control+Shift+KeyH');
+      await expect(page.locator('[data-hint]')).toContainText(hint);
+      expect(await figureUnderHint(page), hint).toBe(0);
+      expect(await overflowingText(page), hint).toEqual([]);
+    }
+  });
+}
 
 test('after quickGuessSec seconds the liar gives up the time and the room at once', async ({ page }) => {
   await quickMystery(page);
