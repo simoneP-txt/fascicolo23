@@ -103,7 +103,10 @@ test.describe('on the 16:10 party screen', () => {
     }
 
     // Rapture opens with the library's time and the study's rule. Its host paints the striped wall above and
-    // the floor below, and the rays behind the door fade out before the top edge.
+    // the floor below, and the rays behind the door fade out before the top edge. Its edges are measured with
+    // the endless motion at rest: the highest bubble rises to 11 px under the top edge, whole, and a frame that
+    // catches it there puts its ring in the patch just inside (18 stage px here), a jump of up to 26 with no
+    // seam to see. A sweep of every phase found the rise and the rays' sway cutting nothing at the edge.
     await page.keyboard.press('Control+Shift+KeyN');
     await continueWish(page);
     await enterRoom(page, 'studio');
@@ -112,7 +115,8 @@ test.describe('on the 16:10 party screen', () => {
     await enterRoom(page, 'rapture');
     await bandsMatchTokens(page, 'Rapture');
     for (const edge of BANDS) {
-      expect(Math.max(...(await edgeJumps(page, edge))), `Rapture at the ${edge} edge of the stage`).toBeLessThanOrEqual(12);
+      const jumps = await edgeJumps(page, edge, { still: true });
+      expect(Math.max(...jumps), `Rapture at the ${edge} edge of the stage`).toBeLessThanOrEqual(12);
     }
   });
 

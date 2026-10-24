@@ -19,9 +19,10 @@ export const colorDistance = (a: Rgb, b: Rgb) => Math.abs(a.r - b.r) + Math.abs(
 
 export const luminance = ({ r, g, b }: Rgb) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
-/** Average color of each PATCH-wide column of this box of the window, in window pixels. */
-async function columnColors(page: Page, clip: { x: number; y: number; width: number; height: number }): Promise<Rgb[]> {
-  const png = await page.screenshot({ clip, scale: 'css' });
+/** Average color of each PATCH-wide column of this box of the window, in window pixels; still, with the
+ *  page's endless animations taken off for the shot, so it shows the drawing at rest. */
+async function columnColors(page: Page, clip: { x: number; y: number; width: number; height: number }, still = false): Promise<Rgb[]> {
+  const png = await page.screenshot({ clip, scale: 'css', animations: still ? 'disabled' : 'allow' });
   return page.evaluate(
     async ([base64, patch]) => {
       const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
@@ -80,10 +81,11 @@ export async function edgeColors(page: Page, edge: 'top' | 'bottom'): Promise<{ 
 }
 
 /** Patch by patch along the whole window, the color distance between just outside and just inside the top
- *  or bottom edge of the stage: a drawing cut straight at the edge shows as a jump. */
-export async function edgeJumps(page: Page, edge: 'top' | 'bottom'): Promise<number[]> {
+ *  or bottom edge of the stage: a drawing cut straight at the edge shows as a jump. With still, the drawing
+ *  is measured at rest, its endless motion taken off. */
+export async function edgeJumps(page: Page, edge: 'top' | 'bottom', { still = false } = {}): Promise<number[]> {
   const { width } = page.viewportSize()!;
-  const row = (y: number) => columnColors(page, { x: 0, y, width, height: PATCH });
+  const row = (y: number) => columnColors(page, { x: 0, y, width, height: PATCH }, still);
   const [outside, inside] = await edgeRows(page, edge);
   const [outer, inner] = [await row(outside), await row(inside)];
   return outer.map((color, i) => colorDistance(color, inner[i]));
