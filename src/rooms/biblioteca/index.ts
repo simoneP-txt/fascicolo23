@@ -9,7 +9,8 @@
 // counts, while another accusation starts the questions over. Once the liar is taken he gets the red outline
 // and the stamp, the solution names the time the model finds, the time clue comes, the area is marked solved
 // and the room completes after --duration-beat. Clicks wait while a book moves, the shelf turns, a card
-// shakes or a question comes, and every visit starts from the shelf, with a new time for a quick guess.
+// shakes or a question comes, the second click of a double click never reaches an accusation, and every
+// visit starts from the shelf, with a new time for a quick guess.
 import './biblioteca.css';
 import type { Room } from '../../engine/types';
 import { button, setEnabled } from '../../ui/button';
@@ -129,6 +130,15 @@ export const biblioteca: Room<LibraryContent> = {
       sheet.append(el('h3', 'biblioteca__name', statement.name), el('p', 'biblioteca__says', statement.says), accuse);
       statements.append(sheet);
     }
+    // The second click of a double click may come after the wait that follows a question or a shake: it stops
+    // here, before any accusation hears it.
+    statements.addEventListener(
+      'click',
+      (event) => {
+        if (event.detail > 1) event.stopPropagation();
+      },
+      { capture: true },
+    );
 
     const [before, after] = mystery.solution.text.split('{time}');
     const answer = el('p', 'biblioteca__answer');

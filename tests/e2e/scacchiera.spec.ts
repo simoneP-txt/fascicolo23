@@ -1,12 +1,13 @@
 // Chessboard e2e: the position of content.json on the 8x8 grid, the legal moves of a white piece, a black
-// piece pressed without an error, wrong moves that count once each and leave the piece where it was, and the
+// piece pressed without an error, wrong moves that count once each and leave the piece where it was, the
+// second click of a slow double click on a wrong capture never pressing the black piece left there, and the
 // line played to the mate, black answering by itself while clicks wait. Solved, the room keeps the mate on
 // screen for the beat without its way back, audience button or help, and it is solved once whatever the
 // player or the host presses. Each visit starts over. Durations are cut to 1 ms; the tests that watch black
 // answer stop the page clock once the room is on screen.
 import { expect, test, type Page } from '@playwright/test';
 import { SAVE_KEY } from '../../src/engine/save';
-import { board, content, continueWish, door, duration, enterRoom, openCase, quick, settled, wish } from './helpers';
+import { board, content, continueWish, door, duration, enterRoom, openCase, quick, settled, slowDoubleClick, wish } from './helpers';
 
 const room = content.rooms.scacchiera;
 
@@ -116,6 +117,14 @@ test('a double click on a wrong move counts one error', async ({ page }) => {
   await expect(hintButton(page)).toBeHidden();
   await move(page, 'h1', 'g1');
   await expect(hintButton(page)).toBeVisible();
+});
+
+test('a slow double click on a wrong capture keeps the answer to the wrong move', async ({ page }) => {
+  await enterChess(page, true);
+  await stopClock(page);
+  await square(page, 'e5').click(); // Nxf7 is legal, and off the line
+  await slowDoubleClick(page, square(page, 'f7'));
+  await expect(witness(page)).toContainText(room.witness.wrong[0]);
 });
 
 test('the line plays out, black answers by itself, and Kg4 mates', async ({ page }) => {

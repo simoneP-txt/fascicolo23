@@ -3,10 +3,10 @@
 // the secret square turns the shelf into the hedge mystery. There a truthful witness accused counts an error
 // and gets an answer, while the liar gives up the time, the clue and the room, once. A right guess sooner
 // than quickGuessSec after the mystery comes in is asked "Sicura?" and "Sicura sicura?" first, with no error
-// counted, a double click asking once and another accusation starting the questions over. Whatever the
-// witness answers a wrong accusation, every hint fits its card and the card stays clear of the silhouette.
-// Curtains, leaves and pages move by transform and opacity only, and each visit starts from the shelf, its
-// quick guess too.
+// counted, a double click asking once however slow it is, and another accusation starting the questions
+// over. Whatever the witness answers a wrong accusation, every hint fits its card and the card stays clear
+// of the silhouette. Curtains, leaves and pages move by transform and opacity only, and each visit starts
+// from the shelf, its quick guess too.
 // The game starts with the chessboard solved; durations are cut to 1 ms, and the tests that watch a meme,
 // the questions or the beat stop the page clock once the room is on screen.
 import { expect, test, type Page } from '@playwright/test';
@@ -14,7 +14,7 @@ import { SAVE_KEY } from '../../src/engine/save';
 import { consistentLiars } from '../../src/rooms/biblioteca/liar';
 import { SQUARES } from '../../src/ui/grid8';
 import { figureUnderHint, overflowingText } from './checks';
-import { board, content, continueWish, enterRoom, fragment, quick, seed, wish } from './helpers';
+import { board, content, continueWish, enterRoom, fragment, quick, seed, slowDoubleClick, wish } from './helpers';
 
 const room = content.rooms.biblioteca;
 const LIAR = consistentLiars()[0];
@@ -235,9 +235,9 @@ test('another accusation starts the questions over, and no question counts an er
   await expect(hintButton(page)).toBeHidden(); // the vicina's error only
 });
 
-test('a double click on a quick right guess asks once', async ({ page }) => {
+test('a double click on a quick right guess asks once, even a slow one', async ({ page }) => {
   await quickMystery(page);
-  await accuse(page, LIAR).dblclick();
+  await slowDoubleClick(page, accuse(page, LIAR));
   await expect(line(page)).toHaveText(room.witness.sure[0]);
   await page.clock.runFor(1000);
   await accuse(page, LIAR).click();

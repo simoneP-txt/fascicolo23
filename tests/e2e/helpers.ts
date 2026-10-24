@@ -1,10 +1,10 @@
 // E2E helpers: the content texts, a network cut that records every request outside the local server,
 // the games of mockup 01 and of the end, a save written before the page loads, quick() for the tests that
-// do not watch animations, settled() and throughChange() for those that wait out a screen change, and the
-// steps most tests repeat (opening the case through the wish, entering a room, and the consolation that
-// follows a confirmed "Apri la porta?"). Solving a room lives in play.ts.
+// do not watch animations, settled() and throughChange() for those that wait out a screen change, a slow
+// double click, and the steps most tests repeat (opening the case through the wish, entering a room, and the
+// consolation that follows a confirmed "Apri la porta?"). Solving a room lives in play.ts.
 import { readFileSync } from 'node:fs';
-import { expect, type BrowserContext, type Page } from '@playwright/test';
+import { expect, type BrowserContext, type Locator, type Page } from '@playwright/test';
 import { save, SAVE_KEY } from '../../src/engine/save';
 import type { GameState } from '../../src/engine/state';
 import { CLUE_IDS, ROOM_IDS } from '../../src/engine/types';
@@ -109,6 +109,18 @@ export function paused(page: Page, sound: string): Promise<boolean> {
  *  overlay that came or went, is over, so a raw or forced click reaches the stage again. */
 export async function settled(page: Page): Promise<void> {
   await expect(page.locator('#app[data-hush]')).toHaveCount(0);
+}
+
+/** A double click on the target as Windows may send it, the second click 400 ms after the first: past the
+ *  wait a room keeps after a wrong answer (--duration-nope), within the system's 500 ms. The page clock runs
+ *  between the two, so it must be installed. */
+export async function slowDoubleClick(page: Page, target: Locator): Promise<void> {
+  await target.hover(); // once the target stands still, as an entrance may still be turning it in
+  await page.mouse.down({ clickCount: 1 });
+  await page.mouse.up({ clickCount: 1 });
+  await page.clock.runFor(400);
+  await page.mouse.down({ clickCount: 2 });
+  await page.mouse.up({ clickCount: 2 });
 }
 
 /** Runs a paused page clock through one screen change: the ink comes in, the screens swap under it, the

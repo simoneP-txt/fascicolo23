@@ -4,7 +4,8 @@
 // move off the line is not played, its square shakes and the witness answers; the right move slides the piece,
 // and after --duration-reply black plays its forced answer by itself. Kg4 uncovers the rook's check: the area
 // is marked solved, the mate stays on screen for --duration-beat and the room completes. The board ignores
-// clicks while a piece slides, a square shakes or black answers, and every visit starts from the position.
+// clicks while a piece slides, a square shakes or black answers, and the second click of a double click
+// always; every visit starts from the position.
 import './scacchiera.css';
 import type { Room } from '../../engine/types';
 import { paper } from '../../ui/card';
@@ -55,6 +56,15 @@ export const scacchiera: Room<ChessContent> = {
       squares.set(square, button);
       return button;
     });
+    // The second click of a double click may come after the shake of a wrong move: it stops here, before it
+    // presses the piece still standing on that square.
+    grid.addEventListener(
+      'click',
+      (event) => {
+        if (event.detail > 1) event.stopPropagation();
+      },
+      { capture: true },
+    );
 
     const start = puzzle.board();
     const layer = svg(
