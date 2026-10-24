@@ -1,0 +1,128 @@
+/* Epilogue (src/rooms/stanza-46/epilogue.ts), mockup 12: on Room 46's sea, whose waves sway along the bottom
+   (stanza46.css), the finale's strings where the finale drew them (finale.css), the red block in the middle with
+   the walker at its foot, and the witness bottom left with its last line, larger than elsewhere, with no label.
+   Until data-play the block is a thin band at its foot, still unseen, and the walker and the bubble are away. Each
+   part rests where the scene ends, and with data-play its animation runs from where the scene begins: the strings
+   fade as the block grows (--duration-spread), the walker rises in and its two poses take turns, the passing one a
+   little higher (--duration-walk), and the bubble pops last. Motion is transform and opacity only. */
+.epilogue[data-play] .finale__strings {
+  opacity: 0;
+  animation: epilogue-fade var(--duration-spread) var(--ease);
+}
+
+.epilogue__block {
+  position: absolute;
+  left: 600px;
+  top: 80px;
+  opacity: 0;
+  transform: scaleY(var(--spread-scale));
+  transform-origin: 50% 100%;
+}
+.epilogue[data-play] .epilogue__block {
+  opacity: 1;
+  transform: none;
+  animation: epilogue-spread var(--duration-spread) var(--ease);
+}
+
+.epilogue__walker {
+  position: absolute;
+  left: 944px;
+  top: 648px;
+  width: var(--space-4);
+  height: var(--space-12);
+  opacity: 0;
+}
+.epilogue[data-play] .epilogue__walker {
+  opacity: 1;
+  animation: epilogue-arrive var(--duration-walk) var(--ease) var(--duration-spread) backwards;
+}
+.epilogue__pose {
+  position: absolute;
+  inset: 0;
+}
+.epilogue__pose[data-pose='pass'] {
+  opacity: 0;
+  transform: translateY(calc(-1 * var(--walk-lift)));
+}
+.epilogue[data-play] .epilogue__pose[data-pose='stride'] {
+  animation: epilogue-stride var(--duration-walk) var(--ease) var(--duration-spread) infinite;
+}
+.epilogue[data-play] .epilogue__pose[data-pose='pass'] {
+  animation: epilogue-pass var(--duration-walk) var(--ease) var(--duration-spread) infinite;
+}
+
+/* The witness bottom left as in mockup 12, its bubble a little lower than its head; the bubble waits for the end. */
+.epilogue .witness {
+  position: absolute;
+  left: var(--space-12);
+  top: 816px;
+  width: 656px;
+}
+.epilogue .witness__label {
+  display: none;
+}
+.epilogue .witness__bubble {
+  margin-top: var(--space-3);
+  opacity: 0;
+  animation: none;
+}
+.epilogue .witness__line {
+  font-size: var(--text-clue);
+}
+.epilogue[data-play] .witness__bubble {
+  opacity: 1;
+  animation: epilogue-say var(--duration-pop) var(--ease) calc(var(--duration-spread) + var(--duration-walk)) backwards;
+}
+
+@keyframes epilogue-fade {
+  from {
+    opacity: 1;
+  }
+}
+
+@keyframes epilogue-spread {
+  from {
+    opacity: 0;
+    transform: scaleY(var(--spread-scale));
+  }
+  10% {
+    opacity: 1;
+  }
+}
+
+@keyframes epilogue-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-1));
+  }
+}
+
+/* A step each half of the round: the stride shows, then the pass, with a cut so short no blend shows. */
+@keyframes epilogue-stride {
+  0%,
+  48% {
+    opacity: 1;
+  }
+  50%,
+  98% {
+    opacity: 0;
+  }
+}
+
+@keyframes epilogue-pass {
+  0%,
+  48% {
+    opacity: 0;
+  }
+  50%,
+  98% {
+    opacity: 1;
+  }
+}
+
+@keyframes epilogue-say {
+  from {
+    opacity: 0;
+    transform: scale(var(--pop-scale));
+  }
+}

@@ -40,6 +40,7 @@ export function fakeUi() {
     showIntro: vi.fn<GameUi['showIntro']>(),
     showBoard: vi.fn<GameUi['showBoard']>(),
     showFinale: vi.fn<GameUi['showFinale']>(),
+    showEpilogue: vi.fn<GameUi['showEpilogue']>(),
     showRoom: vi.fn<GameUi['showRoom']>(() => ({}) as HTMLElement),
     narrate: vi.fn<GameUi['narrate']>(),
     setAudience: vi.fn<GameUi['setAudience']>(),
@@ -74,6 +75,7 @@ export function setup(storage = memoryStorage(), options: { slowScreens?: boolea
     ui.showIntro.mockImplementation(() => screenGone());
     ui.showBoard.mockImplementation(() => screenGone());
     ui.showFinale.mockImplementation(() => screenGone());
+    ui.showEpilogue.mockImplementation(() => screenGone());
     ui.showRoom.mockImplementation((_, shown) => {
       screenGone();
       shown();

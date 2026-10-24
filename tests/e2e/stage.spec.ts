@@ -1,11 +1,23 @@
 // Stage e2e: the 16:9 stage fits the three test resolutions and paints nothing, so the host's art shows
 // through it; on the 16:10 party screen the bands above and below it take the colors of the screen, the
-// library's walnut wall, Rapture's wall and floor and Room 46's sea and waves among them, the finale's too, and
-// darken with it, in one layer, under a dialog; the four fonts load from the build with the network cut.
-// Durations are cut to 1 ms.
+// library's walnut wall, Rapture's wall and floor and Room 46's sea and waves among them, the finale's and the
+// epilogue's too, and darken with it, in one layer, under a dialog; the four fonts load from the build with the
+// network cut. Durations are cut to 1 ms.
 import { expect, test, type Page } from '@playwright/test';
 import { bandColor, bandsMatchTokens, colorDistance, edgeColors, edgeJumps, luminance, type Rgb } from './checks';
-import { board, content, continueWish, enterRoom, finale, offline, openCase, quick } from './helpers';
+import {
+  awayAndBack,
+  board,
+  content,
+  continueWish,
+  enterRoom,
+  epilogue,
+  finale,
+  offline,
+  openCase,
+  quick,
+  watchButton,
+} from './helpers';
 
 const BANDS = ['top', 'bottom'] as const;
 
@@ -63,7 +75,8 @@ test.describe('on the 16:10 party screen', () => {
     }
   }
 
-  test('the bands take the colors of the screen', async ({ page }) => {
+  test('the bands take the colors of the screen', async ({ context, page, baseURL }) => {
+    await offline(context, baseURL!); // the finale's button opens the real video
     await page.goto('/');
     await expect(page.getByRole('heading', { name: content.ui.intro.question })).toBeVisible();
     await bandsMatchTokens(page, 'case opening');
@@ -138,6 +151,16 @@ test.describe('on the 16:10 party screen', () => {
     for (const edge of BANDS) {
       const jumps = await edgeJumps(page, edge, { still: true });
       expect(Math.max(...jumps), `finale at the ${edge} edge of the stage`).toBeLessThanOrEqual(12);
+    }
+
+    // Back from the video, the epilogue stands on the same sea, its red block clear of the top edge.
+    await watchButton(page).click();
+    await awayAndBack(page);
+    await expect(epilogue(page)).toHaveAttribute('data-done', '');
+    await bandsMatchTokens(page, 'epilogue');
+    for (const edge of BANDS) {
+      const jumps = await edgeJumps(page, edge, { still: true });
+      expect(Math.max(...jumps), `epilogue at the ${edge} edge of the stage`).toBeLessThanOrEqual(12);
     }
   });
 

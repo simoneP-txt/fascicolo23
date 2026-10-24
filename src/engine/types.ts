@@ -81,7 +81,7 @@ export interface Content {
   sounds: Record<string, string>;
   loops: string[]; // sounds that play in a loop until stopAll()
   link: { room: RoomId | 'fascicolo'; text: string }[];
-  witness: { board: string; help: string; wish: string; finale: string };
+  witness: { board: string; help: string; wish: string; finale: string; epilogue: string };
   clues: Record<ClueId, { label: string; missing: string }>;
   rooms: Record<RoomId, RoomContent>;
   memes: Record<string, Meme>; // "consolation" follows a confirmed skip; Room 46 names objection, innocent, getHelp

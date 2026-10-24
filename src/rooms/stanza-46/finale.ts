@@ -7,7 +7,8 @@
 // link keeps the bar over it until reveal(), after the wish: the bar comes off, "CASO RISOLTO?" beats onto the
 // link card with its thud and "Guarda la confessione?" comes up. Shown again later, the finale comes already
 // revealed. The button switches off at its first press, so a double click opens one tab; the engine ignores a
-// second watch() as well.
+// second watch() as well. From the press on, the finale waits for the window to come back from the video (the
+// first focus after a blur) and then calls onBack; it stops waiting if it leaves the stage first.
 import './stanza46.css';
 import './finale.css';
 import { FINALE, type Sfx } from '../../engine/game';
@@ -16,6 +17,7 @@ import type { GameState } from '../../engine/state';
 import type { Content } from '../../engine/types';
 import { button, setEnabled } from '../../ui/button';
 import { paper, stamp } from '../../ui/card';
+import { awaitComeback } from '../../ui/comeback';
 import { durationOf, el } from '../../ui/dom';
 import { renderLink } from '../../ui/link';
 import { STAGE_HEIGHT, STAGE_WIDTH } from '../../ui/stage';
@@ -48,7 +50,21 @@ export const FINALE_STRINGS: readonly { clue: Evidence; suspect: SuspectId; d: s
   { clue: 'confession', suspect: 'diva', d: intoSide(CLUE_MIDDLES.confession) },
 ];
 
-export function renderFinale(content: Content, state: GameState, earned: boolean, audio: Sfx, onWatch: () => void): FinaleView {
+/** The strings on a drawing the size of the stage, as the finale shows them and the epilogue opens on them. */
+export function finaleStrings(): SVGSVGElement {
+  const paths = FINALE_STRINGS.map(({ clue, suspect, d }) => `<path data-string="${clue} ${suspect}" d="${d}"/>`);
+  return svg(`<svg class="finale__strings" viewBox="0 0 ${STAGE_WIDTH} ${STAGE_HEIGHT}" aria-hidden="true"
+    fill="none" stroke="var(--red)" stroke-width="3" stroke-linecap="round">${paths.join('')}</svg>`);
+}
+
+export function renderFinale(
+  content: Content,
+  state: GameState,
+  earned: boolean,
+  audio: Sfx,
+  onWatch: () => void,
+  onBack: () => void,
+): FinaleView {
   const texts = content.rooms['stanza-46'] as Stanza46Content;
   const quotes = Object.fromEntries(texts.suspects.map(({ id, quote }) => [id, quote])) as Record<SuspectId, string>;
   const crime = minuteOf(content.clues['time-0451'].label);
@@ -62,9 +78,7 @@ export function renderFinale(content: Content, state: GameState, earned: boolean
   sea.style.top = `${SEA_TOP}px`;
   sea.append(...WAVES.map((markup) => svg(markup)));
 
-  const paths = FINALE_STRINGS.map(({ clue, suspect, d }) => `<path data-string="${clue} ${suspect}" d="${d}"/>`);
-  const strings = svg(`<svg class="finale__strings" viewBox="0 0 ${STAGE_WIDTH} ${STAGE_HEIGHT}" aria-hidden="true"
-    fill="none" stroke="var(--red)" stroke-width="3" stroke-linecap="round">${paths.join('')}</svg>`);
+  const strings = finaleStrings();
 
   const parts = linkParts(content.link, state);
   const line = renderLink(parts, earned ? FINALE : null);
@@ -85,10 +99,25 @@ export function renderFinale(content: Content, state: GameState, earned: boolean
   const clues = el('div', 'finale__clues');
   clues.append(...EVIDENCE.map((clue) => shortClue(content, texts, clue)));
 
+  // The window coming back from the video calls onBack once. The wait ends with the finale: once the screen has
+  // left the stage, the stage's next change of children cancels it.
+  const waitForComeback = () => {
+    const stage = screen.parentElement;
+    if (!stage) return;
+    const cancel = awaitComeback(window, onBack);
+    const watcher = new MutationObserver(() => {
+      if (screen.isConnected) return;
+      cancel();
+      watcher.disconnect();
+    });
+    watcher.observe(stage, { childList: true });
+  };
+
   // Switched off at the first press: a second press of a double click only shakes it.
   const watch = button(content.ui.finale.watch, 'primary', () => {
     setEnabled(watch, false);
     onWatch();
+    waitForComeback();
   });
   watch.classList.add('finale__watch');
 

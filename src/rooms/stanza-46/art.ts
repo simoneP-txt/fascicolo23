@@ -1,9 +1,10 @@
-// Room 46 drawings (mockups 11 and 03): the four suspects as ink silhouettes on a 160x200 grid, each with the
+// Room 46 drawings (mockups 11, 03 and 12): the four suspects as ink silhouettes on a 160x200 grid, each with the
 // thing that tells it apart (the gardener's hat and shears, the professor's glasses and book, the fiancé at his
-// laptop, the diva's hair, microphone and gold star), and the three waves of the sea along the bottom of the
-// stage. A suspect's few colors are custom properties of its card (stanza46.css), so a cleared card can fade
-// them as mockup 03 does. Each wave is its own drawing, a whole wavelength wider than the stage on either side,
-// so it can sway by half a wavelength each way and never show its end.
+// laptop, the diva's hair, microphone and gold star), the three waves of the sea along the bottom of the
+// stage, and for the epilogue the red block with its ragged top and the walker in two poses. A suspect's few
+// colors are custom properties of its card (stanza46.css), so a cleared card can fade them as mockup 03 does.
+// Each wave is its own drawing, a whole wavelength wider than the stage on either side, so it can sway by half a
+// wavelength each way and never show its end.
 import type { SuspectId } from './deduction';
 
 const FIGURE = (shapes: string) =>
@@ -59,3 +60,59 @@ function wave(period: number, base: number, depth: number, layer: 'back' | 'mid'
 
 /** The three waves, back to front, as mockup 11 draws them; the middle one carries the crest line. */
 export const WAVES = [wave(480, 88, 40, 'back'), wave(640, 152, 40, 'mid', true), wave(400, 216, 32, 'front')];
+
+// The epilogue's red block: a field of red about as tall as it is wide, its top a ragged row of small tufts, like
+// a hedge seen from far off, under the paper grain. Each tuft is [width, height of its tip, dip after it] in
+// drawing units, from the line the row stands on: tufts with shallow dips gather into clumps, deep dips part them.
+// Picked by hand so no two neighbours match; the row runs again with every round's heights scaled, so no stretch
+// repeats.
+const BLOCK_WIDTH = 720;
+const BLOCK_HEIGHT = 680;
+const HEDGE = 24; // the line the row of tufts stands on, from the top of the drawing
+const TUFTS = [
+  [6, 8, -2], [5, 12, -3], [6, 9, -1], [4, 5, 2], [7, 3, 3], [5, 7, -1], [6, 11, -3], [5, 14, -4],
+  [6, 10, -2], [5, 6, 1], [8, 4, 3], [6, 2, 2], [5, 8, -2], [6, 13, -4], [4, 9, -3], [6, 11, -2],
+  [5, 6, 1], [7, 3, 3], [5, 9, -1], [6, 7, 0], [5, 12, -3], [6, 8, -1], [4, 4, 2], [8, 3, 3],
+  [5, 10, -2], [6, 15, -4], [5, 12, -3], [6, 9, -2], [5, 5, 2], [6, 2, 3], [5, 7, -1], [7, 10, -2],
+];
+const ROUNDS = [1, 0.8, 1.15, 0.9];
+
+/** The block's outline: up the left side, along the tufts, each a spike with hollow sides, and down the right. */
+function blockOutline(): string {
+  let top = '';
+  let base = HEDGE; // where the last tuft came down
+  for (let x = 0, i = 0; x < BLOCK_WIDTH; i++) {
+    const [w, h, dip] = TUFTS[i % TUFTS.length];
+    const width = Math.min(w, BLOCK_WIDTH - x);
+    const tip = HEDGE - Math.round(h * ROUNDS[Math.floor(i / TUFTS.length) % ROUNDS.length]);
+    const next = x + width >= BLOCK_WIDTH ? HEDGE : HEDGE + dip;
+    top += ` Q ${x + width * 0.35} ${base + (tip - base) * 0.25} ${x + width / 2} ${tip}`;
+    top += ` Q ${x + width * 0.65} ${next + (tip - next) * 0.25} ${x + width} ${next}`;
+    base = next;
+    x += width;
+  }
+  return `M0 ${BLOCK_HEIGHT} V${HEDGE}${top} V${BLOCK_HEIGHT} Z`;
+}
+const OUTLINE = blockOutline();
+
+export const BLOCK = `<svg class="epilogue__block" data-block viewBox="0 0 ${BLOCK_WIDTH} ${BLOCK_HEIGHT}" width="${BLOCK_WIDTH}"
+  height="${BLOCK_HEIGHT}" aria-hidden="true">
+  <defs><pattern id="epilogue-grain" width="8" height="8" patternUnits="userSpaceOnUse">
+    <circle cx="4" cy="4" r="1" fill="var(--grain)"/></pattern></defs>
+  <path d="${OUTLINE}" fill="var(--red)"/>
+  <path d="${OUTLINE}" fill="url(#epilogue-grain)"/>
+</svg>`;
+
+// The walker, a small ink figure seen from behind on a 32x96 grid: a little head over a long coat that narrows to
+// the hem, and two legs, apart in the stride and together as they pass. The two poses take turns on the block.
+const WALKER_FIGURE = (legs: string, pose: 'stride' | 'pass') =>
+  `<svg class="epilogue__pose" data-pose="${pose}" viewBox="0 0 32 96" width="32" height="96" fill="var(--ink)" aria-hidden="true">
+    <ellipse cx="17" cy="8" rx="5" ry="6"/>
+    <path d="M14 14 Q 17 13 20 14 C 25 18 26 25 24 32 L 20 66 Q 16 68 12 66 L 9 32 C 8 25 9 18 14 14 Z"/>
+    <path d="${legs}" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/>
+  </svg>`;
+
+export const WALKER = [
+  WALKER_FIGURE('M14 62 L 10 92 M18 62 L 23 92', 'stride'),
+  WALKER_FIGURE('M14 62 L 14 92 M18 62 L 18 92', 'pass'),
+];

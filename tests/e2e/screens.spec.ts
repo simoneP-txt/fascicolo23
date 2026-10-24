@@ -16,6 +16,7 @@ import {
   consolation,
   content,
   enterRoom,
+  epilogue,
   FINISHED,
   MOCKUP_01,
   openCase,
@@ -206,6 +207,13 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
     await seed(page, FINISHED);
     await page.goto('/');
     await expect(watchButton(page)).toBeVisible();
+  },
+  // 12: the scene over, the red block with the walker and the witness's last line, the game reopened on it once
+  // the video was opened
+  epilogue: async (page) => {
+    await seed(page, { ...FINISHED, watched: true });
+    await page.goto('/');
+    await expect(epilogue(page)).toHaveAttribute('data-done', '');
   },
   // 15 over Rapture: the way out, offered after skipAfterSec, its dialog in Poiret One
   'skip-rapture': async (page) => {

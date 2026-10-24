@@ -23,7 +23,8 @@
     "board": "Da quassù si vede lontano?",
     "help": "Ti serve una mano?",
     "wish": "Hai espresso un desiderio?",
-    "finale": "Hai mai fatto naufragio?"
+    "finale": "Hai mai fatto naufragio?",
+    "epilogue": "Il tuo regalo è oltre la siepe?"
   },
   "memes": {
     "error": { "text": "Sicura?", "sound": "boom" },

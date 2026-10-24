@@ -4,7 +4,9 @@
 // help clock is released; the room is unmounted once its screen has left. Animations (a room coming on
 // screen, a meme) hold the help clock while they play. Room 46 ends the game: once solved, the finale
 // takes the board's place, now and at every start, and its button hands the whole link to the browser
-// once per finale shown. It never touches the DOM: the screen is a GameUi, the browser is GameDeps.open.
+// once per finale shown. When the window comes back from the video the epilogue takes the finale's place,
+// once, and from then on every start opens on it. It never touches the DOM: the screen is a GameUi, the
+// browser is GameDeps.open.
 import { audienceStatus, startCountdown, type AudienceStatus, type Countdown } from './audience';
 import { createLadder, type HelpStatus, type Ladder } from './autohelp';
 import { isOpen } from './clues';
@@ -33,6 +35,7 @@ export interface GameUi {
   showIntro(): void;
   showBoard(state: GameState, earned: Earned | null): void; // earned: the fragment the board celebrates
   showFinale(state: GameState, earned: boolean): void; // earned: the wish of the last fragment plays first
+  showEpilogue(): void; // the closing scene, after the video
   showRoom(room: Room, shown: () => void): HTMLElement; // the element the room mounts into; shown: it is on screen
   narrate(text: string): void;
   setAudience(status: AudienceStatus): void;
@@ -43,7 +46,9 @@ export interface GameUi {
 
 export interface Game {
   readonly state: GameState;
-  start(): void; // the case opening if the case is not open yet, the finale once Room 46 is solved, else the board
+  // The case opening if the case is not open yet, the finale once Room 46 is solved, the epilogue once its video
+  // was opened, else the board.
+  start(): void;
   openCase(): void;
   enter(id: RoomId): void; // only from the board, through an open and unsolved door
   leave(): void; // "Torna alla lavagna?"
@@ -55,6 +60,7 @@ export interface Game {
   giveBackToken(): void; // Ctrl+Shift+G
   debugEnter(id: RoomId): void; // the debug menu: opens the case, adds the room's clues, enters it
   watch(): void; // "Guarda la confessione?": saves watched and opens the video, once per finale shown
+  comeBack(): void; // the window is back after the video: the epilogue, once
   reset(): void; // Ctrl+Shift+R, once confirmed
 }
 
@@ -105,6 +111,13 @@ export function createGame(deps: GameDeps): Game {
     finale = 'shown';
     ui.showFinale(state, earned);
     ui.narrate(content.witness.finale);
+  };
+
+  const showEpilogue = () => {
+    onBoard = false;
+    finale = null;
+    ui.showEpilogue();
+    ui.narrate(content.witness.epilogue);
   };
 
   const showAudience = () => {
@@ -220,7 +233,8 @@ export function createGame(deps: GameDeps): Game {
       return state;
     },
     start() {
-      if (state.solved.includes(FINALE)) showFinale(false);
+      if (state.solved.includes(FINALE) && state.watched) showEpilogue();
+      else if (state.solved.includes(FINALE)) showFinale(false);
       else if (state.opened) showBoard();
       else ui.showIntro();
     },
@@ -289,6 +303,9 @@ export function createGame(deps: GameDeps): Game {
       finale = 'watched';
       persist(rules.watch(state));
       deps.open(assembleLink(content.link.map((part) => part.text))); // always the whole link, whatever was skipped
+    },
+    comeBack() {
+      if (finale === 'watched') showEpilogue(); // only from the finale whose button opened the video
     },
     reset() {
       exit();

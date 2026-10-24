@@ -1,9 +1,9 @@
 // E2E helpers: the content texts and the video link, a network cut that records every request outside the local
 // server, the games of mockup 01, before Rapture, before Room 46 and of the end, a save written before the page
 // loads, quick() for the tests that do not watch animations, settled() and throughChange() for those that wait
-// out a screen change, a slow double click, and the steps most tests repeat (opening the case through the wish,
-// entering a room, and the consolation that follows a confirmed "Apri la porta?"). Solving a room lives in
-// play.ts.
+// out a screen change, a slow double click, the window going to the browser and back, and the steps most tests
+// repeat (opening the case through the wish, entering a room, and the consolation that follows a confirmed "Apri
+// la porta?"). Solving a room lives in play.ts.
 import { readFileSync } from 'node:fs';
 import { expect, type BrowserContext, type Locator, type Page } from '@playwright/test';
 import { assembleLink } from '../../src/engine/link';
@@ -169,8 +169,19 @@ export const wish = (page: Page) => page.locator('[data-wish]');
 
 export const finale = (page: Page) => page.locator('[data-screen="finale"]');
 
+export const epilogue = (page: Page) => page.locator('[data-screen="epilogue"]');
+
 /** "Guarda la confessione?". Never pressed with the network up: it opens the real video. */
 export const watchButton = (page: Page) => page.getByRole('button', { name: content.ui.finale.watch });
+
+/** The window loses the focus to the browser and gets it back, as Electron and Chrome report it when the video's
+ *  tab closes: the page's own window gets a blur, then a focus. */
+export async function awayAndBack(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event('blur'));
+    window.dispatchEvent(new Event('focus'));
+  });
+}
 
 /** Waits for "Continua?" at the end of the wish, presses it and checks that the wish has gone. */
 export async function continueWish(page: Page): Promise<void> {

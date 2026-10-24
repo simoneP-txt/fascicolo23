@@ -4,7 +4,7 @@
    SVG drawings that fade a palette color keep the token and an opacity. Then the frame theme of each
    room, and at the bottom every screen names the tones of its top and bottom edges, which the bands
    around the stage continue; last, the board's cork, frame and vignette, the library's walnut, the
-   study's wall and desk, Rapture's wall and floor and Room 46's sea, painted on the host. */
+   study's wall and desk, Rapture's wall and floor and Room 46's sea, the epilogue's too, painted on the host. */
 :root {
   /* Palette of 04-sistema, with one gold for its brass and its deco gold */
   --red: #e94535;
@@ -233,12 +233,16 @@
   --duration-swell: 7000ms; /* a wave of Room 46 swaying one way */
   --duration-rise: 400ms; /* "Guarda la confessione?" coming up on the finale, once the stamp has landed */
   --duration-pulse: 1400ms; /* a ring leaving the thread's end in Room 46, again and again, once the three clues are pinned */
+  --duration-spread: 2400ms; /* the epilogue's red block growing out of its thin band while the finale's strings fade */
+  --duration-walk: 800ms; /* the walker on the epilogue coming in, then each round of its two poses */
   --press-shift: 2px; /* how far a pressed control sinks */
   --press-scale: 0.98;
   --meme-zoom: 1.35; /* the size a meme lands from */
   --pop-scale: 0.9; /* the size the witness bubble pops from */
   --dialog-scale: 0.96; /* the size a dialog comes in from */
   --stamp-scale: 1.6; /* the size a stamp beats from */
+  --spread-scale: 0.02; /* the thin band the epilogue's red block grows from, a share of its height */
+  --walk-lift: 4px; /* how much higher the epilogue's walker stands while its legs pass */
 }
 
 /* Frame themes: the colors of the room frame (header, way back, audience button, witness, auto-help)
@@ -284,7 +288,8 @@
   --help-tray: var(--gold-glow);
 }
 [data-room='stanza-46'],
-[data-screen='finale'] {
+[data-screen='finale'],
+[data-screen='epilogue'] {
   --frame-label: var(--paper);
   --figure: var(--figure-sea);
 }
@@ -316,7 +321,8 @@
   --backdrop-top: var(--teal);
   --backdrop-bottom: var(--deco-floor);
 }
-[data-backdrop='stanza-46'] {
+[data-backdrop='stanza-46'],
+[data-backdrop='epilogue'] {
   --backdrop-top: var(--sea);
   --backdrop-bottom: var(--swell-front);
 }
@@ -391,8 +397,11 @@
 
 /* Room 46's host paints the sea of mockup 11 across the whole window down to stage line 1040, under every
    trough of the front wave, and that wave's tone from there to the bottom of the window. So the top band carries
-   on the sea, and the bottom band the waves the room draws over it. */
-#app[data-backdrop='stanza-46'] {
+   on the sea, and the bottom band the waves the room draws over it. The epilogue (mockup 12) stands on the same
+   sea; its own backdrop name brings the ink of a screen change from the finale, while the window goes back to
+   fullscreen. */
+#app[data-backdrop='stanza-46'],
+#app[data-backdrop='epilogue'] {
   --stage-px: calc(1px * var(--stage-scale));
   --swell-line: calc(50% + 500 * var(--stage-px)); /* stage line 1040, 500 below the middle of the window */
   background: linear-gradient(var(--backdrop-top) var(--swell-line), var(--backdrop-bottom) 0);

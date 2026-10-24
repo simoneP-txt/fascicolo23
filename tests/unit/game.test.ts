@@ -2,14 +2,15 @@
 // completed once, and an unmount on every way out of a room, even when the room itself is broken. A
 // broken room can still be solved, and a room's context goes inert once the player leaves it. Every
 // fragment won is celebrated on the board, the last one on the finale, which the app reopens on until the
-// video is opened, once per finale; memes and screen changes hold the help clock, and no hold outlives its
-// room; a room is unmounted once its screen has left, and before it mounts again.
+// video is opened, once per finale; the window coming back from the video brings the epilogue once, and the app
+// reopens on it from then on; memes and screen changes hold the help clock, and no hold outlives its room; a room
+// is unmounted once its screen has left, and before it mounts again.
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { validOrders } from '../../src/engine/clues';
 import { assembleLink } from '../../src/engine/link';
 import { SAVE_KEY, load, save } from '../../src/engine/save';
 import { newState, openCase } from '../../src/engine/state';
-import { CLUE_IDS } from '../../src/engine/types';
+import { CLUE_IDS, ROOM_IDS } from '../../src/engine/types';
 import { graphRooms } from '../../src/rooms/graph';
 import { content, ctxOf, memoryStorage, setup } from './fakes';
 
@@ -327,6 +328,53 @@ test('a reset forgets the video', () => {
   expect(game.state.watched).toBe(false);
   game.watch(); // on the case opening
   expect(open).toHaveBeenCalledOnce();
+});
+
+// The epilogue: the window back in front after the video.
+
+test('coming back after the video shows the epilogue and its line', () => {
+  const { game, ui } = before46();
+  game.enter('stanza-46');
+  game.solve();
+  game.watch();
+  game.comeBack();
+  expect(ui.showEpilogue).toHaveBeenCalledOnce();
+  expect(ui.narrate).toHaveBeenLastCalledWith(content.witness.epilogue);
+  game.comeBack();
+  expect(ui.showEpilogue).toHaveBeenCalledOnce();
+});
+
+test('coming back without the video does nothing', () => {
+  const { game, ui } = before46();
+  game.comeBack(); // on the board
+  game.enter('stanza-46');
+  game.comeBack(); // in the room
+  game.solve();
+  game.comeBack(); // on the finale, its button never pressed
+  expect(ui.showEpilogue).not.toHaveBeenCalled();
+  expect(ui.narrate).toHaveBeenLastCalledWith(content.witness.finale);
+});
+
+test('coming back once the finale has left does nothing', () => {
+  const { game, ui } = before46();
+  game.enter('stanza-46');
+  game.solve();
+  game.watch();
+  game.debugEnter('stanza-46'); // the host, during the video
+  game.comeBack();
+  game.reset();
+  game.comeBack();
+  expect(ui.showEpilogue).not.toHaveBeenCalled();
+});
+
+test('the app reopens on the epilogue once the video was opened', () => {
+  const storage = memoryStorage();
+  save({ ...openCase(newState(3)), solved: [...ROOM_IDS], clues: [...CLUE_IDS], watched: true }, storage);
+  const { game, ui } = setup(storage);
+  game.start();
+  expect(ui.showEpilogue).toHaveBeenCalledOnce();
+  expect(ui.showFinale).not.toHaveBeenCalled();
+  expect(ui.narrate).toHaveBeenLastCalledWith(content.witness.epilogue);
 });
 
 // Host actions behind the hidden hotkeys.
