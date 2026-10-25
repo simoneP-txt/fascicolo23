@@ -66,11 +66,11 @@ function schemaOf(rooms: readonly Pick<Room, 'id' | 'schema'>[]): Schema {
 }
 
 const MEME: Schema = { 'text?': 'text', 'image?': 'text', 'video?': 'text', 'sound?': 'text' };
-// Shown by name: the consolation by the engine itself, after a confirmed skip, shelf by the library on a wrong
-// book, run by Rapture on a lost run, and the rest by Room 46, after a wrong accusation (objection, innocent) and
-// every few blind ones (getHelp). ctx.meme() shows nothing for a name it does not know, so a renamed key would
-// drop its meme without an error.
-const NEEDED_MEMES = ['consolation', 'shelf', 'run', 'objection', 'innocent', 'getHelp'];
+// Shown by name: the consolation by the engine itself, after a confirmed skip, error by the study on a wrong option
+// and by the library on a wrong accusation, shelf by the library on a wrong book, run by Rapture on a lost run, and
+// the rest by Room 46, after a wrong accusation (objection, innocent) and every few blind ones (getHelp).
+// ctx.meme() shows nothing for a name it does not know, so a renamed key would drop its meme without an error.
+const NEEDED_MEMES = ['consolation', 'error', 'shelf', 'run', 'objection', 'innocent', 'getHelp'];
 // Played by name: click on every press, wish, stamp on a solved door, boom under the memes, and in Rapture
 // chime at each order, buzz on each error and the deep loop. audio.ts stays silent on a name it does not know,
 // so a renamed key would mute its sound without an error.

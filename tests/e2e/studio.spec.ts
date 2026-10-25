@@ -1,6 +1,7 @@
 // Study e2e: the three reports open one at a time, each with its testimony and four phenomena. A wrong one
-// shakes, counts one error and gets the witness's answer, even under a double click; the right one stamps
-// the report and opens the next with the witness's line for it, and a double click on it answers one report only. The plate only ever gets
+// shakes, counts one error, shows the error meme and gets the witness's answer, even under a double click; the
+// right one stamps the report and opens the next with the witness's line for it, and a double click on it answers
+// one report only. The plate only ever gets
 // "Interessante?", with no error. Three right answers win the fragment and both clues, once. The stake card
 // steps aside for the hint card, and whatever the witness answers a wrong pick, every hint fits its card and
 // the card stays clear of the silhouette. The column of reports keeps between 128 and 984 at every step with
@@ -22,6 +23,7 @@ const right = (page: Page, n: number) => option(page, n, testimonies[n - 1].answ
 const wrong = (page: Page, n: number, k: number) =>
   option(page, n, [0, 1, 2, 3].filter((i) => i !== testimonies[n - 1].answer)[k]);
 const witnessLine = (page: Page) => page.locator('[data-witness] .witness__line');
+const meme = (page: Page) => page.locator('[data-meme]');
 const hintButton = (page: Page) => page.getByRole('button', { name: content.ui.hint.button });
 const tag = (n: number) => room.reports.tag.replace('{n}', String(n)).replace('{total}', String(testimonies.length));
 
@@ -72,6 +74,20 @@ test('a wrong phenomenon counts an error and the witness answers', async ({ page
   await expect(hintButton(page)).toBeHidden();
   await wrong(page, 1, 2).click();
   await expect(hintButton(page)).toBeVisible();
+});
+
+test('a wrong option shows the error meme', async ({ page }) => {
+  await page.clock.install();
+  await enterStudy(page);
+  await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000); // the meme stays until the clock runs
+  await wrong(page, 1, 0).click();
+  await expect(meme(page)).toBeVisible();
+  await expect(meme(page)).toContainText(content.memes.error.text);
+  await page.clock.runFor(1000);
+  await expect(meme(page)).toHaveCount(0);
+  await right(page, 1).click(); // a right answer brings no meme
+  await expect(report(page, 2)).toHaveAttribute('data-state', 'open');
+  await expect(meme(page)).toHaveCount(0);
 });
 
 test("a right answer brings the next report's line", async ({ page }) => {

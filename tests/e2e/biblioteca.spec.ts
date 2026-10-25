@@ -1,9 +1,9 @@
 // Library e2e: the shelf is the chessboard's grid, a chosen square shows its title or none, every title fits
 // its card at 1366x768, wrong books show the shelf meme and count once each even under a double click, and
-// the secret square turns the shelf into the hedge mystery. There a truthful witness accused counts an error
-// and gets an answer, while the liar gives up the time, the clue and the room, once. A right guess sooner
-// than quickGuessSec after the mystery comes in is asked "Sicura?" and "Sicura sicura?" first, with no error
-// counted, a double click asking once however slow it is, and another accusation starting the questions
+// the secret square turns the shelf into the hedge mystery. There a truthful witness accused counts an error,
+// shows the error meme and gets an answer, while the liar gives up the time, the clue and the room, once. A right
+// guess sooner than quickGuessSec after the mystery comes in is asked "Sicura?" and "Sicura sicura?" first, with no
+// error counted, a double click asking once however slow it is, and another accusation starting the questions
 // over. Whatever the witness answers a wrong accusation, every hint fits its card and the card stays clear
 // of the silhouette. Curtains, leaves and pages move by transform and opacity only, and each visit starts
 // from the shelf, its quick guess too.
@@ -168,6 +168,20 @@ test('a wrong accusation counts an error and the witness answers', async ({ page
   await expect(witness(page)).toContainText(room.witness.wrong.lattaio);
   await expect(hintButton(page)).toBeVisible();
   await expect(page.getByText(room.mystery.solution.tag)).toBeHidden();
+});
+
+test('a wrong accusation shows the error meme', async ({ page }) => {
+  await enterLibrary(page, true);
+  await pull(page, room.secret);
+  await page.clock.runFor(1000);
+  await expect(page.locator('[data-view="mystery"]')).toBeVisible();
+  const truthful = room.mystery.statements.find((item: { id: string }) => item.id !== LIAR).id;
+  await accuse(page, truthful).click();
+  await expect(page.locator('[data-meme]')).toBeVisible();
+  await expect(page.locator('[data-meme]')).toContainText(content.memes.error.text);
+  await page.clock.runFor(1000);
+  await expect(page.locator('[data-meme]')).toHaveCount(0);
+  await expect(witness(page)).toContainText(room.witness.wrong[truthful]);
 });
 
 for (const id of Object.keys(room.witness.wrong)) {

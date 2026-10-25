@@ -138,8 +138,9 @@ test('the memes of Room 46 exist', () => {
 });
 
 test('the memes the rooms show by name exist', () => {
-  // The library's wrong book and Rapture's lost run: without its key the meme would just not show.
-  for (const id of ['shelf', 'run']) {
+  // The library's wrong book, Rapture's lost run, and the study's wrong option and the library's wrong
+  // accusation: without its key the meme would just not show.
+  for (const id of ['shelf', 'run', 'error']) {
     const broken = copy();
     delete broken.memes[id];
     expect(() => validateContent(broken, rooms), id).toThrow(new RegExp(`memes\\.${id}`));

@@ -3,12 +3,12 @@
 // square pressed shows its name and its book's title on the card. "Sfila il libro?" on a wrong book slides it
 // out and back, counts an error and shows the shelf meme, and stays off for that book; on the secret square the
 // book stays out and the shelf turns on itself to the mystery behind it: the hedge card and three statement
-// cards, each with its accusation. A truthful witness accused shakes the card, counts an error and turns that
-// accusation off. The liar accused sooner than quickGuessSec after the mystery came in is questioned first:
-// the witness asks each line of witness.sure ("Sicura?", "Sicura sicura?") and the click after the last one
-// counts, while another accusation starts the questions over. Once the liar is taken he gets the red outline
-// and the stamp, the solution names the time the model finds, the time clue comes, the area is marked solved
-// and the room completes after --duration-beat. Clicks wait while a book moves, the shelf turns, a card
+// cards, each with its accusation. A truthful witness accused shakes the card, counts an error, shows the error
+// meme and turns that accusation off. The liar accused sooner than quickGuessSec after the mystery came in is
+// questioned first: the witness asks each line of witness.sure ("Sicura?", "Sicura sicura?") and the click after
+// the last one counts, while another accusation starts the questions over. Once the liar is taken he gets the red
+// outline and the stamp, the solution names the time the model finds, the time clue comes, the area is marked
+// solved and the room completes after --duration-beat. Clicks wait while a book moves, the shelf turns, a card
 // shakes or a question comes, the second click of a double click never reaches an accusation, and every
 // visit starts from the shelf, with a new time for a quick guess.
 import './biblioteca.css';
@@ -123,6 +123,7 @@ export const biblioteca: Room<LibraryContent> = {
         setEnabled(accuse, false);
         replay(sheet, 'nope');
         ctx.reportError();
+        ctx.meme('error');
         const line = texts.witness.wrong[statement.id];
         if (line) ctx.narrate(line);
         wait(durationOf('--duration-nope'));
