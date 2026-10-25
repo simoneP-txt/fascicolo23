@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "e2e": "npm run build && playwright test",
+    "texts": "vitest run --exclude tests/unit/spoilers.test.ts && vite build && playwright test --grep fits",
     "dist": "npm run build && npm test && electron-builder"
   },
   "build": {

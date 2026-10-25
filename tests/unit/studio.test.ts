@@ -1,6 +1,6 @@
 // Study: three testimonies, each with four phenomena and one right answer. No phenomenon comes back in
-// another report, so the last report never falls by elimination, and the witness has an answer for a wrong
-// phenomenon in every report.
+// another report, so the last report never falls by elimination, the witness has an answer for a wrong
+// phenomenon in every report, and a line for every report that opens after the first.
 import { expect, test } from 'vitest';
 import json from '../../content/content.json';
 import { validateContent } from '../../src/engine/content';
@@ -24,3 +24,6 @@ test('no option comes back in another testimony, so none falls by elimination', 
 });
 
 test('the witness answers every wrong testimony', () => expect(room.witness.wrong).toHaveLength(room.testimonies.length));
+
+test('the witness opens every report after the first', () =>
+  expect(room.witness.next).toHaveLength(room.testimonies.length - 1));

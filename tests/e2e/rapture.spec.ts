@@ -89,7 +89,7 @@ test('0451 opens the door to the orders', async ({ page }) => {
 test.describe('at 1366x768', () => {
   test.use({ viewport: { width: 1366, height: 768 } });
 
-  test('a clean run obeys only the questions and wins Qj', async ({ page }) => {
+  test('a clean run obeys only the questions and wins Qj, and every order fits its card', async ({ page }) => {
     await recordPlays(page);
     await enterRapture(page);
     await openRaptureDoor(page);

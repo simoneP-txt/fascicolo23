@@ -2,7 +2,7 @@
 // and the item of a list included), the help thresholds and audience numbers must match the decisions,
 // every witness sentence must end with "?", every sound the game plays by name must be listed, no room keeps a
 // placeholder, and every meme must have something to show, a sound that exists and, if any, an image or a video
-// shipped in assets/memes; the memes the engine and Room 46 name must exist. The board's reset button may go.
+// shipped in assets/memes; the memes the engine and the rooms name must exist. The board's reset button may go.
 import { expect, test } from 'vitest';
 import json from '../../content/content.json';
 import { validateContent, type Schema } from '../../src/engine/content';
@@ -131,6 +131,15 @@ test('a meme video is a file shipped in assets/memes', () => {
 
 test('the memes of Room 46 exist', () => {
   for (const id of ['objection', 'innocent', 'getHelp']) {
+    const broken = copy();
+    delete broken.memes[id];
+    expect(() => validateContent(broken, rooms), id).toThrow(new RegExp(`memes\\.${id}`));
+  }
+});
+
+test('the memes the rooms show by name exist', () => {
+  // The library's wrong book and Rapture's lost run: without its key the meme would just not show.
+  for (const id of ['shelf', 'run']) {
     const broken = copy();
     delete broken.memes[id];
     expect(() => validateContent(broken, rooms), id).toThrow(new RegExp(`memes\\.${id}`));

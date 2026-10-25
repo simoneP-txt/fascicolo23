@@ -2,11 +2,12 @@
 // middle, the witness and the stake card on the right. One report is open at a time: its tag, the question,
 // the testimony and four phenomena, each an option with its dot. A wrong one shakes, counts an error, gets
 // the witness's line for that report and stays switched off; the right one closes the report into its solved
-// form, the testimony on one line, the check and the stamp, and the next report opens. After the third the
-// witness speaks, the area is marked solved and the room completes after --duration-beat. Reports still
-// locked show their tag, a grey line and the lock. The plate swings at each press and the witness finds it
-// interesting, with no error. Clicks wait while an option shakes or a report opens, and the second click of a
-// double click never reaches an option. Every visit starts from the first report.
+// form, the testimony on one line, the check and the stamp, and the next report opens with the witness's line
+// for it, in place of the answer to the last wrong pick. After the third the witness speaks, the area is marked
+// solved and the room completes after --duration-beat. Reports still locked show their tag, a grey line and the
+// lock. The plate swings at each press and the witness finds it interesting, with no error. Clicks wait while an
+// option shakes or a report opens, and the second click of a double click never reaches an option. Every visit
+// starts from the first report.
 import './studio.css';
 import type { Room } from '../../engine/types';
 import { button, setEnabled } from '../../ui/button';
@@ -102,6 +103,7 @@ export const studio: Room<StudioContent> = {
       if (current < testimonies.length) {
         open(current);
         replay(sheets[current], 'unlock');
+        ctx.narrate(texts.witness.next[current - 1]);
         wait(durationOf('--duration-unlock'));
         return;
       }

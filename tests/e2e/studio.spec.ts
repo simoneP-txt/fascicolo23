@@ -1,6 +1,6 @@
 // Study e2e: the three reports open one at a time, each with its testimony and four phenomena. A wrong one
 // shakes, counts one error and gets the witness's answer, even under a double click; the right one stamps
-// the report and opens the next, and a double click on it answers one report only. The plate only ever gets
+// the report and opens the next with the witness's line for it, and a double click on it answers one report only. The plate only ever gets
 // "Interessante?", with no error. Three right answers win the fragment and both clues, once. The stake card
 // steps aside for the hint card, and whatever the witness answers a wrong pick, every hint fits its card and
 // the card stays clear of the silhouette. The column of reports keeps between 128 and 984 at every step with
@@ -72,6 +72,15 @@ test('a wrong phenomenon counts an error and the witness answers', async ({ page
   await expect(hintButton(page)).toBeHidden();
   await wrong(page, 1, 2).click();
   await expect(hintButton(page)).toBeVisible();
+});
+
+test("a right answer brings the next report's line", async ({ page }) => {
+  await enterStudy(page);
+  await wrong(page, 1, 0).click();
+  await expect(witnessLine(page)).toHaveText(room.witness.wrong[0]);
+  await right(page, 1).click();
+  await expect(report(page, 2)).toHaveAttribute('data-state', 'open');
+  await expect(witnessLine(page)).toHaveText(room.witness.next[0]); // not the answer to report 1's wrong pick
 });
 
 test('a double click on a wrong option counts one error', async ({ page }) => {

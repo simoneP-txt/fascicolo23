@@ -1,7 +1,8 @@
 // Screens e2e: the game in the state of each mockup at the three test resolutions, with durations cut to
 // 1 ms. Every pair saves screenshots/<state>-<width>x<height>.png for review against docs/mockups and
 // checks the stage rules: nothing leaves the stage, no text is too small or overflows its box, at most
-// three font families. Later tasks add rows to the table. The overflow check passes a text cut by an ellipsis
+// three font families; each row's title says "fits", so npm run texts runs them after a rewrite. Later tasks add
+// rows to the table. The overflow check passes a text cut by an ellipsis
 // only in a box that opts in with data-ellipsis. On the board rows, "Azzera partita?" covers none of the board's
 // pieces.
 import { expect, test, type Page } from '@playwright/test';
@@ -322,7 +323,7 @@ for (const [width, height, deviceScaleFactor] of SIZES) {
     test.use({ viewport: { width, height }, deviceScaleFactor });
 
     for (const [state, reach] of Object.entries(STATES)) {
-      test(state, async ({ page }) => {
+      test(`${state}, every text fits`, async ({ page }) => {
         await reach(page);
         await page.evaluate(() => document.fonts.ready);
         // Entrances (a dialog, the witness bubble) finish first, so every shot is the settled screen.

@@ -75,6 +75,10 @@
           "Chi ha scelto quel verbo, il testimone?",
           "Basta giurarlo per ricordarlo bene?"
         ],
+        "next": [
+          "Un ricordo smontato: il prossimo testimone sarà più affidabile?",
+          "L'ultimo verbale, poi la porta: ti fidi ancora dei testimoni?"
+        ],
         "solved": "Tre ricordi, tre trappole, e le hai viste tutte?"
       },
       "hints": [

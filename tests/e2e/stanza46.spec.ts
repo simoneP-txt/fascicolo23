@@ -9,12 +9,30 @@
 // before the three clues are pinned is blind, with a new line each time and the video every third time; with the
 // three, the fiancé objects, the other two are innocent and the diva closes the case once, saved at the
 // accusation, the wish of s leading to the finale. Every visit starts over, and every line fits its card at
-// 1366x768. Durations are cut to 1 ms, but for the test that watches the video meme.
+// 1366x768. Once the case is closed, in the room and on the finale, every verdict keeps 8 stage px from its stamp
+// at the three sizes (decision 19 of phase 6). Durations are cut to 1 ms, but for the test that watches the video
+// meme.
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { SAVE_KEY } from '../../src/engine/save';
 import { EVIDENCE, SUSPECT_IDS, type Evidence } from '../../src/rooms/stanza-46/deduction';
+import { STAGE_WIDTH } from '../../src/ui/stage';
 import { overflowingText } from './checks';
-import { BEFORE_46, board, content, continueWish, duration, enterRoom, finale, fragment, played, quick, recordPlays, seed, wish } from './helpers';
+import {
+  BEFORE_46,
+  board,
+  content,
+  continueWish,
+  duration,
+  enterRoom,
+  finale,
+  fragment,
+  played,
+  quick,
+  recordPlays,
+  roomScreen,
+  seed,
+  wish,
+} from './helpers';
 import { accuseSuspect, CULPRIT, evidence, fitsOn, pinClue, suspect } from './play';
 
 const room = content.rooms['stanza-46'];
@@ -74,6 +92,28 @@ async function takeBack(page: Page, clue: Evidence): Promise<void> {
   await page.locator(`[data-spot="${clue}"]`).click();
   await expect(column(page).locator(`[data-evidence="${clue}"]`)).toBeVisible();
 }
+
+const SIZES = [
+  [1707, 1067, 1.5],
+  [1920, 1080, 1],
+  [1366, 768, 1],
+] as const;
+
+/** The closed-case cards on this screen whose verdict comes within 8 stage px of its stamp, above or below it, as
+ *  "<suspect> <gap> px". Boxes are measured as they stand on screen, the card's tilt and the stamp's turn included,
+ *  in stage px; a verdict's text counts down to its last line even where its box cuts it. */
+const verdictGaps = (screen: Locator): Promise<string[]> =>
+  screen.locator('[data-suspect]').evaluateAll((cards, width) => {
+    const scale = document.querySelector('#stage')!.getBoundingClientRect().width / width;
+    return cards.flatMap((card) => {
+      const verdict = card.querySelector<HTMLElement>('[data-verdict]')!;
+      const box = verdict.getBoundingClientRect();
+      const stamp = card.querySelector('[data-stamp]')!.getBoundingClientRect();
+      const bottom = box.bottom + Math.max(0, verdict.scrollHeight - verdict.clientHeight) * scale;
+      const gap = (stamp.top >= bottom ? stamp.top - bottom : box.top - stamp.bottom) / scale;
+      return gap >= 8 ? [] : [`${(card as HTMLElement).dataset.suspect} ${gap.toFixed(1)} px`];
+    });
+  }, STAGE_WIDTH);
 
 /** The three clues pinned as play.ts pins them, those still in the column, then the clock stopped, so the
  *  accusation's beat waits for the test. */
@@ -459,6 +499,26 @@ test.describe('with durations cut', () => {
     await accuseSuspect(page, 'diva');
     await expect(witnessLine(page)).toHaveText(room.witness.blind[0]);
   });
+
+  for (const [width, height, deviceScaleFactor] of SIZES) {
+    test.describe(`at ${width}x${height}`, () => {
+      test.use({ viewport: { width, height }, deviceScaleFactor });
+
+      test('every verdict clears its stamp by 8 px', async ({ page }) => {
+        await enter46(page, true);
+        await pinAllThenStop(page);
+        await accuseSuspect(page, CULPRIT);
+        await expect(page.locator('[data-solved]')).toHaveCount(1);
+        await page.evaluate(() => document.fonts.ready);
+        expect(await verdictGaps(roomScreen(page, 'stanza-46')), 'the closed case in the room').toEqual([]);
+
+        await page.clock.resume();
+        await continueWish(page);
+        await expect(finale(page).locator('[data-verdict]')).toHaveCount(4);
+        expect(await verdictGaps(finale(page)), 'the finale').toEqual([]);
+      });
+    });
+  }
 
   test.describe('at 1366x768', () => {
     test.use({ viewport: { width: 1366, height: 768 } });

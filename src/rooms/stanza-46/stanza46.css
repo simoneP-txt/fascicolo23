@@ -219,8 +219,11 @@
 .suspect[data-outcome='guilty'] .suspect__art {
   background: var(--paper-art-dim);
 }
+/* "ESCLUSO" stands one grid step into the card's foot, so a verdict of three lines under a name of two (the finale's
+   professor) keeps a clear gap above it and the stamp never reads as one more line of the verdict. */
 .suspect__out {
   margin-top: auto;
+  margin-bottom: calc(-1 * var(--space-1));
   font-size: var(--text-tag);
 }
 .suspect__stamp {
