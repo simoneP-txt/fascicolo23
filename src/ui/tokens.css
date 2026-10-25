@@ -276,9 +276,6 @@
   --token-used: var(--paper-faint);
   --sheet-shadow: var(--shadow-sheet-dark);
 }
-[data-room='scacchiera'] {
-  --figure: var(--sea);
-}
 [data-room='biblioteca'] {
   --figure: var(--figure-walnut);
   --token-used: var(--token-spent);
