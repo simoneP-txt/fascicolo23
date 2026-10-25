@@ -2,8 +2,8 @@
 // shared curve, and only the opacity of the host's ink layer moves. Pointer clicks on the stage are ignored
 // while the screen changes and for --duration-hush after it, after any overlay comes or goes, and after
 // "Un indizio?" hides under the pointer. Where a test clicks inside those windows the page clock stands
-// still, so every click lands at the moment it means to. A room solved by playing keeps the screen for five
-// seconds before the board comes back. Ctrl+Shift+N while a room comes in sends the board under the same
+// still, so every click lands at the moment it means to. A room solved by playing keeps the screen for
+// --duration-beat before the board comes back. Ctrl+Shift+N while a room comes in sends the board under the same
 // dip, with one wish.
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { parseDuration } from '../../src/ui/dom';
@@ -206,11 +206,11 @@ test('every overlay holds clicks back as it comes and as it goes', async ({ page
   await expect(hushed).toHaveCount(0);
 });
 
-test('a solved room stays on screen five seconds before the board comes back', async ({ page }) => {
-  const beat = 5000; // Simone, after playing the .exe: about five seconds before the wish
+test('a solved room stays on screen for --duration-beat before the board comes back', async ({ page }) => {
   await page.clock.install();
   await seed(page, OPEN);
   await page.goto('/');
+  const beat = await duration(page, '--duration-beat'); // Simone's pause before the wish
   const dip = await duration(page, '--duration-dip');
   const unlock = await duration(page, '--duration-unlock');
   await pauseClock(page);

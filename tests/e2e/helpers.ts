@@ -65,20 +65,24 @@ const DURATIONS = [...readFileSync('src/ui/tokens.css', 'utf8').matchAll(/^\s*(-
 
 /** Sets every --duration-* token of tokens.css to 1 ms on <html> before the page runs any script, so every
  *  animation, and every timer that reads its length from a token, ends at once. Tests of the animations
- *  themselves leave it out. */
-export async function quick(page: Page): Promise<void> {
-  await page.addInitScript((names) => {
-    const apply = () => {
-      for (const name of names) document.documentElement.style.setProperty(name, '1ms');
-    };
-    if (document.documentElement) return apply();
-    // The parser has not made <html> yet: wait for it.
-    new MutationObserver((_, observer) => {
-      if (!document.documentElement) return;
-      observer.disconnect();
-      apply();
-    }).observe(document, { childList: true });
-  }, DURATIONS);
+ *  themselves leave it out. A token named in keep takes the value given there instead; a later call wins over
+ *  an earlier one. */
+export async function quick(page: Page, keep: Record<`--duration-${string}`, string> = {}): Promise<void> {
+  await page.addInitScript(
+    ([names, keep]) => {
+      const apply = () => {
+        for (const name of names) document.documentElement.style.setProperty(name, keep[name] ?? '1ms');
+      };
+      if (document.documentElement) return apply();
+      // The parser has not made <html> yet: wait for it.
+      new MutationObserver((_, observer) => {
+        if (!document.documentElement) return;
+        observer.disconnect();
+        apply();
+      }).observe(document, { childList: true });
+    },
+    [DURATIONS, keep as Record<string, string>] as const,
+  );
 }
 
 /** A duration token as the page reads it, in ms. */

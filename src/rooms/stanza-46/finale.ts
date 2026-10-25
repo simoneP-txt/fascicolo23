@@ -8,7 +8,8 @@
 // link card with its thud and "Guarda la confessione?" comes up. Shown again later, the finale comes already
 // revealed. The button switches off at its first press, so a double click opens one tab; the engine ignores a
 // second watch() as well. From the press on, the finale waits for the window to come back from the video (the
-// first focus after a blur) and then calls onBack; it stops waiting if it leaves the stage first.
+// first focus after a blur), holds still for --duration-return (decision 20 of phase 6) and then calls onBack; it
+// stops waiting, or holding, if it leaves the stage first.
 import './stanza46.css';
 import './finale.css';
 import { FINALE, type Sfx } from '../../engine/game';
@@ -99,15 +100,18 @@ export function renderFinale(
   const clues = el('div', 'finale__clues');
   clues.append(...EVIDENCE.map((clue) => shortClue(content, texts, clue)));
 
-  // The window coming back from the video calls onBack once. The wait ends with the finale: once the screen has
-  // left the stage, the stage's next change of children cancels it.
+  // The window coming back from the video calls onBack once, --duration-return later, so the window is back in
+  // fullscreen before the epilogue starts (decision 20). The wait and the hold end with the finale: once the screen
+  // has left the stage, the stage's next change of children cancels both.
   const waitForComeback = () => {
     const stage = screen.parentElement;
     if (!stage) return;
-    const cancel = awaitComeback(window, onBack);
+    let hold: ReturnType<typeof setTimeout> | undefined;
+    const cancel = awaitComeback(window, () => (hold = setTimeout(onBack, durationOf('--duration-return'))));
     const watcher = new MutationObserver(() => {
       if (screen.isConnected) return;
       cancel();
+      clearTimeout(hold);
       watcher.disconnect();
     });
     watcher.observe(stage, { childList: true });

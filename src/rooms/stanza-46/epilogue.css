@@ -5,7 +5,8 @@
    is a thin band at its foot, behind the waves and unseen, and the walker and the bubble are away. Each part rests
    where the scene ends, and with data-play its animation runs from where the scene begins: the strings fade as
    the hedge grows out of the waves (--duration-spread), the walker rises in and its two poses take turns, the
-   passing one a little higher (--duration-walk), and the bubble pops last. Motion is transform and opacity only. */
+   passing one a little higher (--duration-walk), and the bubble pops last. --duration-epilogue-exit after the end
+   the two ways out rise at the bottom right. Motion is transform and opacity only. */
 .epilogue[data-play] .finale__strings {
   opacity: 0;
   animation: epilogue-fade var(--duration-spread) var(--ease);
@@ -77,6 +78,23 @@
   animation: epilogue-say var(--duration-pop) var(--ease) calc(var(--duration-spread) + var(--duration-walk)) backwards;
 }
 
+/* The two ways out (decision 21 of phase 6), bare paper links like the room's way back and the board's reset, so
+   the hedge stays the picture: bottom right on the dark sky and the back wave, level with the walker, right-aligned
+   on the witness's margin, clear of the hedge's right edge (stage 1344) and above the light crest of the middle
+   wave (about stage line 912), which would cut through a line of text. They rise once, as "Guarda la
+   confessione?". */
+.epilogue__exits {
+  position: absolute;
+  right: var(--space-12);
+  top: 768px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+  color: var(--paper);
+  animation: epilogue-rise var(--duration-rise) var(--ease);
+}
+
 @keyframes epilogue-fade {
   from {
     opacity: 1;
@@ -127,5 +145,12 @@
   from {
     opacity: 0;
     transform: scale(var(--pop-scale));
+  }
+}
+
+@keyframes epilogue-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-4));
   }
 }

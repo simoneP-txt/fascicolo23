@@ -17,6 +17,7 @@ import {
   board,
   consolation,
   content,
+  door,
   enterRoom,
   epilogue,
   FINISHED,
@@ -24,6 +25,7 @@ import {
   openCase,
   quick,
   seed,
+  settled,
   watchButton,
   wish,
 } from './helpers';
@@ -242,11 +244,30 @@ const STATES: Record<string, (page: Page) => Promise<void>> = {
     await expect(watchButton(page)).toBeVisible();
   },
   // 12: the scene over, the red hedge with the walker and the witness's last line, the game reopened on it once
-  // the video was opened
+  // the video was opened; its two buttons held back, as the mockup has none
   epilogue: async (page) => {
+    await quick(page, { '--duration-epilogue-exit': '600s' });
     await seed(page, { ...FINISHED, watched: true });
     await page.goto('/');
     await expect(epilogue(page)).toHaveAttribute('data-done', '');
+    await expect(epilogue(page).getByRole('button')).toHaveCount(0);
+  },
+  // 12 rested: "Torna alla lavagna?" and "Azzera partita?" up at the bottom right (decision 21)
+  'epilogue-exits': async (page) => {
+    await seed(page, { ...FINISHED, watched: true });
+    await page.goto('/');
+    await expect(epilogue(page)).toHaveAttribute('data-exits', '');
+  },
+  // 01 after the epilogue: every door stamped, Room 46's with "Entra?" beside its stamp, the link whole
+  'board-done': async (page) => {
+    await seed(page, { ...FINISHED, watched: true });
+    await page.goto('/');
+    await expect(epilogue(page)).toHaveAttribute('data-exits', '');
+    await settled(page);
+    await page.getByRole('button', { name: content.ui.back }).click();
+    await expect(board(page)).toBeVisible();
+    await expect(door(page, 'stanza-46').getByRole('button', { name: content.ui.enter })).toBeVisible();
+    await resetClear(page);
   },
   // 15 over Rapture: the way out, offered after skipAfterSec, its dialog in Poiret One
   'skip-rapture': async (page) => {

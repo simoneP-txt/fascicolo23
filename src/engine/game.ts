@@ -5,8 +5,9 @@
 // screen, a meme) hold the help clock while they play. Room 46 ends the game: once solved, the finale
 // takes the board's place, now and at every start, and its button hands the whole link to the browser
 // once per finale shown. When the window comes back from the video the epilogue takes the finale's place,
-// once, and from then on every start opens on it. It never touches the DOM: the screen is a GameUi, the
-// browser is GameDeps.open.
+// once, and from then on every start opens on it. From the epilogue board() brings the board with every room
+// solved, where Room 46's door plays the epilogue again (decision 21). It never touches the DOM: the screen is a
+// GameUi, the browser is GameDeps.open.
 import { audienceStatus, startCountdown, type AudienceStatus, type Countdown } from './audience';
 import { createLadder, type HelpStatus, type Ladder } from './autohelp';
 import { isOpen } from './clues';
@@ -50,8 +51,11 @@ export interface Game {
   // was opened, else the board.
   start(): void;
   openCase(): void;
-  enter(id: RoomId): void; // only from the board, through an open and unsolved door
+  // Only from the board, through an open and unsolved door, or through Room 46's once its video was opened: the
+  // epilogue again.
+  enter(id: RoomId): void;
   leave(): void; // "Torna alla lavagna?"
+  board(): void; // "Torna alla lavagna?" on the epilogue: the board with every room solved; nothing elsewhere
   solve(): void; // ctx.complete(), Ctrl+Shift+N and the end of a confirmed skip all land here
   skip(): void; // the confirmed "Apri la porta?": the consolation meme, then solve()
   startAudience(): void; // "Aiuto del pubblico?"
@@ -90,8 +94,8 @@ export function createGame(deps: GameDeps): Game {
   let state = load(content.tokens, storage);
   let session: Session | null = null;
   let leaving: Room | null = null; // left, but its screen is still on the way out
-  let onBoard = false;
-  let finale: 'shown' | 'watched' | null = null; // the finale on screen, and whether its button was pressed
+  // The screen the engine acts on, beside a room's session: 'watched' is the finale once its button was pressed.
+  let screen: 'board' | 'finale' | 'watched' | 'epilogue' | null = null;
   // One ladder per room for the whole game: leaving pauses it, coming back resumes it.
   const ladders = new Map<RoomId, Ladder>();
 
@@ -101,21 +105,19 @@ export function createGame(deps: GameDeps): Game {
   };
 
   const showBoard = (earned: Earned | null = null) => {
-    onBoard = true;
+    screen = 'board';
     ui.showBoard(state, earned);
     ui.narrate(content.witness.board);
   };
 
   const showFinale = (earned: boolean) => {
-    onBoard = false;
-    finale = 'shown';
+    screen = 'finale';
     ui.showFinale(state, earned);
     ui.narrate(content.witness.finale);
   };
 
   const showEpilogue = () => {
-    onBoard = false;
-    finale = null;
+    screen = 'epilogue';
     ui.showEpilogue();
     ui.narrate(content.witness.epilogue);
   };
@@ -192,8 +194,7 @@ export function createGame(deps: GameDeps): Game {
 
   const mount = (room: Room) => {
     retire();
-    onBoard = false;
-    finale = null;
+    screen = null;
     const roomContent = content.rooms[room.id];
     let ladder = ladders.get(room.id);
     if (ladder) ladder.resume();
@@ -245,13 +246,17 @@ export function createGame(deps: GameDeps): Game {
     },
     enter(id) {
       const room = rooms.find((candidate) => candidate.id === id);
-      if (!room || !onBoard || state.solved.includes(id) || !isOpen(room, state.clues)) return;
-      mount(room);
+      if (!room || screen !== 'board') return;
+      if (id === FINALE && state.solved.includes(id) && state.watched) showEpilogue();
+      else if (!state.solved.includes(id) && isOpen(room, state.clues)) mount(room);
     },
     leave() {
       if (!session) return;
       exit();
       showBoard();
+    },
+    board() {
+      if (screen === 'epilogue') showBoard();
     },
     solve() {
       if (!session) return;
@@ -289,7 +294,7 @@ export function createGame(deps: GameDeps): Game {
     giveBackToken() {
       persist(rules.giveBackToken(state, content.tokens));
       if (session) showAudience();
-      else if (onBoard) showBoard();
+      else if (screen === 'board') showBoard();
     },
     debugEnter(id) {
       const room = rooms.find((candidate) => candidate.id === id);
@@ -299,13 +304,13 @@ export function createGame(deps: GameDeps): Game {
       mount(room);
     },
     watch() {
-      if (finale !== 'shown') return;
-      finale = 'watched';
+      if (screen !== 'finale') return;
+      screen = 'watched';
       persist(rules.watch(state));
       deps.open(assembleLink(content.link.map((part) => part.text))); // always the whole link, whatever was skipped
     },
     comeBack() {
-      if (finale === 'watched') showEpilogue(); // only from the finale whose button opened the video
+      if (screen === 'watched') showEpilogue(); // only from the finale whose button opened the video
     },
     reset() {
       exit();
@@ -313,8 +318,7 @@ export function createGame(deps: GameDeps): Game {
       ladders.clear();
       clear(storage);
       state = rules.newState(content.tokens);
-      onBoard = false;
-      finale = null;
+      screen = null;
       ui.showIntro();
     },
   };

@@ -5,9 +5,10 @@
 // won, the wish plays over it first and the board reveals the fragment, and what the room brought, once the
 // wish is over; the finale (mockup 03) comes the same way with the last fragment, on Room 46's sea, with no way
 // back, audience or help. The epilogue (mockup 12) comes on the same sea, through the ink of a screen change, and
-// its scene plays once it is on screen. The board's "Azzera partita?" opens the confirmation of Ctrl+Shift+R
-// before the engine wipes the case. On the board the witness speaks from the top right, its silhouette
-// standing under the bubble; on the finale and the epilogue from the bottom left, beside it. Overlays, the meme
+// its scene plays once it is on screen; its "Torna alla lavagna?" leads to the board. "Azzera partita?", on the
+// board and on the epilogue, opens the confirmation of Ctrl+Shift+R before the engine wipes the case. On the
+// board the witness speaks from the top right, its silhouette standing under the bubble; on the finale and the
+// epilogue from the bottom left, beside it. Overlays, the meme
 // and the wish included, go on the stage root: they scale with the stage, leave with the screen under them and
 // stay outside the screen's clip, so a veil reaches the bands. A screen change tells the engine when the old
 // screen has gone, so it can unmount the room that left, and when a room is on screen, so its help clock
@@ -43,6 +44,7 @@ export function createScreens(
   let audience: AudienceView[] = [];
   let help: HelpPanel | null = null;
   const gives = (earned: Earned): readonly ClueId[] => rooms.find((room) => room.id === earned)?.gives ?? [];
+  const askReset = () => confirmDialog(stage.root, content.ui.reset, () => game.reset()); // the dialog of Ctrl+Shift+R
 
   return {
     showIntro() {
@@ -53,8 +55,7 @@ export function createScreens(
     },
 
     showBoard(state, earned) {
-      const reset = () => confirmDialog(stage.root, content.ui.reset, () => game.reset()); // the dialog of Ctrl+Shift+R
-      const board = renderBoard(content, rooms, state, earned, audio, (id) => game.enter(id), reset);
+      const board = renderBoard(content, rooms, state, earned, audio, (id) => game.enter(id), askReset);
       witness = createWitness(content, 'down');
       audience = [];
       help = null;
@@ -82,7 +83,8 @@ export function createScreens(
     },
 
     showEpilogue() {
-      const epilogue = renderEpilogue();
+      // Without ui.reset.button the epilogue offers no reset, as the board does not (decision 21).
+      const epilogue = renderEpilogue(content, () => game.board(), content.ui.reset.button ? askReset : null);
       witness = createWitness(content, 'right');
       audience = [];
       help = null;

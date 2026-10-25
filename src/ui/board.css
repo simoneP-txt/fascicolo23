@@ -1,10 +1,10 @@
 /* Board (src/engine/board.ts), mockup 01: every card hangs at its own place on the 1920x1080 stage, tilted
    by a degree or two, over the cork the host paints (tokens.css); the stage itself paints nothing. The red
    strings run behind the cards; "Azzera partita?" sits on the bare cork under the tokens. A door is solved
-   (fragment chip and stamp), open (red outline and "Entra?") or closed (darker paper, faded drawing, lock,
-   what it lacks). After a wish, reveal() sets data-reveal and what the room brought (data-new) arrives in
-   turn: the stamp beats once the bar is off, the clue cards come down, then their strings stretch. Only
-   transform, opacity and the strings' dash move. */
+   (fragment chip and stamp; Room 46's also "Entra?" once the epilogue has played), open (red outline and
+   "Entra?") or closed (darker paper, faded drawing, lock, what it lacks). After a wish, reveal() sets
+   data-reveal and what the room brought (data-new) arrives in turn: the stamp beats once the bar is off, the
+   clue cards come down, then their strings stretch. Only transform, opacity and the strings' dash move. */
 .board__strings {
   position: absolute;
   inset: 0;
@@ -174,6 +174,12 @@
   right: var(--space-2);
   top: var(--space-10);
   rotate: -10deg;
+}
+/* Room 46's door once the epilogue has played: "Entra?" under its stamp, on the fragment's row, at the right. */
+.door__again {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
 }
 
 .board .clue {

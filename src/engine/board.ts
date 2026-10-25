@@ -5,7 +5,8 @@
 // and the clues in the order found, each joined by a red string to every door that needs it. The tokens
 // left hang under the window; under them, on the bare cork, sits "Azzera partita?", a quiet link that calls
 // onReset (decision 20), only while content.json has its line. Once Room 46 is solved the game ends on its
-// finale, never on the board.
+// finale; only the epilogue leads back here, every door solved, and Room 46's offers "Entra?" beside its
+// stamp to see the epilogue again (decision 21 of phase 6). The other solved doors stay shut.
 // With a fragment just won the board waits under the wish: the fragment stays under its bar, and the stamp,
 // clue cards and strings the room brought (data-new) stay out of sight until reveal(), which board.css plays.
 import '../ui/board.css';
@@ -18,7 +19,7 @@ import { renderLink } from '../ui/link';
 import { STAGE_HEIGHT, STAGE_WIDTH } from '../ui/stage';
 import { icon, svg } from '../ui/svg';
 import { isOpen, type GraphRoom } from './clues';
-import type { Earned, Sfx } from './game';
+import { FINALE, type Earned, type Sfx } from './game';
 import { linkParts } from './link';
 import type { GameState } from './state';
 import type { ClueId, Content, Room, RoomId } from './types';
@@ -166,6 +167,11 @@ function doorCard(room: Room, content: Content, state: GameState, won: boolean, 
     if (won) solved.dataset.new = '';
     card.classList.add('door--solved');
     card.append(fragment, solved);
+    if (room.id === FINALE && state.watched) {
+      const again = button(content.ui.enter, 'primary', () => onEnter(room.id));
+      again.classList.add('door__enter', 'door__again');
+      card.append(again);
+    }
   } else if (isOpen(room, state.clues)) {
     const enter = button(content.ui.enter, 'primary', () => onEnter(room.id));
     enter.classList.add('door__enter');
