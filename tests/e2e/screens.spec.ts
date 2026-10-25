@@ -4,7 +4,7 @@
 // three font families; each row's title says "fits", so npm run texts runs them after a rewrite. Later tasks add
 // rows to the table. The overflow check passes a text cut by an ellipsis
 // only in a box that opts in with data-ellipsis. On the board rows, "Azzera partita?" covers none of the board's
-// pieces.
+// pieces, while content.json offers it: the party day's content has none.
 import { expect, test, type Page } from '@playwright/test';
 import { bandsMatchTokens, edgeJumps, fontFamilies, hasBands, outsideStage, overflowingText, smallText } from './checks';
 import type { RoomId } from '../../src/engine/types';
@@ -23,6 +23,7 @@ import {
   FINISHED,
   MOCKUP_01,
   openCase,
+  PARTY_DAY,
   quick,
   seed,
   settled,
@@ -77,8 +78,10 @@ const BOARD_PIECES = [
   '[data-witness] .witness__figure',
 ].join(', ');
 
-/** "Azzera partita?" is on the board and its box meets none of the board's pieces. */
+/** "Azzera partita?" is on the board and its box meets none of the board's pieces. The party day's content offers
+ *  no reset (board.spec checks that), so there it checks nothing. */
 async function resetClear(page: Page): Promise<void> {
+  if (PARTY_DAY) return;
   const reset = page.getByRole('button', { name: content.ui.reset.button });
   await expect(reset).toBeVisible();
   const box = (await reset.boundingBox())!;

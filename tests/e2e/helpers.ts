@@ -1,9 +1,9 @@
-// E2E helpers: the content texts and the video link, a network cut that records every request outside the local
-// server, the games of mockup 01, before Rapture, before Room 46 and of the end, a save written before the page
-// loads, quick() for the tests that do not watch animations, settled() and throughChange() for those that wait
-// out a screen change, a slow double click, the window going to the browser and back, and the steps most tests
-// repeat (opening the case through the wish, entering a room, and the consolation that follows a confirmed "Apri
-// la porta?"). Solving a room lives in play.ts.
+// E2E helpers: the content texts, whether they are the party day's, and the video link, a network cut that records
+// every request outside the local server, the games of mockup 01, before Rapture, before Room 46 and of the end, a
+// save written before the page loads, quick() for the tests that do not watch animations, settled() and
+// throughChange() for those that wait out a screen change, a slow double click, the window going to the browser and
+// back, and the steps most tests repeat (opening the case through the wish, entering a room, and the consolation
+// that follows a confirmed "Apri la porta?"). Solving a room lives in play.ts.
 import { readFileSync } from 'node:fs';
 import { expect, type BrowserContext, type Locator, type Page } from '@playwright/test';
 import { assembleLink } from '../../src/engine/link';
@@ -13,6 +13,10 @@ import { CLUE_IDS, ROOM_IDS } from '../../src/engine/types';
 import { parseDuration } from '../../src/ui/dom';
 
 export const content = JSON.parse(readFileSync('content/content.json', 'utf8'));
+
+/** Whether content.json is the party day's: Simone deletes ui.reset.button, so no screen offers "Azzera partita?"
+ *  (decision 21). The tests of that button skip on it, and the tests of its absence run only on it. */
+export const PARTY_DAY = !content.ui.reset.button;
 
 /** The whole case link, which "Guarda la confessione?" opens. */
 export const VIDEO = assembleLink(content.link.map((part: { text: string }) => part.text));

@@ -4,8 +4,8 @@
 // its clue cards, strings, locks, stamps and tokens; a room won stamps its door and stretches its strings
 // only once the wish is over, moving nothing but transform, opacity and the strings' dash; the board keeps its
 // tokens to the end, since the game ends on Room 46's finale. "Azzera partita?" on the board asks first, as
-// Ctrl+Shift+R does: "No, continua?" leaves board and save as they were, "Sì, azzera?" wipes the case. Durations
-// are cut to 1 ms.
+// Ctrl+Shift+R does: "No, continua?" leaves board and save as they were, "Sì, azzera?" wipes the case. On the party
+// day's content, with no ui.reset.button, the board offers no "Azzera partita?" at all. Durations are cut to 1 ms.
 import { expect, test, type Page } from '@playwright/test';
 import { SAVE_KEY } from '../../src/engine/save';
 import {
@@ -18,6 +18,7 @@ import {
   MOCKUP_01,
   offline,
   openCase,
+  PARTY_DAY,
   played,
   quick,
   recordPlays,
@@ -198,6 +199,7 @@ test('the board keeps the tokens with every room solved but 46', async ({ page }
 });
 
 test('the board offers "Azzera partita?", which asks first', async ({ page }) => {
+  test.skip(PARTY_DAY, 'party-day content: no reset button');
   await seed(page, MOCKUP_01);
   await page.goto('/');
   await expect(board(page)).toBeVisible();
@@ -212,10 +214,20 @@ test('the board offers "Azzera partita?", which asks first', async ({ page }) =>
 });
 
 test('"Sì, azzera?" from the board wipes the case', async ({ page }) => {
+  test.skip(PARTY_DAY, 'party-day content: no reset button');
   await seed(page, MOCKUP_01);
   await page.goto('/');
   await resetButton(page).click();
   await page.getByRole('button', { name: content.ui.reset.yes }).click();
   await expect(page.getByRole('heading', { name: content.ui.intro.question })).toBeVisible();
   expect(await saved(page)).toBeNull();
+});
+
+test('on the party-day content the board offers no "Azzera partita?"', async ({ page }) => {
+  test.skip(!PARTY_DAY, 'runs only on the party-day content, without ui.reset.button');
+  await seed(page, MOCKUP_01);
+  await page.goto('/');
+  await expect(door(page, 'biblioteca').getByRole('button', { name: content.ui.enter })).toBeVisible();
+  // The literal text, since content.json no longer holds it.
+  await expect(page.getByRole('button', { name: 'Azzera partita?' })).toHaveCount(0);
 });

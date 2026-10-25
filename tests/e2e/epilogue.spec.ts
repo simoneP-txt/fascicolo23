@@ -6,9 +6,10 @@
 // behind the waves, and the walker stands in front of the hedge, above the waves' crest. --duration-epilogue-exit
 // after the scene "Torna alla lavagna?" and "Azzera partita?" come up bottom right, clear of the scene, at the three
 // sizes: the first leads to the board, whose Room 46 door plays the epilogue again, the second asks before it wipes
-// the case. The app reopens on the epilogue once the video was opened, during the video as after the scene and
-// after the board (Review Focus 5). The scene moves transform and opacity only. The button is pressed only with the
-// network blocked: it opens the real video.
+// the case. On the party day's content, with no ui.reset.button, "Torna alla lavagna?" comes up alone. The app
+// reopens on the epilogue once the video was opened, during the video as after the scene and after the board (Review
+// Focus 5). The scene moves transform and opacity only. The button is pressed only with the network blocked: it
+// opens the real video.
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { load, SAVE_KEY } from '../../src/engine/save';
 import { ROOM_IDS } from '../../src/engine/types';
@@ -22,6 +23,7 @@ import {
   finale,
   FINISHED,
   offline,
+  PARTY_DAY,
   quick,
   seed,
   settled,
@@ -259,6 +261,8 @@ test('the scene moves only transform and opacity', async ({ page }) => {
 
 const backButton = (page: Page) => page.getByRole('button', { name: content.ui.back });
 const resetButton = (page: Page) => page.getByRole('button', { name: content.ui.reset.button });
+/** The epilogue's ways out as content.json offers them: the reset only while ui.reset.button exists. */
+const exitButtons = (page: Page) => (PARTY_DAY ? [backButton(page)] : [backButton(page), resetButton(page)]);
 
 /** The epilogue the app reopens on once the video was opened, its two buttons up and the stage taking clicks. */
 async function exits(page: Page): Promise<void> {
@@ -282,7 +286,7 @@ for (const [width, height, deviceScaleFactor] of SIZES) {
   test.describe(`${width}x${height}`, () => {
     test.use({ viewport: { width, height }, deviceScaleFactor });
 
-    test('the epilogue offers the board and the reset once its scene has rested', async ({ page }) => {
+    test('the epilogue offers its ways out once its scene has rested, clear of the scene', async ({ page }) => {
       await seed(page, { ...FINISHED, watched: true });
       await page.goto('/');
       await expect(epilogue(page)).toHaveAttribute('data-play', '');
@@ -313,7 +317,7 @@ for (const [width, height, deviceScaleFactor] of SIZES) {
       await expect(epilogue(page)).toHaveAttribute('data-exits', '');
       const stage = (await page.locator('#stage').boundingBox())!;
       const parts = ['[data-hedge]', '[data-walker]', '[data-witness] .witness__bubble', '[data-witness] .witness__figure'];
-      for (const button of [backButton(page), resetButton(page)]) {
+      for (const button of exitButtons(page)) {
         await expect(button).toBeVisible();
         const box = (await button.boundingBox())!;
         expect(box.x).toBeGreaterThanOrEqual(stage.x);
@@ -350,12 +354,12 @@ test('"Torna alla lavagna?" leads to the board, whose Room 46 door plays the epi
   await expect(epilogue(page)).toHaveAttribute('data-done', '');
   await expect(line(page)).toHaveText(content.witness.epilogue);
   await expect(epilogue(page)).toHaveAttribute('data-exits', '');
-  await expect(backButton(page)).toBeVisible();
-  await expect(resetButton(page)).toBeVisible();
+  for (const button of exitButtons(page)) await expect(button).toBeVisible();
   await expect(board(page)).toHaveCount(0);
 });
 
 test('"Azzera partita?" on the epilogue asks first, and "Sì, azzera?" wipes the case', async ({ page }) => {
+  test.skip(PARTY_DAY, 'party-day content: no reset button');
   await exits(page);
   const saved = () => page.evaluate((key) => localStorage.getItem(key), SAVE_KEY);
   const before = await saved();
@@ -380,14 +384,27 @@ test('the app reopened on the epilogue offers the same buttons', async ({ page }
   await page.reload(); // closed on the epilogue
   await expect(epilogue(page)).toHaveAttribute('data-done', '');
   await expect(epilogue(page)).toHaveAttribute('data-exits', '');
-  await expect(backButton(page)).toBeVisible();
-  await expect(resetButton(page)).toBeVisible();
+  for (const button of exitButtons(page)) await expect(button).toBeVisible();
 
   await settled(page);
   await backButton(page).click();
   await expect(board(page)).toBeVisible();
   await page.reload(); // closed on the board it led to
   await expect(epilogue(page)).toHaveAttribute('data-exits', '');
-  await expect(backButton(page)).toBeVisible();
-  await expect(resetButton(page)).toBeVisible();
+  for (const button of exitButtons(page)) await expect(button).toBeVisible();
+});
+
+test('on the party-day content the epilogue offers "Torna alla lavagna?" alone, and it leads to the board', async ({
+  page,
+}) => {
+  test.skip(!PARTY_DAY, 'runs only on the party-day content, without ui.reset.button');
+  await exits(page);
+  // The page's one button is the way back: no reset anywhere.
+  await expect(page.getByRole('button')).toHaveCount(1);
+  await expect(page.getByRole('button')).toHaveText(content.ui.back);
+  await backButton(page).click();
+  await expect(board(page)).toBeVisible();
+  await expect(door(page, 'stanza-46').getByRole('button', { name: content.ui.enter })).toBeVisible();
+  // The literal text, since content.json no longer holds it.
+  await expect(page.getByRole('button', { name: 'Azzera partita?' })).toHaveCount(0);
 });
