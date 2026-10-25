@@ -27,10 +27,10 @@
     "epilogue": "Il tuo regalo è oltre la siepe?"
   },
   "memes": {
-    "error": { "text": "Sicura?", "sound": "boom" },
-    "consolation": { "text": "Capita anche a Poirot?", "sound": "boom" },
+    "error": { "text": "Ci vediamo in appello?", "sound": "boom" },
+    "consolation": { "text": "Vittoria a tavolino?", "sound": "boom" },
     "shelf": { "text": "Ritenta, Sherlock?", "sound": "boom" },
-    "run": { "text": "Would you kindly riprovare?", "sound": "boom" },
+    "run": { "text": "Colpita e affondata?", "sound": "boom" },
     "objection": { "text": "Obiezione?", "sound": "boom" },
     "innocent": { "text": "Innocente?", "sound": "boom" },
     "getHelp": { "video": "assets/memes/stop-it-get-some-help.mp4" }
@@ -71,19 +71,19 @@
         "intro": "Cosa vede una mente quando chiude gli occhi?",
         "plate": "Interessante?",
         "wrong": [
-          "Dove guardavano gli occhi, se non sulla faccia?",
-          "Chi ha scelto quel verbo, il testimone?",
+          "E se il microfono fosse una pistola, dove guarderesti?",
+          "Chi ha scelto «massacrava», lui o chi faceva le domande?",
           "Basta giurarlo per ricordarlo bene?"
         ],
         "next": [
-          "Un ricordo smontato: il prossimo testimone sarà più affidabile?",
-          "L'ultimo verbale, poi la porta: ti fidi ancora dei testimoni?"
+          "Uno smontato: questo ricorda i fatti o le domande?",
+          "Ultimo verbale: più uno è sicuro, più gli credi?"
         ],
-        "solved": "Tre ricordi, tre trappole, e le hai viste tutte?"
+        "solved": "Tre testimoni smontati: Elizabeth Loftus ti assumerebbe?"
       },
       "hints": [
-        "Ogni testimone sbaglia per un motivo diverso.",
-        "Chiediti cosa ha guidato il ricordo: un oggetto, una parola, la certezza."
+        "Ogni testimone sbaglia a modo suo: cosa ha guidato il suo ricordo?",
+        "Il microfono fa da arma, la domanda suggerisce, la certezza inganna."
       ],
       "help": { "hintAfterSec": 180, "secondHintAfterSec": 300, "hintAfterErrors": 3, "skipAfterSec": 360, "skipAfterErrors": null }
     },
@@ -93,21 +93,21 @@
       "from": "dalla scacchiera",
       "witness": {
         "intro": "Cosa c'è dietro quel muro di pezzi?",
-        "black": "Muove il bianco?",
+        "black": "Quelli sono i pezzi del sospettato: tu muovi il bianco?",
         "wrong": [
           "E se il nero non avesse tempo di respirare?",
-          "Nell'angolo il re si sente al sicuro, vero?",
-          "Chi lascia passare la torre?"
+          "Chi dei tuoi pezzi sa saltare la siepe?",
+          "La torre in h1 scalpita: chi le sbarra la strada?"
         ],
         "replies": [
-          "Il re è scappato nell'angolo, e adesso?",
-          "Chi è rimasto sulla colonna h?"
+          "Il re si è rintanato in h8: chi lo va a stanare?",
+          "La colonna h si è aperta: chi è rimasto in mezzo?"
         ],
         "solved": "Il Re parla inglese?"
       },
       "hints": [
         "Dai scacco a ogni mossa: il nero non deve avere tempo.",
-        "L'ultimo scacco lo dà la torre in h1: lasciala passare."
+        "Alfiere in f7, cavallo in g6, poi fai strada alla torre in h1."
       ],
       "help": { "hintAfterSec": 120, "secondHintAfterSec": 240, "hintAfterErrors": 3, "skipAfterSec": 300, "skipAfterErrors": null },
       "fen": "rn3bk1/ppp2ppp/8/4N1P1/2B1PP1K/6P1/PPP5/7R w - - 0 1",
@@ -127,7 +127,7 @@
         "intro": "Lo senti anche tu, questo fruscio?",
         "passage": "Chi ha lasciato entrare il vento?",
         "wrong": {
-          "vicina": "Mentirebbe anche sulla prima passeggiata?",
+          "vicina": "Se mente lei, il custode ha sentito cesoie tagliare l'aria?",
           "lattaio": "Allora vicina e custode possono dire il vero tutti e due?"
         },
         "solved": "Il custode non sapeva che la vicina porta fuori il cane?",
@@ -135,7 +135,7 @@
       },
       "hints": [
         "g4 vale anche sullo scaffale. Dietro, chi mente mente su tutto.",
-        "Se mentisse la vicina, alle cinque meno sedici la siepe sarebbe già a terra."
+        "La vicina dice il vero: chi ha sentito le cesoie troppo presto?"
       ],
       "help": { "hintAfterSec": 240, "secondHintAfterSec": 360, "hintAfterErrors": 3, "skipAfterSec": 420, "skipAfterErrors": null },
       "quickGuessSec": 30,
@@ -146,20 +146,25 @@
         "untitled": "Il titolo è sbiadito",
         "titles": {
           "a8": "Il barboncino dei Baskerville",
+          "e8": "Profondo giallo",
           "g8": "La donna del lunedì mattina",
-          "c7": "Assassinio sul Naviglio",
+          "c7": "Assassinio sull'Orient Espresso",
           "h7": "Il mistero della camera in disordine",
           "b6": "Il giorno della cornacchia",
           "e6": "Delitto e merenda",
+          "f6": "Il chiasso degli innocenti",
           "d5": "Dieci piccoli punti interrogativi",
+          "h5": "La signora in giallo paglierino",
+          "a4": "Uno, nessuno e centomila alibi",
           "g4": "Scacco matto in biblioteca",
           "b3": "Uno studio in beige",
-          "d3": "Poirot va in vacanza",
+          "d3": "Il nome della mosca",
           "h3": "Il maggiordomo ha un alibi",
           "c2": "Maigret e la pipa smarrita",
           "f2": "C'è un segnalibro in biblioteca",
           "a1": "La lettera rubata due volte",
-          "e1": "Psicologia forense per gatti"
+          "e1": "Psicologia forense per gatti",
+          "h1": "Elementare, Watson?"
         }
       },
       "mystery": {
@@ -199,15 +204,15 @@
         "code": [
           "Ti ricordi a che ora è caduta la siepe?",
           "Le cifre dell'orario trovato in biblioteca, senza i due punti?",
-          "Prova 0451, come in ogni gioco che si rispetti?"
+          "0451: i gamer in sala lo stanno già urlando?"
         ],
         "open": "Quaggiù tutti danno ordini: a chi obbedirai?",
         "lost": "Troppo obbediente, o troppo distratta?",
         "solved": "Un uomo sceglie, uno schiavo obbedisce: e tu hai scelto?"
       },
       "hints": [
-        "Il codice è l'orario trovato in biblioteca.",
-        "Esegui solo gli ordini che finiscono con il punto interrogativo."
+        "Il codice è l'orario della biblioteca. Dentro vale la regola dello studio.",
+        "Codice 0451. Poi esegui solo le domande: «Would you kindly» non basta."
       ],
       "help": { "hintAfterSec": null, "secondHintAfterSec": null, "hintAfterErrors": null, "skipAfterSec": 300, "skipAfterErrors": 3 },
       "code": "0451",
@@ -254,17 +259,17 @@
           "confession": "Una confessione filmata: dove sarebbe la telecamera, qui?"
         },
         "ready": "Tre indizi appuntati: su chi tendi il filo dell'accusa?",
-        "unready": "Manca un indizio: un'accusa, adesso, conterebbe qualcosa?",
-        "blind": ["Accusi senza prove?", "Un'accusa senza indizi vale qualcosa?", "Il giudice riderebbe, no?", "Di nuovo a occhio?"],
+        "unready": "Hai tolto un indizio: un'accusa a metà regge in tribunale?",
+        "blind": ["Accusi senza prove?", "Un'accusa senza indizi vale qualcosa?", "L'avvocato della difesa ringrazia?", "Di nuovo a occhio?"],
         "accused": {
           "giardiniere": "Chiude con il punto: non l'aveva già escluso il profilo?",
           "professore": "Si risponde da solo, col punto fermo: parla forse per domande?",
-          "fidanzato": "Alle 04:51 faceva un commit: il registro non mente, no?"
+          "fidanzato": "Alle 04:51 faceva un commit di questo gioco: chi credi che l'abbia scritto?"
         },
-        "solved": "Una diretta registrata non è una diretta, vero?"
+        "solved": "In diretta, ma registrata: avrà registrato anche una confessione?"
       },
       "hints": [
-        "Appunta ogni indizio sul sospettato a cui si adatta.",
+        "Leggi come finisce ogni frase dei sospettati: il profilo dice come parla il colpevole.",
         "Due parlano solo per domande e hanno un alibi alla stessa ora: quale si può registrare?"
       ],
       "help": { "hintAfterSec": 180, "secondHintAfterSec": 300, "hintAfterErrors": 3, "skipAfterSec": 360, "skipAfterErrors": null },
