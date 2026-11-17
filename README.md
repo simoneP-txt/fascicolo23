@@ -1,8 +1,16 @@
 # Fascicolo 23
 
-A detective game for Windows, in Italian. The title means "case file no. 23".
+A detective game for Windows, in Italian, that I made as a birthday present, for fun. The title means "case file no. 23".
 
-I made it in October 2026 as a birthday present, for fun. It ran once, at the party, on a PC with friends watching. I didn't build it for work or for my CV, and I won't update it.
+## Stack
+
+- TypeScript and Vite, with no UI framework
+- Electron, packaged by electron-builder as a single portable `Fascicolo23.exe`
+- Hand-written SVG for every illustration, fonts from `@fontsource`, chess.js for the chess problem
+- Vitest for the logic: the mate in three, the single liar, the clue graph
+- Playwright, which plays the whole game offline in every valid room order and takes screenshots at three resolutions
+
+All player-facing text lives in `content/content.json`.
 
 ![Opening screen: the case file asks "Vuoi aprire il caso?"](docs/screenshots/01-intro.png)
 
@@ -56,17 +64,11 @@ Rapture borrows from BioShock, Room 46 from Blue Prince, and the five-star scene
 
 ## Built for a live audience
 
-- **Audience help.** The audience gets three tokens per game. Each one starts a 30-second timer for the friends watching to shout the answer. Rapture has no audience help.
+- **Audience help.** The audience gets three tokens per game. Each token gives the people watching 30 seconds to shout the answer. Rapture has no audience help.
 - **Nobody gets stuck.** After two minutes or three mistakes, a hint button appears. After five minutes you can solve the room with *Apri la porta?*. Every room has its own thresholds in `content/content.json`.
 - **Host keys**, hidden from the screen: Ctrl+Shift+N solves the room, Ctrl+Shift+H gives a hint, Ctrl+Shift+G returns an audience token, Ctrl+Shift+D opens a debug menu, Ctrl+Shift+R resets the game.
 - **Saves.** The game saves after every room and picks up where it left off on launch.
 - **Offline.** The .exe carries every font, sound and drawing. The game makes one network request, for the video at the end.
-
-## Stack
-
-Vite and TypeScript with no UI framework, wrapped in Electron and packaged by electron-builder as a single portable `Fascicolo23.exe`. Fonts come from `@fontsource`, and chess.js checks the chess problem. All player-facing text lives in `content/content.json`.
-
-Vitest covers the logic: the mate in three, the single liar, the clue graph. Playwright plays the whole game offline in every valid room order and takes screenshots at 1920x1080, 1707x1067 and 1366x768.
 
 ## Run it
 
