@@ -11,7 +11,8 @@ const filesUnder = (...folders: string[]): string[] =>
     .flatMap((folder) => readdirSync(folder, { recursive: true, encoding: 'utf8' }).map((name) => `${folder}/${name.replaceAll('\\', '/')}`))
     .filter((path) => statSync(path).isFile());
 
-test('the reference photo never reaches the game', () => {
+// The public repo leaves assets/reference/ out, so a fresh clone has nothing to guard.
+test.skipIf(!existsSync('assets/reference'))('the reference photo never reaches the game', () => {
   const references = filesUnder('assets/reference').map((path) => readFileSync(path));
   expect(references.length).toBeGreaterThan(0);
   const marks = references.flatMap((bytes) => [bytes, Buffer.from(bytes.subarray(0, 300).toString('base64'))]);
