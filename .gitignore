@@ -4,5 +4,5 @@ dist-electron/
 release/
 test-results/
 playwright-report/
-screenshots/
+/screenshots/
 assets/inbox/
