@@ -6,7 +6,8 @@ A detective game for Windows, in Italian, that I made as a birthday present, for
 
 - TypeScript and Vite, with no UI framework
 - Electron, packaged by electron-builder as a single portable `Fascicolo23.exe`
-- Hand-written SVG for every illustration, fonts from `@fontsource`, chess.js for the chess problem
+- Every illustration written as SVG code, with no image files
+- Fonts from `@fontsource`, chess.js for the chess problem
 - Vitest for the logic: the mate in three, the single liar, the clue graph
 - Playwright, which plays the whole game offline in every valid room order and takes screenshots at three resolutions
 
@@ -60,7 +61,7 @@ After the video, the Witness asks one last question, *Il tuo regalo è oltre la 
 
 ## Nods
 
-Rapture borrows from BioShock, Room 46 from Blue Prince, and the five-star scene from the wishes in Genshin Impact. The art is hand-written SVG, with no images, music or logos from those games.
+Rapture borrows from BioShock, Room 46 from Blue Prince, and the five-star scene from the wishes in Genshin Impact. Every illustration is SVG code, and the game uses no images, music or logos from those games.
 
 ## Built for a live audience
 
