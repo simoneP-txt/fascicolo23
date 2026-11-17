@@ -73,6 +73,10 @@ Rapture borrows from BioShock, Room 46 from Blue Prince, and the five-star scene
 
 ## Run it
 
+Download `Fascicolo23.exe` from [Releases](https://github.com/simoneP-txt/fascicolo23/releases/latest) and open it, with no install. Windows SmartScreen warns about unsigned apps: click *More info*, then *Run anyway*.
+
+To build it yourself:
+
 ```sh
 npm install
 npm run dev                       # play in the browser
